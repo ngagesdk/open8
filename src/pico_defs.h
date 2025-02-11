@@ -1,0 +1,13 @@
+/* @file pico_defs.h
+ *
+ * A Pico-8 emulator for the Nokia N-Gage.
+ */
+
+#ifndef PICO_DEFS_H
+#define PICO_DEFS_H
+
+#define CART_WIDTH 160
+#define CART_HEIGHT 205
+#define SCREEN_SIZE 128
+
+#endif // PICO_DEFS_H
