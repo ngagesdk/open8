@@ -163,14 +163,13 @@ static int load_cartridge(const char* filename, cartridge_t* cartridge)
 
    extract_pico8_data(image_data, cartridge->cart_data);
    Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
-   SDL_Log("Header: 0x%08x", header);
    if (0x003a633a == header) // :c: followed by \x00
    {
        SDL_Log("Code is compressed (old format).");
    }
    else if (0x61787000 == header) // \x00 followed by pxa
    {
-       SDL_Log("Code is compressed (new format, v0.2.0 + ).");
+       SDL_Log("Code is compressed (new format, v0.2.0+).");
    }
    else
    {
