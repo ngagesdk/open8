@@ -102,7 +102,7 @@ void update_cartridges()
     source.h = SCREEN_SIZE;
 
     dest.x = 24.f;
-    dest.y = 20.f;
+    dest.y = 25.f;
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
