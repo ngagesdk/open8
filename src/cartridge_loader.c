@@ -22,6 +22,7 @@ static int selection;
 
 static int load_cartridge(const char* filename, cartridge_t* cartridge);
 static void destroy_cartridge(cartridge_t* cartridge);
+static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data);
 
 bool init_cartridge_loader(void)
 {
@@ -139,8 +140,6 @@ static int load_cartridge(const char* filename, cartridge_t* cartridge)
    cartridge->size = file_size;
    fclose(file);
 
-   // tbd.
-
    Uint32* image_data = stbi_load_from_memory(cartridge->data, cartridge->size, &width, &height, &bpp, 4);
    if (!image_data)
    {
@@ -161,6 +160,23 @@ static int load_cartridge(const char* filename, cartridge_t* cartridge)
        stbi_image_free(image_data);
        return 0;
    }
+
+   extract_pico8_data(image_data, cartridge->cart_data);
+   Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
+   SDL_Log("Header: 0x%08x", header);
+   if (0x003a633a == header) // :c: followed by \x00
+   {
+       SDL_Log("Code is compressed (old format).");
+   }
+   else if (0x61787000 == header) // \x00 followed by pxa
+   {
+       SDL_Log("Code is compressed (new format, v0.2.0 + ).");
+   }
+   else
+   {
+       SDL_Log("Code is in plaintext.");
+   }
+
    stbi_image_free(image_data);
 
    extern SDL_Renderer* renderer;
@@ -190,5 +206,39 @@ static void destroy_cartridge(cartridge_t* cartridge)
     if (cartridge->data)
     {
         SDL_free(cartridge->data);
+    }
+}
+
+static void extract_pico8_data(const uint8_t *image_data, uint8_t *cart_data)
+{
+    size_t data_index = 0;
+    size_t pixel_count = CART_WIDTH * CART_HEIGHT;
+
+    // Each Pico-8 byte is stored as the two least significant bits of each of the four
+    // channels, ordered ABGR (E.g: the A channel stores the 2 most significant bits in
+    // the bytes).  The image is 160 pixels wide and 205 pixels high, for a possible
+    // storage of 32,800 (0x8020) bytes.
+
+    for (size_t i = 0; i < pixel_count; i++)
+    {
+        if (data_index >= CART_DATA_SIZE)
+        {
+            break;
+        }
+
+        // ABGR8888
+        uint8_t A = image_data[i * 4];     // A channel
+        uint8_t B = image_data[i * 4 + 1]; // B channel
+        uint8_t G = image_data[i * 4 + 2]; // G channel
+        uint8_t R = image_data[i * 4 + 3]; // R channel
+
+        // Extract the 2 least significant bits from each channel.
+        uint8_t byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
+
+        // Swap nibbles.
+        byte = (byte >> 4) | (byte << 4);
+
+        cart_data[data_index] = byte;
+        data_index++;
     }
 }

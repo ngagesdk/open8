@@ -8,6 +8,9 @@
 
 #define CART_WIDTH 160
 #define CART_HEIGHT 205
+
+#define CART_DATA_SIZE 0x8020
+
 #define SCREEN_SIZE 128
 
 #endif // PICO_DEFS_H

@@ -11,6 +11,8 @@ typedef struct cartridge
     Uint8* data;
     Uint32 size;
 
+    Uint8 cart_data[0x8020];
+
 } cartridge_t;
 
 bool init_cartridge_loader(void);
