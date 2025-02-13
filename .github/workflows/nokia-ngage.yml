@@ -61,7 +61,7 @@ jobs:
       shell: pwsh
 
     - name: Archive Pico-8.sis
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Pico-8.sis
         path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
