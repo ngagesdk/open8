@@ -5,18 +5,14 @@
 
 #define SDL_MAIN_USE_CALLBACKS 1
 
-#define NGAGE_W 176
-#define NGAGE_H 208
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include "cartridge_loader.h"
 #include "pico_defs.h"
 
-SDL_Window* window;
-SDL_Renderer* renderer;
-SDL_Texture* frame;
+static SDL_Window* window;
+static SDL_Renderer* renderer;
 
 // This function runs once at startup.
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -47,32 +43,12 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         SDL_Log("Mix_Init: %s", SDL_GetError());
     }
 
-    char path[256];
-    SDL_snprintf(path, sizeof(path), "%sdata/frame.bmp", SDL_GetBasePath());
-
-    SDL_Surface* frame_sf = SDL_LoadBMP(path);
-    if (!frame_sf)
-    {
-        SDL_Log("Failed to load image frame.bmp: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    else
-    {
-        frame = SDL_CreateTextureFromSurface(renderer, frame_sf);
-        if (!frame)
-        {
-            SDL_Log("Could not create texture from surface: %s", SDL_GetError());
-        }
-        SDL_DestroySurface(frame_sf);
-        SDL_RenderTexture(renderer, frame, NULL, NULL);
-    }
-
-    if (!init_cartridge_loader())
+    if (!init_cartridge_loader(renderer))
     {
         SDL_Log("Couldn't initialize cartridge loader.");
         return SDL_APP_FAILURE;
     }
-    update_cartridges();
+    render_cartridge(renderer, true);
 
     return SDL_APP_SUCCESS;
 }
@@ -95,15 +71,15 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
             if (event->key.key == SDLK_LEFT)
             {
-                prev_cartridge();
-                update_cartridges();
+                prev_cartridge(renderer);
+                render_cartridge(renderer, false);
                 return SDL_APP_CONTINUE;
             }
 
             if (event->key.key == SDLK_RIGHT)
             {
-                next_cartridge();
-                update_cartridges();
+                next_cartridge(renderer);
+                render_cartridge(renderer, false);
                 return SDL_APP_CONTINUE;
             }
 
@@ -114,8 +90,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
             else if (event->key.key == SDLK_HASH);
             {
-                SDL_RenderTexture(renderer, frame, NULL, NULL);
-                update_cartridges();
+                render_cartridge(renderer, true);
             }
 
             break;
@@ -135,7 +110,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 // This function runs once at shutdown.
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
-    SDL_DestroyTexture(frame);
     destroy_cartridge_loader();
     Mix_CloseAudio();
     Mix_Quit();

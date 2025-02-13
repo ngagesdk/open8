@@ -6,6 +6,9 @@
 #ifndef PICO_DEFS_H
 #define PICO_DEFS_H
 
+#define NGAGE_W 176
+#define NGAGE_H 208
+
 #define CART_WIDTH 160
 #define CART_HEIGHT 205
 

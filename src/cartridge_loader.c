@@ -4,15 +4,16 @@
  */
 
 #include <SDL3/SDL.h>
+#include <stdio.h>
 #include "cartridge_loader.h"
+#include "image_loader.h"
 #include "pico_defs.h"
+#include "stb_image.h"
 
 #include <dirent.h>
 #include <string.h>
 
-#define STBI_NO_THREAD_LOCALS
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+static SDL_Texture* frame;
 
 static char** available_carts;
 static int num_carts;
@@ -20,23 +21,38 @@ static int num_carts;
 static cartridge_t cartridge;
 static int selection;
 
-static int load_cartridge(const char* filename, cartridge_t* cartridge);
+static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartridge_t* cartridge);
 static void destroy_cartridge(cartridge_t* cartridge);
-static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data);
+static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
 
-bool init_cartridge_loader(void)
+bool init_cartridge_loader(SDL_Renderer* renderer)
 {
+    char path[256];
+    int width, height, bpp;
+
     num_carts = 0;
     selection = 0;
 
-    char path[256];
+    SDL_snprintf(path, sizeof(path), "%sdata/frame.png", SDL_GetBasePath());
+    frame = load_image(renderer, path, &width, &height, &bpp);
+    if (!frame)
+    {
+        return false;
+    }
+    if (width != NGAGE_W || height != NGAGE_H)
+    {
+        SDL_Log("Invalid frame size: %dx%d", width, height);
+        SDL_DestroyTexture(frame);
+        return false;
+    }
+
     SDL_snprintf(path, sizeof(path), "%scarts", SDL_GetBasePath());
 
     DIR* dir = opendir(path);
     if (!dir)
     {
         SDL_Log("Couldn't open directory: %s", path);
-        return;
+        return false;
     }
     struct dirent* entry;
     while ((entry = readdir(dir)))
@@ -52,7 +68,10 @@ bool init_cartridge_loader(void)
         SDL_Log("No cartridges found in directory: %s", path);
         return false;
     }
-    load_cartridge(available_carts[0], &cartridge);
+    if (!load_cartridge(renderer, (const Uint8*)available_carts[0], &cartridge))
+    {
+        return false;
+    }
     return true;
 }
 
@@ -67,9 +86,13 @@ void destroy_cartridge_loader(void)
     {
         SDL_free(available_carts);
     }
+    if (frame)
+    {
+        SDL_DestroyTexture(frame);
+    }
 }
 
-void next_cartridge(void)
+void next_cartridge(SDL_Renderer* renderer)
 {
     destroy_cartridge(&cartridge);
     selection++;
@@ -77,10 +100,10 @@ void next_cartridge(void)
     {
         selection = 0;
     }
-    load_cartridge(available_carts[selection], &cartridge);
+    load_cartridge(renderer, available_carts[selection], &cartridge);
 }
 
-void prev_cartridge(void)
+void prev_cartridge(SDL_Renderer* renderer)
 {
     destroy_cartridge(&cartridge);
     selection--;
@@ -88,10 +111,10 @@ void prev_cartridge(void)
     {
         selection = num_carts - 1;
     }
-    load_cartridge(available_carts[selection], &cartridge);
+    load_cartridge(renderer, available_carts[selection], &cartridge);
 }
 
-void update_cartridges()
+void render_cartridge(SDL_Renderer *renderer, bool with_frame)
 {
     SDL_FRect source;
     SDL_FRect dest;
@@ -106,88 +129,91 @@ void update_cartridges()
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
-    extern SDL_Renderer* renderer;
-
+    if (with_frame)
+    {
+        SDL_RenderClear(renderer);
+        SDL_RenderTexture(renderer, frame, NULL, NULL);
+    }
     SDL_RenderTexture(renderer, cartridge.image, &source, &dest);
     SDL_RenderPresent(renderer);
 }
 
-static int load_cartridge(const char* filename, cartridge_t* cartridge)
+static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartridge_t* cartridge)
 {
-   int width, height, bpp;
-   char path[256];
+    int width, height, bpp;
+    char path[256];
 
-   SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), filename);
-   FILE* file = fopen(path, "rb");
-   if (!file)
-   {
-       SDL_Log("Couldn't open file: %s", path);
-       return 0;
-   }
+    SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), file_name);
 
-   fseek(file, 0, SEEK_END);
-   long file_size = ftell(file);
-   fseek(file, 0, SEEK_SET);
+    FILE* file = fopen(path, "rb");
+    if (!file)
+    {
+        SDL_Log("Couldn't open file: %s", path);
+        return 0;
+    }
 
-   cartridge->data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
-   if (!cartridge->data)
-   {
-       SDL_Log("Couldn't allocate memory for cartridge data");
-       fclose(file);
-       return 0;
-   }
-   fread(cartridge->data, 1, file_size, file);
-   cartridge->size = file_size;
-   fclose(file);
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-   Uint32* image_data = stbi_load_from_memory(cartridge->data, cartridge->size, &width, &height, &bpp, 4);
-   if (!image_data)
-   {
-       SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
-       return 0;
-   }
+    cartridge->data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
+    if (!cartridge->data)
+    {
+        SDL_Log("Couldn't allocate memory for cartridge data");
+        fclose(file);
+        return 0;
+    }
+    fread(cartridge->data, 1, file_size, file);
+    cartridge->size = file_size;
+    fclose(file);
 
-   if (width != CART_WIDTH || height != CART_HEIGHT)
-   {
-       SDL_Log("Invalid image size: %dx%d", width, height);
-       return 0;
-   }
+    Uint32* image_data = stbi_load_from_memory(cartridge->data, cartridge->size, &width, &height, &bpp, 4);
+    if (!image_data)
+    {
+        SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
+        return 0;
+    }
 
-   SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ABGR8888, image_data, width * 4);
-   if (!surface)
-   {
-       SDL_Log("Couldn't create surface: %s", SDL_GetError());
-       stbi_image_free(image_data);
-       return 0;
-   }
+    if (width != CART_WIDTH || height != CART_HEIGHT)
+    {
+        SDL_Log("Invalid image size: %dx%d", width, height);
+        return 0;
+    }
 
-   extract_pico8_data(image_data, cartridge->cart_data);
-   Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
-   if (0x003a633a == header) // :c: followed by \x00
-   {
-       SDL_Log("Code is compressed (old format).");
-   }
-   else if (0x61787000 == header) // \x00 followed by pxa
-   {
-       SDL_Log("Code is compressed (new format, v0.2.0+).");
-   }
-   else
-   {
-       SDL_Log("Code is in plaintext.");
-   }
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ABGR8888, image_data, width * 4);
+    if (!surface)
+    {
+        SDL_Log("Couldn't create surface: %s", SDL_GetError());
+        stbi_image_free(image_data);
+        return 0;
+    }
 
-   stbi_image_free(image_data);
+    extract_pico8_data(image_data, cartridge->cart_data);
+    Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
+    if (0x003a633a == header) // :c: followed by \x00
+    {
+        SDL_Log("Code is compressed (old format).");
+    }
+    else if (0x61787000 == header) // \x00 followed by pxa
+    {
+        SDL_Log("Code is compressed (new format, v0.2.0+).");
+    }
+    else
+    {
+        SDL_Log("Code is in plaintext.");
+    }
 
-   extern SDL_Renderer* renderer;
-   cartridge->image = SDL_CreateTextureFromSurface(renderer, surface);
-   if (!cartridge->image)
-   {
-       SDL_Log("Couldn't create texture: %s", SDL_GetError());
-       return 0;
-   }
-   SDL_DestroySurface(surface);
+    stbi_image_free(image_data);
 
-   return 1;
+    cartridge->image = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!cartridge->image)
+    {
+        SDL_Log("Couldn't create texture: %s", SDL_GetError());
+        return 0;
+    }
+    SDL_DestroySurface(surface);
+
+    return 1;
 }
 
 static void destroy_cartridge(cartridge_t* cartridge)
@@ -208,7 +234,7 @@ static void destroy_cartridge(cartridge_t* cartridge)
     }
 }
 
-static void extract_pico8_data(const uint8_t *image_data, uint8_t *cart_data)
+static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data)
 {
     size_t data_index = 0;
     size_t pixel_count = CART_WIDTH * CART_HEIGHT;
@@ -226,13 +252,13 @@ static void extract_pico8_data(const uint8_t *image_data, uint8_t *cart_data)
         }
 
         // ABGR8888
-        uint8_t A = image_data[i * 4];     // A channel
-        uint8_t B = image_data[i * 4 + 1]; // B channel
-        uint8_t G = image_data[i * 4 + 2]; // G channel
-        uint8_t R = image_data[i * 4 + 3]; // R channel
+        Uint8 A = image_data[i * 4];     // A channel
+        Uint8 B = image_data[i * 4 + 1]; // B channel
+        Uint8 G = image_data[i * 4 + 2]; // G channel
+        Uint8 R = image_data[i * 4 + 3]; // R channel
 
         // Extract the 2 least significant bits from each channel.
-        uint8_t byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
+        Uint8 byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
 
         // Swap nibbles.
         byte = (byte >> 4) | (byte << 4);
