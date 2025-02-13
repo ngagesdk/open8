@@ -46,6 +46,10 @@ jobs:
       run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
       shell: pwsh
 
+    - name: Remove existing Pico-8 directory
+      run: Remove-Item -Recurse -Force ${{ env.NGAGESDK }}/projects/Pico-8
+      shell: pwsh
+
     - name: Clone Pico-8
       run: git clone https://github.com/ngagesdk/Pico-8.git ${{ env.NGAGESDK }}/projects/Pico-8
       shell: pwsh
@@ -55,3 +59,9 @@ jobs:
         cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
         cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
       shell: pwsh
+
+    - name: Archive Pico-8.sis
+      uses: actions/upload-artifact@v2
+      with:
+        name: Pico-8.sis
+        path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
