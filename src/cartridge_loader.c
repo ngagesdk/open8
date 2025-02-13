@@ -69,7 +69,7 @@ bool init_cartridge_loader(SDL_Renderer* renderer)
         SDL_Log("No cartridges found in directory: %s", path);
         return false;
     }
-    if (!load_cartridge(renderer, (const Uint8*)available_carts[0], &cartridge))
+    if (!load_cartridge(renderer, (const char*)available_carts[0], &cartridge))
     {
         return false;
     }
@@ -189,34 +189,53 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
         return 0;
     }
 
-    extract_pico8_data(image_data, cartridge->cart_data);
+    extract_pico8_data((const Uint8*)image_data, cartridge->cart_data);
+
     Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
+    int status;
+
     if (0x003a633a == header) // :c: followed by \x00
     {
         // Code is compressed (old format).
-        cartridge->code_size = decompress_mini(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
-        if (cartridge->code_size == 1 || !cartridge->code_size)
-        {
-            SDL_Log("Corrupt code data.");
-        }
-        else
-        {
-            SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
-            FILE* code_file = fopen(path, "wb+");
-            if (code_file)
-            {
-                fwrite(cartridge->code, 1, cartridge->code_size, code_file);
-                fclose(code_file);
-            }
-        }
+        status = decompress_mini(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
+        //0x4304 - 0x4305 , msb first
+        cartridge->code_size = cartridge->cart_data[0x4304] << 8 | cartridge->cart_data[0x4305];
     }
     else if (0x61787000 == header) // \x00 followed by pxa
     {
-        SDL_Log("Code is compressed (new format, v0.2.0+).");
+        // Code is compressed (new format, v0.2.0+).
+        status = pxa_decompress(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
+        cartridge->code_size = cartridge->cart_data[0x4304] << 8 | cartridge->cart_data[0x4305];
     }
     else
     {
-        SDL_Log("Code is in plaintext.");
+        // Up to first null byte, if any.
+        for (cartridge->code_size = 0; cartridge->code_size < MAX_CODE_SIZE; cartridge->code_size++)
+        {
+            if (cartridge->cart_data[0x4300 + cartridge->code_size] == 0)
+            {
+                break;
+            }
+            else
+            {
+                cartridge->code[cartridge->code_size] = cartridge->cart_data[0x4300 + cartridge->code_size];
+            }
+        }
+    }
+
+    if (status == 1)
+    {
+        SDL_Log("Corrupt code data.");
+    }
+    else
+    {
+        SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
+        FILE* code_file = fopen(path, "wb+");
+        if (code_file)
+        {
+            fwrite(cartridge->code, 1, cartridge->code_size, code_file);
+            fclose(code_file);
+        }
     }
 
     stbi_image_free(image_data);

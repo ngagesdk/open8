@@ -30,5 +30,6 @@
 typedef unsigned char uint8;
 
 int decompress_mini(uint8* in_p, uint8* out_p, int max_len);
+int pxa_decompress(uint8* in_p, uint8* out_p, int max_len);
 
 #endif // P8_COMPRESS_H
