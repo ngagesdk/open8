@@ -50,10 +50,6 @@
 typedef unsigned short int uint16;
 typedef unsigned char uint8;
 
-static uint16* hash_list[HASH_MAX];
-static uint16* hash_heap = NULL;
-static int found[HASH_MAX];
-
 #define WRITE_VAL(x) {*p_8 = (x); p_8++;}
 
 static int bit = 1;
@@ -67,20 +63,6 @@ static int src_pos = 0;
 
 static uint8* dest_buf = NULL;
 static uint8* src_buf = NULL;
-
-// 0.2.0j
-// encode / decode as an int
-static int get_write_pos()
-{
-    int result = (dest_pos << 16) | (byte << 8) | bit;
-    return result;
-}
-static void set_write_pos(int val)
-{
-    bit = val & 0xff;
-    byte = (val >> 8) & 0xff;
-    dest_pos = (val >> 16) & 0x7fff;
-}
 
 static int getbit()
 {
@@ -124,48 +106,8 @@ static int getval(int bits)
     return val;
 }
 
-
-static int putval(int val, int bits)
-{
-    int i;
-    if (bits <= 0) return 0;
-
-    for (i = 0; i < bits; i++)
-        putbit(val & (1 << i));
-
-    return bits;
-}
-
-static void putbitlen(int val)
-{
-    int i;
-    for (i = 0; i < val - 1; i++)
-        putbit(0);
-    putbit(1);
-}
-
-
-static int putchain(int val, int link_bits, int max_bits)
-{
-    int i;
-    int max_link_val = (1 << link_bits) - 1; // 3 bits means can write < 7 in a single link
-    int bits_written = 0;
-    int vv = max_link_val;
-
-    while (vv == max_link_val)
-    {
-        vv = MIN(val, max_link_val);
-        bits_written += putval(vv, link_bits);
-        val -= vv;
-
-        if (bits_written >= max_bits) return bits_written; // next val is implicitly 0
-    }
-    return bits_written;
-}
-
 static int getchain(int link_bits, int max_bits)
 {
-    int i;
     int max_link_val = (1 << link_bits) - 1;
     int val = 0;
     int vv = max_link_val;
@@ -182,37 +124,10 @@ static int getchain(int link_bits, int max_bits)
     return val;
 }
 
-/*
-    // used for block distance. reasonably even distribution of values, but more frequently closer.
-
-    // calc number of bits; write that first (steps of 2)
-    // then write val
-*/
-static int putnum(int val)
-{
-    int jump = BLOCK_DIST_BITS;
-    int bits = jump;
-    int i;
-
-    while ((1 << bits) <= val)
-        bits += jump;
-    // printf("writing num bitlen: %d  at %d %d\n", bits, dest_pos, bit);
-
-    // 1  15 bits // more frequent so put first
-    // 01 10 bits
-    // 00  5 bits
-    putchain(3 - (bits / jump), 1, 2);
-
-    putval(val, bits);
-    return (bits / jump) + bits;
-}
-
 static int getnum()
 {
     int jump = BLOCK_DIST_BITS;
     int bits = jump;
-    int src_pos_0 = src_pos;
-    int bit_0 = bit;
     int val;
 
     // 1  15 bits // more frequent so put first
@@ -230,13 +145,7 @@ static int getnum()
 
 // ---------------------
 
-#define PXA_READ_VAL(x)  getval(8)
-
-// debug stats
-static int block_bits_written = 0;
-static int literal_bits_written = 0;
-static int total_block_len = 0;
-static int num_blocks, num_blocks_large, num_literals;
+#define PXA_READ_VAL(x) getval(8)
 
 static void init_literals_state(int* literal, int* literal_pos)
 {
@@ -254,7 +163,6 @@ static void init_literals_state(int* literal, int* literal_pos)
 
 int pxa_decompress(uint8* in_p, uint8* out_p, int max_len)
 {
-    uint8* dest;
     int i;
     int literal[256];
     int literal_pos[256];
