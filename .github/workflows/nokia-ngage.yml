@@ -1,0 +1,57 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout toolchain
+      uses: actions/checkout@v2
+
+    - name: Install Ninja
+      run: choco install ninja --confirm
+      shell: pwsh
+
+    - name: Clone ngage-toolchain
+      run: git clone https://github.com/ngagesdk/ngage-toolchain.git
+
+    - name: Set up NGAGESDK environment variable
+      run: |
+        $ngagesdk = "${{ github.workspace }}/ngage-toolchain"
+        $ngagesdk = $ngagesdk -replace '\\', '/'
+        echo "NGAGESDK=$ngagesdk" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Add runtime paths to PATH
+      run: |
+        echo "${{ env.NGAGESDK }}/sdk/sdk/6.1/Shared/EPOC32/gcc/bin" >> $env:GITHUB_PATH
+        echo "${{ env.NGAGESDK }}/sdk/sdk/6.1/Shared/EPOC32/ngagesdk/bin" >> $env:GITHUB_PATH
+      shell: pwsh
+
+    - name: Verify directory structure
+      run: |
+        echo "NGAGESDK: ${{ env.NGAGESDK }}"
+        ls ${{ env.NGAGESDK }}
+        ls ${{ env.NGAGESDK }}/setup
+      shell: pwsh
+
+    - name: Fetch SDK
+      run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/build
+      shell: pwsh
+
+    - name: Clone Pico-8
+      run: git clone https://github.com/ngagesdk/Pico-8.git ${{ env.NGAGESDK }}/projects/Pico-8
+      shell: pwsh
+
+    - name: Build Pico-8
+      run: |
+        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/build
+      shell: pwsh
