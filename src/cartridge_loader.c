@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL.h>
 #include <stdio.h>
+#include "lexaloffle/p8_compress.h"
 #include "cartridge_loader.h"
 #include "image_loader.h"
 #include "pico_defs.h"
@@ -114,7 +115,7 @@ void prev_cartridge(SDL_Renderer* renderer)
     load_cartridge(renderer, available_carts[selection], &cartridge);
 }
 
-void render_cartridge(SDL_Renderer *renderer, bool with_frame)
+void render_cartridge(SDL_Renderer* renderer, bool with_frame)
 {
     SDL_FRect source;
     SDL_FRect dest;
@@ -192,7 +193,22 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
     Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
     if (0x003a633a == header) // :c: followed by \x00
     {
-        SDL_Log("Code is compressed (old format).");
+        // Code is compressed (old format).
+        cartridge->code_size = decompress_mini(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
+        if (cartridge->code_size == 1 || !cartridge->code_size)
+        {
+            SDL_Log("Corrupt code data.");
+        }
+        else
+        {
+            SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
+            FILE* code_file = fopen(path, "wb+");
+            if (code_file)
+            {
+                fwrite(cartridge->code, 1, cartridge->code_size, code_file);
+                fclose(code_file);
+            }
+        }
     }
     else if (0x61787000 == header) // \x00 followed by pxa
     {

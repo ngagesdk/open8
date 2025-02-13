@@ -4,6 +4,7 @@
  */
 
 #include <SDL3/SDL.h>
+#include "pico_defs.h"
 
 typedef struct cartridge
 {
@@ -12,6 +13,8 @@ typedef struct cartridge
     Uint32 size;
 
     Uint8 cart_data[0x8020];
+    Uint8 code[MAX_CODE_SIZE];
+    Uint32 code_size;
 
 } cartridge_t;
 

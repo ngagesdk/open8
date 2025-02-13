@@ -14,6 +14,8 @@
 
 #define CART_DATA_SIZE 0x8020
 
+#define MAX_CODE_SIZE 65536
+
 #define SCREEN_SIZE 128
 
 #endif // PICO_DEFS_H
