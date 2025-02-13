@@ -32,7 +32,7 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
     fread(data, 1, file_size, file);
     fclose(file);
 
-    Uint32* image_data = stbi_load_from_memory(data, file_size, width, height, bpp, 4);
+    Uint32* image_data = (Uint32*)stbi_load_from_memory(data, file_size, width, height, bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
