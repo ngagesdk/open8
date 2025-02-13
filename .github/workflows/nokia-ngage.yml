@@ -43,7 +43,7 @@ jobs:
       shell: pwsh
 
     - name: Fetch SDK
-      run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/build
+      run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
       shell: pwsh
 
     - name: Clone Pico-8
@@ -52,6 +52,6 @@ jobs:
 
     - name: Build Pico-8
       run: |
-        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
-        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/build
+        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
       shell: pwsh
