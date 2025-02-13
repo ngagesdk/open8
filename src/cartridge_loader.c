@@ -198,7 +198,6 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
     {
         // Code is compressed (old format).
         status = decompress_mini(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
-        //0x4304 - 0x4305 , msb first
         cartridge->code_size = cartridge->cart_data[0x4304] << 8 | cartridge->cart_data[0x4305];
     }
     else if (0x61787000 == header) // \x00 followed by pxa
@@ -209,7 +208,6 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
     }
     else
     {
-        // Up to first null byte, if any.
         for (cartridge->code_size = 0; cartridge->code_size < MAX_CODE_SIZE; cartridge->code_size++)
         {
             if (cartridge->cart_data[0x4300 + cartridge->code_size] == 0)
