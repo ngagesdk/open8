@@ -1,5 +1,7 @@
 # Pico-8 for the N-Gage
 
+![Logo](media/logo.png)
+
 [![Continuous Integration](https://github.com/ngagesdk/Pico-8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/Pico-8/actions/workflows/nokia-ngage.yml)
 
 First of all, this project is not directly related to Pico-8 by Lexaloffle.
