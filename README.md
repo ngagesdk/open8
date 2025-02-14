@@ -26,5 +26,5 @@ The emulator is not yet in a playable state.
   [LICENSE](https://github.com/nothings/stb/blob/master/LICENSE) for
   details.
 
-- - z8lua by Sam Hocevar is used for the Lua interpreter.  It is licensed under the
+- z8lua by Sam Hocevar is used for the Lua interpreter.  It is licensed under the
   "[The WTFPL License](http://www.wtfpl.net)".
