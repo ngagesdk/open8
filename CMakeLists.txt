@@ -52,8 +52,6 @@ set(Pico-8_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_appview.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_document.cpp")
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua)
-
 add_library(game STATIC ${project_sources})
 add_library(Pico-8 STATIC ${Pico-8_sources})
 build_exe_static(game exe ${UID1} ${UID2} ${UID3} "${game_static_libs}" "${game_libs}")
@@ -75,14 +73,6 @@ endif()
 add_dependencies(
   game.exe
   game)
-
-add_dependencies(
-  game
-  z8lua)
-
-target_link_libraries(
-  game
-  z8lua)
 
 target_compile_definitions(
   game
