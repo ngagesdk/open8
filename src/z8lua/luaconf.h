@@ -1,5 +1,5 @@
 /*
-** $Id: luaconf.h,v 1.176.1.1 2013/04/12 18:48:47 roberto Exp roberto $
+** $Id: luaconf.h,v 1.176.1.2 2013/11/21 17:26:16 roberto Exp $
 ** Configuration file for Lua
 ** See Copyright Notice in lua.h
 */
@@ -433,7 +433,7 @@
 /* the following operations need the math library */
 #if defined(lobject_c) || defined(lvm_c)
 #include <math.h>
-#define luai_nummod(L,a,b)	((a)%(b))
+#define luai_nummod(L,a,b)	((a) - l_mathop(floor)((a)/(b))*(b))
 #define luai_numpow(L,a,b)	(l_mathop(pow)(a,b))
 #endif
 
@@ -546,63 +546,6 @@
 */
 
 
-#include <cstdint> // for int16_t
-#include "fix32.h" // for z8::fix32
-
-#undef LUA_USE_STRTODHEX
-#undef LUA_USE_LONGLONG
-#undef LUA_INTEGER
-#undef LUA_NUMBER_DOUBLE
-#undef LUA_NUMBER
-#undef LUA_IEEE754TRICK
-#undef LUA_MSASMTRICK
-#undef LUAI_UACNUMBER
-
-#undef lua_number2str
-#undef l_mathop
-
-#if defined(LUA_USE_READLINE)
-#define LUA_PROMPT	"\x01\x1b[1;95m\x02zepto8\x01\x1b[0m\x02> "
-#define LUA_PROMPT2	"\x01\x1b[1;95m\x02zepto8\x01\x1b[0m\x02>> "
-#else
-#define LUA_PROMPT	"zepto8> "
-#define LUA_PROMPT2	"zepto8>> "
-#endif
-
-#define LUA_PROGNAME	"z8lua"
-#define LUA_INTEGER	int16_t
-#define LUA_NUMBER	z8::fix32
-#define LUAI_UACNUMBER	z8::fix32
-#define l_mathop(x)	(z8::fix32::x)
-
-#define luai_numidiv(L,a,b)	(l_mathop(floor)((a)/(b)))
-#define luai_numband(L,a,b)	((a)&(b))
-#define luai_numbor(L,a,b)	((a)|(b))
-#define luai_numbxor(L,a,b)	((a)^(b))
-#define luai_numshl(L,a,b)	((a)<<int((b)))
-#define luai_numshr(L,a,b)	((a)>>int((b)))
-#define luai_numlshr(L,a,b)	(l_mathop(lshr)((a),int((b))))
-#define luai_numrotl(L,a,b)	(l_mathop(rotl)((a),int((b))))
-#define luai_numrotr(L,a,b)	(l_mathop(rotr)((a),int((b))))
-#define luai_numbnot(L,a)	(~(a))
-#define luai_numpeek(L,a)	(luaV_peek(L,a,1))
-#define luai_numpeek2(L,a)	(luaV_peek(L,a,2))
-#define luai_numpeek4(L,a)	(luaV_peek(L,a,4))
-
-#define lua_number2str(s,n) [&]() { \
-  int i = sprintf(s, "%1.4f", (double)n); \
-  while (i > 0 && s[i - 1] == '0') s[--i] = '\0'; \
-  if (i > 0 && s[i - 1] == '.') s[--i] = '\0'; \
-  return i; }()
-
-#define luai_hashnum(i,n) (i = (n * z8::fix32::frombits(2654435769u)).bits())
-
-static inline z8::fix32 operator/(z8::fix32 x, int y) { return x / z8::fix32(y); }
-static inline z8::fix32 operator+(int x, z8::fix32 y) { return z8::fix32(x) + y; }
-
-static inline bool operator==(z8::fix32 x, int y) { return x == z8::fix32(y); }
-static inline bool operator <(z8::fix32 x, int y) { return x  < z8::fix32(y); }
-static inline bool operator <(int x, z8::fix32 y) { return z8::fix32(x)  < y; }
 
 #endif
 

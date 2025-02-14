@@ -5,6 +5,7 @@
 */
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -168,7 +169,7 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
 #endif
 
 
-static lua_Number readany (const char **s, lua_Number r, int *count, int base, int max = INT_MAX) {
+static lua_Number readany (const char **s, lua_Number r, int *count, int base, int max) {
   for (; lisxdigit(cast_uchar(**s)); (*s)++, max--) {
     if (max > 0) {
       int d = luaO_hexavalue(cast_uchar(**s));
@@ -180,6 +181,17 @@ static lua_Number readany (const char **s, lua_Number r, int *count, int base, i
   return r;
 }
 
+static uint64_t lua_Number_to_bits(lua_Number num) {
+    uint64_t bits;
+    memcpy(&bits, &num, sizeof(bits));
+    return bits;
+}
+
+static lua_Number lua_Number_from_bits(uint64_t bits) {
+    lua_Number num;
+    memcpy(&num, &bits, sizeof(num));
+    return num;
+}
 
 /*
 ** convert an hexadecimal or binary numeric string to a number
@@ -195,7 +207,7 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
                 || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
     return 0.0;  /* invalid format (no '0b' or '0x') */
   s += 2;  /* skip '0x' or '0b' */
-  r = readany(&s, r, &i, base);  /* read integer part */
+  r = readany(&s, r, &i, base, INT_MAX);  /* read integer part */
   if (*s == '.') {
     s++;  /* skip dot */
     f = readany(&s, f, &e, base, base == 2 ? 16 : 4);  /* read fractional part */
@@ -203,7 +215,10 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   if (i == 0 && e == 0)
     return 0.0;  /* invalid format (no digit) */
   *endptr = cast(char *, s);  /* valid up to here */
-  r = lua_Number::frombits(r.bits() | (uint32_t)f.bits() >> (base == 2 ? e : e * 4));
+  uint64_t r_bits = lua_Number_to_bits(r);
+  uint64_t f_bits = lua_Number_to_bits(f);
+  r_bits |= f_bits >> (base == 2 ? e : e * 4);
+  r = lua_Number_from_bits(r_bits);
   return neg ? -r : r;
 }
 

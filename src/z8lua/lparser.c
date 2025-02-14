@@ -1192,7 +1192,7 @@ static void compound (LexState *ls, expdesc *v) {
   expdesc e1 = *v, e2;
   /* compound -> ( `+=' | `-=' | `*=' | `/=' | etc. ) expression */
   BinOpr op = ls->t.token >= TK_ADDE && ls->t.token <= TK_CONCATE ?
-              BinOpr(ls->t.token - TK_ADDE + OPR_ADD) :
+              (BinOpr)(ls->t.token - TK_ADDE + OPR_ADD) :
               OPR_NOBINOPR;
   extra = fs->freereg - fs->nactvar;
   for (i = 0; i < extra; ++i)
