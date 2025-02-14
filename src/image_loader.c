@@ -1,6 +1,11 @@
-/* @file image_loader.c
+/** @file image_loader.c
  *
- */
+ *  A Pico-8 emulator for the Nokia N-Gage.
+ *
+ *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  SPDX-License-Identifier: MIT
+ *
+ **/
 
 #include <SDL3/SDL.h>
 #include "image_loader.h"

@@ -1,7 +1,11 @@
-/* @file emulator.h
+/** @file emulator.h
  *
- * A Pico-8 emulator for the Nokia N-Gage.
- */
+ *  A Pico-8 emulator for the Nokia N-Gage.
+ *
+ *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  SPDX-License-Identifier: MIT
+ *
+ **/
 
 #ifndef EMULATOR_H
 #define EMULATOR_H

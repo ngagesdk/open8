@@ -1,6 +1,11 @@
-/* @file ngage_appui.cpp
+/** @file ngage_appui.cpp
  *
- */
+ *  A Pico-8 emulator for the Nokia N-Gage.
+ *
+ *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  SPDX-License-Identifier: MIT
+ *
+ **/
 
 #include <avkon.hrh>
 #include <aknnotewrappers.h>

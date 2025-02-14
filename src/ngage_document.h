@@ -1,6 +1,11 @@
-/* @file ngage_document.h
+/** @file ngage_document.h
  *
- */
+ *  A Pico-8 emulator for the Nokia N-Gage.
+ *
+ *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  SPDX-License-Identifier: MIT
+ *
+ **/
 
 #ifndef NGAGE_DOCUMENT_H
 #define NGAGE_DOCUMENT_H
