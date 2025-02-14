@@ -545,7 +545,51 @@
 ** without modifying the main part of the file.
 */
 
+#include <math.h>
+#include <stdint.h>
+#include <limits.h>
 
+// Convert double to int64_t safely
+static inline int64_t dbl_to_int(double x) {
+    return (int64_t)x;  // Truncate towards zero
+}
+
+// Convert int64_t back to double
+static inline double int_to_dbl(int64_t x) {
+    return (double)x;
+}
+
+#define luai_numidiv(L,a,b)  (floor((a) / (b)))  // Integer division as floor division
+
+#define luai_numband(L,a,b)  int_to_dbl(dbl_to_int(a) & dbl_to_int(b))
+#define luai_numbor(L,a,b)   int_to_dbl(dbl_to_int(a) | dbl_to_int(b))
+#define luai_numbxor(L,a,b)  int_to_dbl(dbl_to_int(a) ^ dbl_to_int(b))
+#define luai_numshl(L,a,b)   int_to_dbl(dbl_to_int(a) << (int)(b))
+#define luai_numshr(L,a,b)   int_to_dbl(dbl_to_int(a) >> (int)(b))
+
+// Logical shift right (lshr)
+static inline int64_t logical_shift_right(int64_t value, int shift) {
+    return (uint64_t)value >> shift;
+}
+#define luai_numlshr(L,a,b)  int_to_dbl(logical_shift_right(dbl_to_int(a), (int)(b)))
+
+// Rotate left (rotl)
+static inline int64_t rotate_left(int64_t value, int shift) {
+    return (value << shift) | ((uint64_t)value >> (64 - shift));
+}
+#define luai_numrotl(L,a,b)  int_to_dbl(rotate_left(dbl_to_int(a), (int)(b)))
+
+// Rotate right (rotr)
+static inline int64_t rotate_right(int64_t value, int shift) {
+    return ((uint64_t)value >> shift) | (value << (64 - shift));
+}
+#define luai_numrotr(L,a,b)  int_to_dbl(rotate_right(dbl_to_int(a), (int)(b)))
+
+#define luai_numbnot(L,a)    int_to_dbl(~dbl_to_int(a))
+
+#define luai_numpeek(L,a)	(luaV_peek(L,a,1))
+#define luai_numpeek2(L,a)	(luaV_peek(L,a,2))
+#define luai_numpeek4(L,a)	(luaV_peek(L,a,4))
 
 #endif
 
