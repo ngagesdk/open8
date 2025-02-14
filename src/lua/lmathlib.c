@@ -264,6 +264,9 @@ static const luaL_Reg mathlib[] = {
   {NULL, NULL}
 };
 
+#ifndef HUGE_VAL
+#define HUGE_VAL (1.0/0.0)
+#endif
 
 /*
 ** Open math library

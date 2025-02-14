@@ -19,7 +19,7 @@ set(lua_sources
   linit.c
   liolib.c
   llex.c
-  #lmathlib.c
+  lmathlib.c
   lmem.c
   loadlib.c
   lobject.c
@@ -29,7 +29,7 @@ set(lua_sources
   lstate.c
   lstring.c
   lstrlib.c
-  #ltable.c
+  ltable.c
   ltablib.c
   ltm.c
   lua.c
