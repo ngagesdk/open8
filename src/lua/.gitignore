@@ -1,5 +1,0 @@
-Makefile
-*.a
-*.o
-lua
-luac

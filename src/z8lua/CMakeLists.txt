@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(lua)
+project(z8lua)
 
-set(lua_sources
+set(z8lua_sources
   lapi.c
   lauxlib.c
   lbaselib.c
@@ -26,16 +26,17 @@ set(lua_sources
   lopcodes.c
   loslib.c
   lparser.c
+  #lpico8lib.c
   lstate.c
   lstring.c
   lstrlib.c
   ltable.c
   ltablib.c
+  ltests.c
   ltm.c
   lua.c
-  luac.c
   lundump.c
   lvm.c
   lzio.c)
 
-add_library(lua STATIC ${lua_sources})
+add_library(z8lua STATIC ${z8lua_sources})

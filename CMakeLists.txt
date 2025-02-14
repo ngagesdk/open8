@@ -52,7 +52,7 @@ set(Pico-8_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_appview.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_document.cpp")
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/lua)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua)
 
 add_library(game STATIC ${project_sources})
 add_library(Pico-8 STATIC ${Pico-8_sources})
@@ -78,11 +78,11 @@ add_dependencies(
 
 add_dependencies(
   game
-  lua)
+  z8lua)
 
 target_link_libraries(
   game
-  lua)
+  z8lua)
 
 target_compile_definitions(
   game
