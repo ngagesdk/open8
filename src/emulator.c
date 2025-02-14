@@ -1,4 +1,4 @@
-/* @file cartridge_loader.c
+/* @file emulator.c
  *
  * A Pico-8 emulator for the Nokia N-Gage.
  */
@@ -6,9 +6,8 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include "lexaloffle/p8_compress.h"
-#include "cartridge_loader.h"
+#include "emulator.h"
 #include "image_loader.h"
-#include "pico_defs.h"
 #include "stb_image.h"
 
 #include <dirent.h>
@@ -19,14 +18,14 @@ static SDL_Texture* frame;
 static char** available_carts;
 static int num_carts;
 
-static cartridge_t cartridge;
+static cart_t cart;
 static int selection;
 
-static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartridge_t* cartridge);
-static void destroy_cartridge(cartridge_t* cartridge);
+static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart);
+static void destroy_cart(cart_t* cart);
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
 
-bool init_cartridge_loader(SDL_Renderer* renderer)
+bool init_cart_loader(SDL_Renderer* renderer)
 {
     char path[256];
     int width, height, bpp;
@@ -66,19 +65,19 @@ bool init_cartridge_loader(SDL_Renderer* renderer)
 
     if (!num_carts)
     {
-        SDL_Log("No cartridges found in directory: %s", path);
+        SDL_Log("No carts found in directory: %s", path);
         return false;
     }
-    if (!load_cartridge(renderer, (const char*)available_carts[0], &cartridge))
+    if (!load_cart(renderer, (const char*)available_carts[0], &cart))
     {
         return false;
     }
     return true;
 }
 
-void destroy_cartridge_loader(void)
+void destroy_cart_loader(void)
 {
-    destroy_cartridge(&cartridge);
+    destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
     {
         SDL_free(available_carts[i]);
@@ -93,29 +92,29 @@ void destroy_cartridge_loader(void)
     }
 }
 
-void next_cartridge(SDL_Renderer* renderer)
+void select_next(SDL_Renderer* renderer)
 {
-    destroy_cartridge(&cartridge);
+    destroy_cart(&cart);
     selection++;
     if (selection >= num_carts)
     {
         selection = 0;
     }
-    load_cartridge(renderer, available_carts[selection], &cartridge);
+    load_cart(renderer, available_carts[selection], &cart);
 }
 
-void prev_cartridge(SDL_Renderer* renderer)
+void select_prev(SDL_Renderer* renderer)
 {
-    destroy_cartridge(&cartridge);
+    destroy_cart(&cart);
     selection--;
     if (selection < 0)
     {
         selection = num_carts - 1;
     }
-    load_cartridge(renderer, available_carts[selection], &cartridge);
+    load_cart(renderer, available_carts[selection], &cart);
 }
 
-void render_cartridge(SDL_Renderer* renderer, bool with_frame)
+void render_selection(SDL_Renderer* renderer, bool with_frame)
 {
     SDL_FRect source;
     SDL_FRect dest;
@@ -135,11 +134,33 @@ void render_cartridge(SDL_Renderer* renderer, bool with_frame)
         SDL_RenderClear(renderer);
         SDL_RenderTexture(renderer, frame, NULL, NULL);
     }
-    SDL_RenderTexture(renderer, cartridge.image, &source, &dest);
+    SDL_RenderTexture(renderer, cart.image, &source, &dest);
     SDL_RenderPresent(renderer);
 }
 
-static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartridge_t* cartridge)
+bool run_selection(SDL_Renderer* renderer)
+{
+    char path[256];
+
+    if (!cart.is_corrupt)
+    {
+        SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
+        FILE* code_file = fopen(path, "wb+");
+        if (code_file)
+        {
+            fwrite(cart.code, 1, cart.code_size, code_file);
+            fclose(code_file);
+        }
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart)
 {
     int width, height, bpp;
     char path[256];
@@ -157,18 +178,18 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
     long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    cartridge->data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
-    if (!cartridge->data)
+    cart->data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
+    if (!cart->data)
     {
-        SDL_Log("Couldn't allocate memory for cartridge data");
+        SDL_Log("Couldn't allocate memory for cart data");
         fclose(file);
         return 0;
     }
-    fread(cartridge->data, 1, file_size, file);
-    cartridge->size = file_size;
+    fread(cart->data, 1, file_size, file);
+    cart->size = file_size;
     fclose(file);
 
-    Uint32* image_data = stbi_load_from_memory(cartridge->data, cartridge->size, &width, &height, &bpp, 4);
+    Uint32* image_data = stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
@@ -189,57 +210,51 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
         return 0;
     }
 
-    extract_pico8_data((const Uint8*)image_data, cartridge->cart_data);
+    extract_pico8_data((const Uint8*)image_data, cart->cart_data);
 
-    Uint32 header = *(Uint32*)&cartridge->cart_data[0x4300];
-    int status;
+    Uint32 header = *(Uint32*)&cart->cart_data[0x4300];
+    int status = 0;
 
     if (0x003a633a == header) // :c: followed by \x00
     {
         // Code is compressed (old format).
-        status = decompress_mini(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
-        cartridge->code_size = cartridge->cart_data[0x4304] << 8 | cartridge->cart_data[0x4305];
+        status = decompress_mini(&cart->cart_data[0x4300], cart->code, MAX_CODE_SIZE);
+        cart->code_size = cart->cart_data[0x4304] << 8 | cart->cart_data[0x4305];
     }
     else if (0x61787000 == header) // \x00 followed by pxa
     {
         // Code is compressed (new format, v0.2.0+).
-        status = pxa_decompress(&cartridge->cart_data[0x4300], cartridge->code, MAX_CODE_SIZE);
-        cartridge->code_size = cartridge->cart_data[0x4304] << 8 | cartridge->cart_data[0x4305];
+        status = pxa_decompress(&cart->cart_data[0x4300], cart->code, MAX_CODE_SIZE);
+        cart->code_size = cart->cart_data[0x4304] << 8 | cart->cart_data[0x4305];
     }
     else
     {
-        for (cartridge->code_size = 0; cartridge->code_size < MAX_CODE_SIZE; cartridge->code_size++)
+        for (cart->code_size = 0; cart->code_size < MAX_CODE_SIZE; cart->code_size++)
         {
-            if (cartridge->cart_data[0x4300 + cartridge->code_size] == 0)
+            if (cart->cart_data[0x4300 + cart->code_size] == 0)
             {
                 break;
             }
             else
             {
-                cartridge->code[cartridge->code_size] = cartridge->cart_data[0x4300 + cartridge->code_size];
+                cart->code[cart->code_size] = cart->cart_data[0x4300 + cart->code_size];
             }
         }
     }
 
     if (status == 1)
     {
-        SDL_Log("Corrupt code data.");
+        cart->is_corrupt = true;
     }
     else
     {
-        SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
-        FILE* code_file = fopen(path, "wb+");
-        if (code_file)
-        {
-            fwrite(cartridge->code, 1, cartridge->code_size, code_file);
-            fclose(code_file);
-        }
+        cart->is_corrupt = false;
     }
 
     stbi_image_free(image_data);
 
-    cartridge->image = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!cartridge->image)
+    cart->image = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!cart->image)
     {
         SDL_Log("Couldn't create texture: %s", SDL_GetError());
         return 0;
@@ -249,21 +264,21 @@ static int load_cartridge(SDL_Renderer* renderer, const char* file_name, cartrid
     return 1;
 }
 
-static void destroy_cartridge(cartridge_t* cartridge)
+static void destroy_cart(cart_t* cart)
 {
-    if (!cartridge)
+    if (!cart)
     {
         return;
     }
 
-    if (cartridge->image)
+    if (cart->image)
     {
-        SDL_DestroyTexture(cartridge->image);
+        SDL_DestroyTexture(cart->image);
     }
 
-    if (cartridge->data)
+    if (cart->data)
     {
-        SDL_free(cartridge->data);
+        SDL_free(cart->data);
     }
 }
 

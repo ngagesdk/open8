@@ -2,7 +2,7 @@
 
 set(project_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/cartridge_loader.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/emulator.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/image_loader.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/p8_compress.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/pxa_compress_snippets.c)
