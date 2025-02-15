@@ -109,6 +109,7 @@ static void callTM (lua_State *L, const TValue *f, const TValue *p1,
 
 
 void luaV_gettable (lua_State *L, const TValue *t, TValue *key, StkId val) {
+  int loop;
   // PICO-8 0.2.5 changelog: sub(str,pos,pos) can be written as str[pos]
   if (ttisstring(t)) {
     const char *s = svalue(t);
@@ -121,7 +122,6 @@ void luaV_gettable (lua_State *L, const TValue *t, TValue *key, StkId val) {
       setsvalue2s(L, val, luaS_newlstr(L, s + idx, 1));
     return;
   }
-  int loop;
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
     const TValue *tm;
     if (ttistable(t)) {  /* `t' is a table? */

@@ -241,9 +241,9 @@ static void trydecpoint (LexState *ls, SemInfo *seminfo) {
 */
 static void read_numeral (LexState *ls, SemInfo *seminfo) {
   int first = ls->current;
+  int hexa = 0;
   lua_assert(lisdigit(ls->current));
   save_and_next(ls);
-  int hexa = 0;
   if (first == '0') {
     if (check_next(ls, "Xx")) {  /* hexadecimal? */
       hexa = 1;

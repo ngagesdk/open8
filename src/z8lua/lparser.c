@@ -1281,6 +1281,7 @@ static void labelstat (LexState *ls, TString *label, int line) {
 static void whilestat (LexState *ls, int line) {
   /* whilestat -> WHILE cond DO block END */
   FuncState *fs = ls->fs;
+  int short_while;
   int whileinit;
   int condexit;
   BlockCnt bl;
@@ -1289,7 +1290,7 @@ static void whilestat (LexState *ls, int line) {
   whileinit = luaK_getlabel(fs);
   condexit = cond(ls);
   enterblock(fs, &bl, 1);
-  int short_while = ls->t.token != TK_DO && ls->t.token != TK_EOS
+  short_while = ls->t.token != TK_DO && ls->t.token != TK_EOS
                  && ls->braces == 0 && line == ls->linenumber;
   if (short_while)
     ls->emiteol = 1;
@@ -1609,6 +1610,8 @@ static void retstat (LexState *ls) {
 
 static void shortprint (LexState *ls) {
   int line = ls->linenumber;
+  int base, nparams;
+  expdesc args;
   FuncState *fs = ls->fs;
 
   /* same as suffixedexp() except we push "print" first */
@@ -1620,7 +1623,6 @@ static void shortprint (LexState *ls) {
   luaK_exp2nextreg(fs, &f);
 
   /* now we do the same as funcargs() */
-  expdesc args;
   if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)  /* arg list is empty? */
     args.k = VVOID;
   else {
@@ -1631,7 +1633,6 @@ static void shortprint (LexState *ls) {
   if (!testnext(ls, TK_EOS)) /* check that we are at EOL or EOS */
     check_match(ls, TK_EOL, '?', line);
 
-  int base, nparams;
   lua_assert(f.k == VNONRELOC);
   base = f.u.info;  /* base register for call */
   if (hasmultret(args.k))

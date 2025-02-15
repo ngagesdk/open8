@@ -197,6 +197,8 @@ static lua_Number lua_Number_from_bits(uint64_t bits) {
 ** convert an hexadecimal or binary numeric string to a number
 */
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
+  uint64_t r_bits;
+  uint64_t f_bits;
   lua_Number r = 0.0, f = 0.0;
   int e = 0, i = 0;
   int neg = 0;  /* 1 if number is negative */
@@ -215,8 +217,8 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   if (i == 0 && e == 0)
     return 0.0;  /* invalid format (no digit) */
   *endptr = cast(char *, s);  /* valid up to here */
-  uint64_t r_bits = lua_Number_to_bits(r);
-  uint64_t f_bits = lua_Number_to_bits(f);
+  r_bits = lua_Number_to_bits(r);
+  f_bits = lua_Number_to_bits(f);
   r_bits |= f_bits >> (base == 2 ? e : e * 4);
   r = lua_Number_from_bits(r_bits);
   return neg ? -r : r;
