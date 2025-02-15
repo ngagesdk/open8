@@ -10,6 +10,7 @@
 #ifndef API_H
 #define API_H
 
+#include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 
 void register_api(lua_State* L);

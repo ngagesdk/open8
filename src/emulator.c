@@ -10,6 +10,8 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include "lexaloffle/p8_compress.h"
+#include "z8lua/lauxlib.h"
+#include "z8lua/lua.h"
 #include "emulator.h"
 #include "image_loader.h"
 #include "stb_image.h"
@@ -24,6 +26,7 @@ static int num_carts;
 
 static cart_t cart;
 static state_t state;
+static lua_State* vm;
 
 static int selection;
 
@@ -78,11 +81,27 @@ bool init_emulator(SDL_Renderer* renderer)
     {
         return false;
     }
+
+    vm = luaL_newstate();
+    if (!vm)
+    {
+        SDL_Log("Couldn't create Lua state.");
+        return false;
+    }
+    luaL_openlibs(vm);
+    if (luaL_dostring(vm, "print('Lua VM initialized successfully')"))
+    {
+        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        return false;
+    }
+
     return true;
 }
 
 void destroy_emulator(void)
 {
+    lua_close(vm);
+
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
     {
