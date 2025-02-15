@@ -1,4 +1,4 @@
-# Pico-8 for the N-Gage
+# Pico-8 for the Nokia N-Gage
 
 ![Logo](media/logo.png)
 
