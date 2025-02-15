@@ -37,11 +37,20 @@ typedef struct cart
 
 } cart_t;
 
-bool init_cart_loader(SDL_Renderer* renderer);
-void destroy_cart_loader(void);
+typedef enum state
+{
+    STATE_MENU,
+    STATE_EMULATOR
+
+} state_t;
+
+bool init_emulator(SDL_Renderer* renderer);
+void destroy_emulator(void);
 void select_next(SDL_Renderer* renderer);
 void select_prev(SDL_Renderer* renderer);
 void render_selection(SDL_Renderer* renderer, bool with_frame);
 bool run_selection(SDL_Renderer* renderer);
+
+bool handle_event(SDL_Renderer* renderer, SDL_Event* event);
 
 #endif // EMULATOR_H

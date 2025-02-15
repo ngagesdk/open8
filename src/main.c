@@ -46,9 +46,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         SDL_Log("Mix_Init: %s", SDL_GetError());
     }
 
-    if (!init_cart_loader(renderer))
+    if (!init_emulator(renderer))
     {
-        SDL_Log("Couldn't initialize cartridge loader.");
+        SDL_Log("Couldn't initialize emulator.");
         return SDL_APP_FAILURE;
     }
     render_selection(renderer, true);
@@ -59,51 +59,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 // This function runs when a new event (Keypresses, etc) occurs.
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
-    switch (event->type)
+    if (!handle_event(renderer, event))
     {
-        case SDL_EVENT_QUIT:
-        {
-            return SDL_APP_SUCCESS;
-        }
-        case SDL_EVENT_KEY_DOWN:
-        {
-            if (event->key.repeat) // No key repeat.
-            {
-                break;
-            }
-
-            if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
-            {
-                run_selection(renderer);
-                return SDL_APP_CONTINUE;
-            }
-
-            if (event->key.key == SDLK_LEFT)
-            {
-                select_prev(renderer);
-                render_selection(renderer, false);
-                return SDL_APP_CONTINUE;
-            }
-
-            if (event->key.key == SDLK_RIGHT)
-            {
-                select_next(renderer);
-                render_selection(renderer, false);
-                return SDL_APP_CONTINUE;
-            }
-
-            if (event->key.key == SDLK_SOFTLEFT)
-            {
-                return SDL_APP_SUCCESS;
-            }
-
-            else if (event->key.key == SDLK_HASH);
-            {
-                render_selection(renderer, true);
-            }
-
-            break;
-        }
+        return SDL_APP_SUCCESS;
     }
 
     return SDL_APP_CONTINUE;
@@ -119,7 +77,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 // This function runs once at shutdown.
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
-    destroy_cart_loader();
+    destroy_emulator();
     Mix_CloseAudio();
     Mix_Quit();
     // SDL will clean up the window/renderer for us.

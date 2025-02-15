@@ -23,13 +23,15 @@ static char** available_carts;
 static int num_carts;
 
 static cart_t cart;
+static state_t state;
+
 static int selection;
 
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart);
 static void destroy_cart(cart_t* cart);
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
 
-bool init_cart_loader(SDL_Renderer* renderer)
+bool init_emulator(SDL_Renderer* renderer)
 {
     char path[256];
     int width, height, bpp;
@@ -79,7 +81,7 @@ bool init_cart_loader(SDL_Renderer* renderer)
     return true;
 }
 
-void destroy_cart_loader(void)
+void destroy_emulator(void)
 {
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
@@ -159,6 +161,57 @@ bool run_selection(SDL_Renderer* renderer)
     else
     {
         return false;
+    }
+
+    return true;
+}
+
+bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
+{
+    switch (event->type)
+    {
+        case SDL_EVENT_QUIT:
+        {
+            return false;
+        }
+        case SDL_EVENT_KEY_DOWN:
+        {
+            if (event->key.repeat) // No key repeat.
+            {
+                break;
+            }
+
+            if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
+            {
+                run_selection(renderer);
+                return true;
+            }
+
+            if (event->key.key == SDLK_LEFT)
+            {
+                select_prev(renderer);
+                render_selection(renderer, false);
+                return true;
+            }
+
+            if (event->key.key == SDLK_RIGHT)
+            {
+                select_next(renderer);
+                render_selection(renderer, false);
+                return true;
+            }
+
+            if (event->key.key == SDLK_SOFTLEFT)
+            {
+                return false;
+            }
+
+            if (event->key.key == SDLK_HASH);
+            {
+                render_selection(renderer, true);
+            }
+            break;
+        }
     }
 
     return true;
