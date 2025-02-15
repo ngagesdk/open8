@@ -89,6 +89,14 @@ bool init_emulator(SDL_Renderer* renderer)
         return false;
     }
     luaL_openlibs(vm);
+    register_api(vm);
+
+    if (luaL_dostring(vm, "print = function(...) SDL_log(...) end"))
+    {
+        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        return false;
+    }
+
     if (luaL_dostring(vm, "print('Lua VM initialized successfully')"))
     {
         SDL_Log("Lua error: %s", lua_tostring(vm, -1));
@@ -175,6 +183,12 @@ bool run_selection(SDL_Renderer* renderer)
         {
             fwrite(cart.code, 1, cart.code_size, code_file);
             fclose(code_file);
+        }
+
+        if (luaL_dostring(vm, "dofile('cart.p8')"))
+        {
+            SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+            return false;
         }
     }
     else
