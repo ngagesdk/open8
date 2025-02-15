@@ -21,6 +21,7 @@ set(game_static_libs
   ${EPOC_EXTRAS}/lib/armi/urel/SDL3_mixer.lib)
 
 set(game_libs
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/armi/urel/z8lua.lib
   ${EPOC_LIB}/NRenderer.lib
   ${EPOC_LIB}/3dtypes.a
   ${EPOC_LIB}/cone.lib
