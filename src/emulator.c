@@ -199,6 +199,15 @@ bool run_selection(SDL_Renderer* renderer)
     return true;
 }
 
+void run_unit_tests(void)
+{
+    SDL_Log("Run unit tests.");
+    if (luaL_dostring(vm, "dofile('unit_tests.p8')"))
+    {
+        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+    }
+}
+
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
 {
     switch (event->type)
@@ -217,6 +226,12 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
             {
                 run_selection(renderer);
+                return true;
+            }
+
+            if (event->key.key == SDLK_7)
+            {
+                run_unit_tests();
                 return true;
             }
 
