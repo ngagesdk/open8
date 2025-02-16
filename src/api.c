@@ -10,13 +10,23 @@
 #include <SDL3/SDL.h>
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
+#include "z8lua/trigtables.h"
 
 /***
  * Math functions.
  */
 static int pico8_abs(lua_State* L)
 {
-    lua_pushnumber(L, SDL_fabs(lua_tonumber(L, 1)));
+    float value = (float)lua_tonumber(L, 1);
+    if (value == 0x8000)
+    {
+         // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
+        lua_pushnumber(L, 0x7fffffff);
+    }
+    else
+    {
+        lua_pushnumber(L, SDL_fabs(value));
+    }
     return 1;
 }
 
