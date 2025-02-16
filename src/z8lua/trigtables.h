@@ -11,7 +11,7 @@
 //
 
 
-#include <cctype>
+#include <stdint.h>
 
 // This table was generated using the following PICO-8 code:
 //   for i = 0,0.25,0x.0004 do x = i * -4 - sin(i) printh('0x'..sub(tostr(x,1),8,11)..', ') end
