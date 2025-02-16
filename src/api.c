@@ -20,7 +20,7 @@ static int pico8_abs(lua_State* L)
     float value = (float)lua_tonumber(L, 1);
     if (value == 0x8000)
     {
-         // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
+        // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
         lua_pushnumber(L, 0x7fffffff);
     }
     else
@@ -47,7 +47,10 @@ static int pico8_flr(lua_State* L)
 
 static int pico8_max(lua_State* L)
 {
-    return 0;
+    float a = (float)lua_tonumber(L, 1);
+    float b = (float)lua_tonumber(L, 2);
+    lua_pushnumber(L, a > b ? a : b);
+    return 1;
 }
 
 static int pico8_mid(lua_State* L)
@@ -57,7 +60,10 @@ static int pico8_mid(lua_State* L)
 
 static int pico8_min(lua_State* L)
 {
-    return 0;
+    float a = (float)lua_tonumber(L, 1);
+    float b = (float)lua_tonumber(L, 2);
+    lua_pushnumber(L, a < b ? a : b);
+    return 1;
 }
 
 static int pico8_rnd(lua_State* L)
