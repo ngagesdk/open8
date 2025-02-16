@@ -11,53 +11,6 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 
-static int pico8_abs(lua_State* L);
-static int pico8_atan2(lua_State* L);
-static int pico8_cos(lua_State* L);
-static int pico8_flr(lua_State* L);
-static int pico8_max(lua_State* L);
-static int pico8_mid(lua_State* L);
-static int pico8_min(lua_State* L);
-static int pico8_rnd(lua_State* L);
-static int pico8_sgn(lua_State* L);
-static int pico8_sin(lua_State* L);
-static int pico8_sqrt(lua_State* L);
-static int pico8_srand(lua_State* L);
-static int pico8_SDL_log(lua_State* L);
-
-void register_api(lua_State* L)
-{
-    // Math.
-    lua_pushcfunction(L, pico8_abs);
-    lua_setglobal(L, "abs");
-    lua_pushcfunction(L, pico8_atan2);
-    lua_setglobal(L, "atan2");
-    lua_pushcfunction(L, pico8_cos);
-    lua_setglobal(L, "cos");
-    lua_pushcfunction(L, pico8_flr);
-    lua_setglobal(L, "flr");
-    lua_pushcfunction(L, pico8_max);
-    lua_setglobal(L, "max");
-    lua_pushcfunction(L, pico8_mid);
-    lua_setglobal(L, "mid");
-    lua_pushcfunction(L, pico8_min);
-    lua_setglobal(L, "min");
-    lua_pushcfunction(L, pico8_rnd);
-    lua_setglobal(L, "rnd");
-    lua_pushcfunction(L, pico8_sgn);
-    lua_setglobal(L, "sgn");
-    lua_pushcfunction(L, pico8_sin);
-    lua_setglobal(L, "sin");
-    lua_pushcfunction(L, pico8_sqrt);
-    lua_setglobal(L, "sqrt");
-    lua_pushcfunction(L, pico8_srand);
-    lua_setglobal(L, "srand");
-
-    // Debug.
-    lua_pushcfunction(L, pico8_SDL_log);
-    lua_setglobal(L, "SDL_log");
-}
-
 /***
  * Math functions.
  */
@@ -144,4 +97,37 @@ static int pico8_SDL_log(lua_State* L)
         lua_pop(L, 1);
     }
     return 0;
+}
+
+void register_api(lua_State* L)
+{
+    // Math.
+    lua_pushcfunction(L, pico8_abs);
+    lua_setglobal(L, "abs");
+    lua_pushcfunction(L, pico8_atan2);
+    lua_setglobal(L, "atan2");
+    lua_pushcfunction(L, pico8_cos);
+    lua_setglobal(L, "cos");
+    lua_pushcfunction(L, pico8_flr);
+    lua_setglobal(L, "flr");
+    lua_pushcfunction(L, pico8_max);
+    lua_setglobal(L, "max");
+    lua_pushcfunction(L, pico8_mid);
+    lua_setglobal(L, "mid");
+    lua_pushcfunction(L, pico8_min);
+    lua_setglobal(L, "min");
+    lua_pushcfunction(L, pico8_rnd);
+    lua_setglobal(L, "rnd");
+    lua_pushcfunction(L, pico8_sgn);
+    lua_setglobal(L, "sgn");
+    lua_pushcfunction(L, pico8_sin);
+    lua_setglobal(L, "sin");
+    lua_pushcfunction(L, pico8_sqrt);
+    lua_setglobal(L, "sqrt");
+    lua_pushcfunction(L, pico8_srand);
+    lua_setglobal(L, "srand");
+
+    // Debug.
+    lua_pushcfunction(L, pico8_SDL_log);
+    lua_setglobal(L, "SDL_log");
 }
