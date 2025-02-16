@@ -50,6 +50,7 @@ void select_next(SDL_Renderer* renderer);
 void select_prev(SDL_Renderer* renderer);
 void render_selection(SDL_Renderer* renderer, bool with_frame);
 bool run_selection(SDL_Renderer* renderer);
+void run_unit_tests(void);
 
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event);
 
