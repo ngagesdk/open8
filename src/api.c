@@ -1,4 +1,4 @@
-/** @file api.c
+﻿/** @file api.c
  *
  *  A Pico-8 emulator for the Nokia N-Gage.
  *
@@ -8,9 +8,81 @@
  **/
 
 #include <SDL3/SDL.h>
+#include <stdint.h>
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
-#include "z8lua/trigtables.h"
+#include "sin_table.h"
+
+#define TABLE_SIZE 4096
+#define FIXED_SCALE 32767.0  // Scale factor for fixed-point values.
+
+/***
+* Auxiliary functions.
+*/
+
+// Lookup sine using a full circle range [0,1]
+double sin_lookup(double x)
+{
+    if (x < 0.0 || x > 1.0)
+    {
+        x -= (int)x; // Ensure 0 <= x < 1 (handle periodicity).
+    }
+
+    double lookup_x = x * TABLE_SIZE * 2;  // Scale to full sine wave.
+    int index = (int)lookup_x;
+    double fraction = lookup_x - index;
+
+    // Determine actual lookup index based on sine symmetry.
+    if (index < TABLE_SIZE)
+    {
+        // First half (0 to 0.5).
+        double y1 = SIN_TABLE[index] / FIXED_SCALE;
+        double y2 = SIN_TABLE[index + 1] / FIXED_SCALE;
+        return y1 + fraction * (y2 - y1);
+    }
+    else
+    {
+        // Second half (0.5 to 1.0): Use mirroring (sin(x) = -sin(1-x)).
+        int mirrored_index = (2 * TABLE_SIZE - index);
+        double y1 = -SIN_TABLE[mirrored_index] / FIXED_SCALE;
+        double y2 = -SIN_TABLE[mirrored_index - 1] / FIXED_SCALE;
+        return y1 + fraction * (y2 - y1);
+    }
+}
+
+// Cosine lookup using phase shift.
+double cos_lookup(double x)
+{
+    return sin_lookup(x + 0.25 > 1.0 ? x - 0.75 : x + 0.25);
+}
+
+#if 0
+#define PI 3.141592653589793
+static void generate_lookup()
+{
+    FILE *file = fopen("E:\\sin_table.h", "w+");
+    if (!file)
+    {
+        SDL_Log("Error opening file!");
+        return;
+    }
+
+    fprintf(file, "static const short SIN_TABLE[%d] = {\n", TABLE_SIZE);
+
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        double angle = (double)i / TABLE_SIZE * PI; // Half-circle (0 to PI).
+        short value = (short)(sin(angle) * 32767); // Scale to 16-bit fixed point.
+        fprintf(file, "0x%04X%s", (unsigned short)value, (i < TABLE_SIZE - 1) ? ", " : "");
+        if ((i + 1) % 8 == 0) fprintf(file, "\n");
+    }
+
+    fprintf(file, "};\n");
+    fclose(file);
+
+    SDL_Log("Lookup table generated in sin_table.h");
+}
+#endif
 
 /***
  * Math functions.
@@ -37,7 +109,9 @@ static int pico8_atan2(lua_State* L)
 
 static int pico8_cos(lua_State* L)
 {
-    return 0;
+    double x = luaL_checknumber(L, 1);
+    lua_pushnumber(L, cos_lookup(x));
+    return 1;
 }
 
 static int pico8_flr(lua_State* L)
@@ -78,7 +152,9 @@ static int pico8_sgn(lua_State* L)
 
 static int pico8_sin(lua_State* L)
 {
-    return 0;
+    double x = luaL_checknumber(L, 1);
+    lua_pushnumber(L, sin_lookup(x));
+    return 1;
 }
 
 static int pico8_sqrt(lua_State* L)
