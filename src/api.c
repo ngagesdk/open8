@@ -53,8 +53,14 @@ double sin_lookup(double x)
 // Cosine lookup using phase shift.
 double cos_lookup(double x)
 {
-    return sin_lookup(x + 0.25 > 1.0 ? x - 0.75 : x + 0.25);
+    x += 0.25;
+    if (x > 1.0)
+    {
+        x -= 1.0;
+    }
+    return sin_lookup(x);
 }
+
 
 #if 0
 #define PI 3.141592653589793
@@ -109,8 +115,18 @@ static int pico8_atan2(lua_State* L)
 
 static int pico8_cos(lua_State* L)
 {
-    double x = luaL_checknumber(L, 1);
-    lua_pushnumber(L, cos_lookup(x));
+    double angle = luaL_checknumber(L, 1);
+    double cos = cos_lookup(angle);
+
+    if (angle == 0.25)
+    {
+        lua_pushnumber(L, 0.0);
+    }
+    else
+    {
+        lua_pushnumber(L, cos);
+    }
+
     return 1;
 }
 
@@ -152,8 +168,18 @@ static int pico8_sgn(lua_State* L)
 
 static int pico8_sin(lua_State* L)
 {
-    double x = luaL_checknumber(L, 1);
-    lua_pushnumber(L, sin_lookup(x));
+    double angle = luaL_checknumber(L, 1);
+    double sin = sin_lookup(angle);
+
+    if (angle == 0.0 || angle == 1.0 || angle == 0.5)
+    {
+        lua_pushnumber(L, 0.0);
+    }
+    else
+    {
+        lua_pushnumber(L, -sin);
+    }
+
     return 1;
 }
 
