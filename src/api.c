@@ -21,7 +21,7 @@ static int pico8_abs(lua_State* L)
     if (value == 0x8000)
     {
         // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
-        lua_pushnumber(L, 0x7fffffff);
+        lua_pushnumber(L, 32767.9999f);
     }
     else
     {
