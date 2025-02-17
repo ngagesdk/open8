@@ -67,7 +67,7 @@ jobs:
         path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
 
     - name: Install MinGW
-      run: choco install mingw --confirm
+      run: choco install mingw32 --confirm
       shell: pwsh
 
     - name: Build test runner (MinGW)
