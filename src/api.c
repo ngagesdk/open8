@@ -185,7 +185,16 @@ static int pico8_sin(lua_State* L)
 
 static int pico8_sqrt(lua_State* L)
 {
-    return 0;
+    double x = luaL_checknumber(L, 1);
+    double root = 0.0;
+
+    if (x > 0)
+    {
+        root = SDL_sqrt(x);
+    }
+
+    lua_pushnumber(L, (int)(root * 10000) / 10000.0);
+    return 1;
 }
 
 static int pico8_srand(lua_State* L)
