@@ -25,4 +25,6 @@ jobs:
           cmake --build tests
 
       - name: Run API tests
-        run: tests\tests.exe
+        run: |
+          cd tests
+          ./tests.exe
