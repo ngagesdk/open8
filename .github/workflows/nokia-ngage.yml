@@ -65,3 +65,25 @@ jobs:
       with:
         name: Pico-8.sis
         path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
+
+    - name: Build Test runner
+      run: |
+        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests
+        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/tests
+      shell: pwsh
+
+    - name: Verify Test Executable and SDL3.dll
+      run: |
+        ls ${{ env.NGAGESDK }}/projects/Pico-8/tests
+      shell: pwsh
+
+    - name: Run Tests
+      run: |
+        $exePath = "${{ env.NGAGESDK }}/projects/Pico-8/tests/tests.exe"
+        if (Test-Path $exePath) {
+          & $exePath
+        } else {
+          Write-Error "Test application not found!"
+          exit 1
+        }
+      shell: pwsh
