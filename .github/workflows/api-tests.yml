@@ -1,0 +1,28 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  Windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x86
+
+      - name: Build API test runner
+        run: |
+          cmake -G "Ninja" -B tests -S tests -DCMAKE_BUILD_TYPE=Release
+          cmake --build tests
+
+      - name: Run API tests
+        run: tests\tests.exe
