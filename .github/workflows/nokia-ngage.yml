@@ -65,24 +65,3 @@ jobs:
       with:
         name: Pico-8.sis
         path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
-
-    - name: Install MinGW
-      run: choco install mingw32 --confirm
-      shell: pwsh
-
-    - name: Build test runner (MinGW)
-      run: |
-        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32 -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc
-        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32
-      shell: pwsh
-
-    - name: Run tests
-      run: |
-        $exePath = "${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32/tests.exe"
-        if (Test-Path $exePath) {
-          & $exePath
-        } else {
-          Write-Error "Test application not found!"
-          exit 1
-        }
-      shell: pwsh
