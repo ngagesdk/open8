@@ -1,0 +1,10 @@
+!.gitignore
+!tests.c
+!unit_tests.p8
+!CMakeLists.txt
+!CMakeSettings.json
+out
+*.dll
+*.exe
+*.ilk
+*.pdb
