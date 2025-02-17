@@ -1,3 +1,4 @@
+#include <SDL3/SDL.h>
 #include <stdlib.h>
 #include "z8lua/lua.h"
 #include "api.h"
