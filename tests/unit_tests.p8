@@ -46,8 +46,6 @@ function run_tests()
     assert_max_deviation(sin(0.75),   1,      0.0001, "sin(0.75)")
     assert_max_deviation(sin(0.875),  0.7071, 0.0001, "sin(0.875)")
     assert_max_deviation(sin(1),      0,      0.0001, "sin(1)")
-
-    assert_equal(1, 0, "1 == 0")
 end
 
 run_tests()
