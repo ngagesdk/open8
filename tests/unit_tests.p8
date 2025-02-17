@@ -37,6 +37,12 @@ function run_tests()
     assert_max_deviation(cos(0.875),  0.7071, 0.0001, "cos(0.875)")
     assert_max_deviation(cos(1),      1,      0.0001, "cos(1)")
 
+    assert_equal(max(1, 2), 2, "max(1, 2)")
+    assert_equal(max(2, 1), 2, "max(2, 1)")
+
+    assert_equal(min(1, 2), 1, "min(1, 2)")
+    assert_equal(min(2, 1), 1, "min(2, 1)")
+
     assert_max_deviation(sin(0),      0,      0.0001, "sin(0)")
     assert_max_deviation(sin(0.125), -0.7071, 0.0001, "sin(0.125)")
     assert_max_deviation(sin(0.25),  -1,      0.0001, "sin(0.25)")
