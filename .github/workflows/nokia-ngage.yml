@@ -66,9 +66,13 @@ jobs:
         name: Pico-8.sis
         path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
 
-    - name: Build test runner
+    - name: Install MinGW
+      run: choco install mingw --confirm
+      shell: pwsh
+
+    - name: Build test runner (MinGW)
       run: |
-        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32 -DCMAKE_C_COMPILER="cl.exe" -DCMAKE_GENERATOR_TOOLSET="host=x86"
+        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32 -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc
         cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32
       shell: pwsh
 
