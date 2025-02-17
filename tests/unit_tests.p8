@@ -1,10 +1,12 @@
 -- Unit tests.
+local failed_tests = 0
 
 function assert_equal(actual, expected, test_name)
     if actual == expected then
         print(test_name .. " passed")
     else
         print(test_name .. " failed: expected " .. expected .. " but got " .. actual)
+        failed_tests += 1
     end
 end
 
@@ -13,6 +15,7 @@ function assert_max_deviation(actual, expected, deviation, test_name)
         print(test_name .. " passed")
     else
         print(test_name .. " failed: expected " .. expected .. " but got " .. actual)
+        failed_tests += 1
     end
 end
 
@@ -43,6 +46,10 @@ function run_tests()
     assert_max_deviation(sin(0.75),   1,      0.0001, "sin(0.75)")
     assert_max_deviation(sin(0.875),  0.7071, 0.0001, "sin(0.875)")
     assert_max_deviation(sin(1),      0,      0.0001, "sin(1)")
+
+    assert_equal(1, 0, "1 == 0")
 end
 
 run_tests()
+
+return failed_tests
