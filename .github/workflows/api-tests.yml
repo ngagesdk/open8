@@ -27,4 +27,4 @@ jobs:
       - name: Run API Tests
         run: |
           cd tests
-          tests.exe
+          .\tests.exe
