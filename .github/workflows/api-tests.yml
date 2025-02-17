@@ -19,12 +19,12 @@ jobs:
         with:
           arch: x86
 
-      - name: Build API test runner
+      - name: Build API Test runner
         run: |
           cmake -G "Ninja" -B tests -S tests -DCMAKE_BUILD_TYPE=Release
           cmake --build tests
 
-      - name: Run API tests
+      - name: Run API Tests
         run: |
           cd tests
-          ./tests.exe
+          tests.exe
