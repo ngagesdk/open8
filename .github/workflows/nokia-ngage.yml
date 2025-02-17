@@ -68,7 +68,7 @@ jobs:
 
     - name: Build test runner
       run: |
-        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32 -DCMAKE_SYSTEM_NAME=Windows -A Win32
+        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8/tests -B ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32 -DCMAKE_C_COMPILER="cl.exe" -DCMAKE_GENERATOR_TOOLSET="host=x86"
         cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/tests/out/build/Win32
       shell: pwsh
 
