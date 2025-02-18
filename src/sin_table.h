@@ -10,7 +10,9 @@
 #ifndef SIN_TABLE_H
 #define SIN_TABLE_H
 
-static const short SIN_TABLE[4096] =
+#define SIN_TABLE_SIZE 4096
+
+static const short SIN_TABLE[SIN_TABLE_SIZE] =
 {
     0x0000, 0x0019, 0x0032, 0x004B, 0x0064, 0x007D, 0x0096, 0x00AF,
     0x00C9, 0x00E2, 0x00FB, 0x0114, 0x012D, 0x0146, 0x015F, 0x0178,

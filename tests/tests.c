@@ -1,4 +1,4 @@
-#include <SDL3/SDL.h>
+﻿#include <SDL3/SDL.h>
 #include <stdlib.h>
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
@@ -39,5 +39,6 @@ int main()
 
     lua_pop(vm, 1);
     lua_close(vm);
+
     return EXIT_SUCCESS;
 }
