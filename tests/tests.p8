@@ -28,6 +28,11 @@ function run_tests()
     assert_equal(cos(0.875),  0.7071, "cos(0.875)")
     assert_equal(cos(1),      1,      "cos(1)")
 
+    assert_equal(flr(5.9),   5, "flr(5.9)")
+    assert_equal(flr(-5.2), -6, "flr(-5.2)")
+    assert_equal(flr(7),     7, "flr(7)")
+    assert_equal(flr(-7),    7, "flr(-7)")
+
     assert_equal(max(1, 2), 2, "max(1, 2)")
     assert_equal(max(2, 1), 2, "max(2, 1)")
 
