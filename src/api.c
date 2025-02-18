@@ -145,7 +145,31 @@ static int pico8_max(lua_State* L)
 
 static int pico8_mid(lua_State* L)
 {
-    return 0;
+    double first = lua_tonumber(L, 1);
+    double second = lua_tonumber(L, 2);
+    double third = lua_tonumber(L, 3);
+
+    if (first > second)
+    {
+        double temp = first;
+        first = second;
+        second = temp;
+    }
+    if (second > third)
+    {
+        double temp = second;
+        second = third;
+        third = temp;
+    }
+    if (first > second)
+    {
+        double temp = first;
+        first = second;
+        second = temp;
+    }
+    lua_pushnumber(L, second);
+
+    return 1;
 }
 
 static int pico8_min(lua_State* L)

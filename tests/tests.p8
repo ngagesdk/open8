@@ -40,6 +40,10 @@ function run_tests()
     assert_equal(max(1, 2), 2, "max(1, 2)")
     assert_equal(max(2, 1), 2, "max(2, 1)")
 
+    assert_equal(mid(8, 2, 4),           4,   "mid(8, 2, 4)")
+    assert_equal(mid(-3.5, -3.4, -3.6), -3.5, "mid(-3.5, -3.4, -3.6)")
+    --assert_equal(mid(6, 6, 8),           6    "mid(6, 6, 8)")
+
     assert_equal(min(1, 2), 1, "min(1, 2)")
     assert_equal(min(2, 1), 1, "min(2, 1)")
 
