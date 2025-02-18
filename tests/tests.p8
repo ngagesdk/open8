@@ -53,6 +53,10 @@ function run_tests()
     assert_max_deviation(sin(0.875),  0.7071, 0.0001, "sin(0.875)")
     assert_max_deviation(sin(1),      0,      0.0001, "sin(1)")
 
+    assert_equal(sgn(100),  1, "sgn(100)")
+    assert_equal(sgn(0),    1, "sgn(0)")
+    assert_equal(sgn(-14), -1, "sgn(-14)")
+
     assert_equal(sqrt(9),    3,      "sqrt(9)")
     assert_equal(sqrt(2),    1.4142, "sqrt(2)")
     assert_equal(sqrt(0.25), 0.5,    "sqrt(0.25)")

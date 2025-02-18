@@ -163,7 +163,16 @@ static int pico8_rnd(lua_State* L)
 
 static int pico8_sgn(lua_State* L)
 {
-    return 0;
+    double num = luaL_checknumber(L, 1);
+    if (num >= 0)
+    {
+        lua_pushnumber(L, 1.0);
+    }
+    else
+    {
+        lua_pushnumber(L, -1.0);
+    }
+    return 1;
 }
 
 static int pico8_sin(lua_State* L)
