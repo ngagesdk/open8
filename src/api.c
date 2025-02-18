@@ -133,7 +133,9 @@ static int pico8_cos(lua_State* L)
 
 static int pico8_flr(lua_State* L)
 {
-    return 0;
+    double value = SDL_floor(lua_tonumber(L, 1));
+    lua_pushnumber(L, value);
+    return 1;
 }
 
 static int pico8_max(lua_State* L)
