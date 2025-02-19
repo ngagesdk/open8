@@ -125,6 +125,140 @@ static void generate_sin_lookup()
 }
 #endif
 
+/***********************
+ * Graphics functions. *
+ ***********************/
+
+static int pico8_camera(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_circ(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_circfill(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_clip(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_cls(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_color(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_cursor(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_fget(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_fillp(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_flip(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_fset(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_line(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_oval(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_ovalfill(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_pal(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_palt(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_pget(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_print(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_pset(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_rect(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_rectfill(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_sget(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_spr(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_sset(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_sspr(lua_State* L)
+{
+    return 0;
+}
+
+static int pico8_tline(lua_State* L)
+{
+    return 0;
+}
+
 /*******************
  * Math functions. *
  *******************/
@@ -352,6 +486,60 @@ static int pico8_SDL_log(lua_State* L)
 
 void register_api(lua_State* L)
 {
+    // Graphics.
+    lua_pushcfunction(L, pico8_camera);
+    lua_setglobal(L, "camera");
+    lua_pushcfunction(L, pico8_circ);
+    lua_setglobal(L, "circ");
+    lua_pushcfunction(L, pico8_circfill);
+    lua_setglobal(L, "circfill");
+    lua_pushcfunction(L, pico8_clip);
+    lua_setglobal(L, "clip");
+    lua_pushcfunction(L, pico8_cls);
+    lua_setglobal(L, "cls");
+    lua_pushcfunction(L, pico8_color);
+    lua_setglobal(L, "color");
+    lua_pushcfunction(L, pico8_cursor);
+    lua_setglobal(L, "cursor");
+    lua_pushcfunction(L, pico8_fget);
+    lua_setglobal(L, "fget");
+    lua_pushcfunction(L, pico8_fillp);
+    lua_setglobal(L, "fillp");
+    lua_pushcfunction(L, pico8_flip);
+    lua_setglobal(L, "flip");
+    lua_pushcfunction(L, pico8_fset);
+    lua_setglobal(L, "fset");
+    lua_pushcfunction(L, pico8_line);
+    lua_setglobal(L, "line");
+    lua_pushcfunction(L, pico8_oval);
+    lua_setglobal(L, "oval");
+    lua_pushcfunction(L, pico8_ovalfill);
+    lua_setglobal(L, "ovalfill");
+    lua_pushcfunction(L, pico8_pal);
+    lua_setglobal(L, "pal");
+    lua_pushcfunction(L, pico8_palt);
+    lua_setglobal(L, "palt");
+    lua_pushcfunction(L, pico8_pget);
+    lua_setglobal(L, "pget");
+    lua_pushcfunction(L, pico8_print);
+    lua_setglobal(L, "print");
+    lua_pushcfunction(L, pico8_pset);
+    lua_setglobal(L, "pset");
+    lua_pushcfunction(L, pico8_rect);
+    lua_setglobal(L, "rect");
+    lua_pushcfunction(L, pico8_rectfill);
+    lua_setglobal(L, "rectfill");
+    lua_pushcfunction(L, pico8_sget);
+    lua_setglobal(L, "sget");
+    lua_pushcfunction(L, pico8_spr);
+    lua_setglobal(L, "spr");
+    lua_pushcfunction(L, pico8_sset);
+    lua_setglobal(L, "sset");
+    lua_pushcfunction(L, pico8_sspr);
+    lua_setglobal(L, "sspr");
+    lua_pushcfunction(L, pico8_tline);
+    lua_setglobal(L, "tline");
+
     // Math.
     static bool seed_initialized = false;
     if (!seed_initialized)
