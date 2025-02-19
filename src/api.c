@@ -17,7 +17,9 @@
 #define FIXED_SCALE 32767.0 // Scale factor for fixed-point values.
 #define M_PI 3.14159265358979323846
 
-/************************
+static Uint64 seed;
+
+ /************************
  * Auxiliary functions. *
  ************************/
 
@@ -274,6 +276,7 @@ static int pico8_sqrt(lua_State* L)
 
 static int pico8_srand(lua_State* L)
 {
+    seed = (Uint64)luaL_checknumber(L, 1);
     return 0;
 }
 
@@ -308,6 +311,11 @@ static int pico8_SDL_log(lua_State* L)
 void register_api(lua_State* L)
 {
     // Math.
+    if (!seed)
+    {
+        seed = SDL_GetPerformanceCounter();
+    }
+
     lua_pushcfunction(L, pico8_abs);
     lua_setglobal(L, "abs");
     lua_pushcfunction(L, pico8_atan2);
