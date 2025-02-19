@@ -98,6 +98,17 @@ double atan2_lookup(double dy, double dx)
     return ATAN2_TABLE[index];
 }
 
+static Uint64 xorshift64(Uint64 *state)
+{
+    Uint64 x = *state;
+    x ^= x << 13;
+    x ^= x >> 7;
+    x ^= x << 17;
+    *state = x;
+    return x;
+}
+
+
 #if 0
 static void generate_sin_lookup()
 {
@@ -223,9 +234,47 @@ static int pico8_min(lua_State* L)
     return 1;
 }
 
+// This function does not return the same values as PICO-8's rnd() function (yet).
+// Not sure how important this is, but it might be worth looking into.
 static int pico8_rnd(lua_State* L)
 {
-    return 0;
+    if (lua_isnumber(L, 1))
+    {
+        double limit = luaL_optnumber(L, 1, 1.0);
+        if (limit <= 0.0)
+        {
+            lua_pushnumber(L, 0.0);
+        }
+        else
+        {
+            double result = (double)xorshift64(&seed) / (double)(UINT64_MAX + 1.0) * limit;
+            int integer_part = (int)result;
+            int fractional_part = (int)((result - integer_part) * 65536); // 65536 = 2^16
+            result = integer_part + (fractional_part / 65536.0);
+            double rounded_result = ((int)(result * 10000.0 + (result >= 0 ? 0.5 : -0.5))) / 10000.0;
+            lua_pushnumber(L, rounded_result);
+        }
+    }
+    else if (lua_istable(L, 1))
+    {
+        int len = luaL_len(L, 1);
+        if (len == 0)
+        {
+            lua_pushnil(L);
+        }
+        else
+        {
+            int index = xorshift64(&seed) % len + 1;
+            lua_rawgeti(L, 1, index);
+        }
+    }
+    else
+    {
+        double result = (double)xorshift64(&seed) / (double)(UINT64_MAX + 1.0);
+        lua_pushnumber(L, result);
+    }
+
+    return 1;
 }
 
 static int pico8_sgn(lua_State* L)
@@ -276,7 +325,22 @@ static int pico8_sqrt(lua_State* L)
 
 static int pico8_srand(lua_State* L)
 {
-    seed = (Uint64)luaL_checknumber(L, 1);
+    double seed_value = luaL_checknumber(L, 1);
+    if (seed_value != (int)seed_value)
+    {
+        luaL_error(L, "srand expects an integer seed");
+        return 0;
+    }
+
+    seed = (Uint64)seed_value;
+    if (seed == 0)
+    {
+        seed = 1;
+    }
+    else
+    {
+        seed += 0x9E3779B97F4A7C15;
+    }
     return 0;
 }
 
@@ -311,9 +375,12 @@ static int pico8_SDL_log(lua_State* L)
 void register_api(lua_State* L)
 {
     // Math.
-    if (!seed)
+    static bool seed_initialized = false;
+    if (!seed_initialized)
     {
         seed = SDL_GetPerformanceCounter();
+        seed_initialized = true;
+        SDL_srand(seed);
     }
 
     lua_pushcfunction(L, pico8_abs);
