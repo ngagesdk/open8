@@ -17,9 +17,9 @@
 #define FIXED_SCALE 32767.0 // Scale factor for fixed-point values.
 #define M_PI 3.14159265358979323846
 
-/***
-* Auxiliary functions.
-*/
+/************************
+ * Auxiliary functions. *
+ ************************/
 
 // Lookup sine using a full circle range [0,1]
 double sin_lookup(double x)
@@ -123,9 +123,10 @@ static void generate_sin_lookup()
 }
 #endif
 
-/***
- * Math functions.
- */
+/*******************
+ * Math functions. *
+ *******************/
+
 static int pico8_abs(lua_State* L)
 {
     float value = (float)lua_tonumber(L, 1);
@@ -276,9 +277,9 @@ static int pico8_srand(lua_State* L)
     return 0;
 }
 
-/***
- * Debug functions.
- */
+/********************
+ * Debug functions. *
+ ********************/
 
 static int pico8_SDL_log(lua_State* L)
 {
@@ -299,6 +300,10 @@ static int pico8_SDL_log(lua_State* L)
     }
     return 0;
 }
+
+/*********************
+ * API Registration. *
+ *********************/
 
 void register_api(lua_State* L)
 {
