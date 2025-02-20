@@ -10,9 +10,10 @@
 #ifndef API_H
 #define API_H
 
+#include <SDL3/SDL.h>
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 
-void register_api(lua_State* L);
+void register_api(lua_State* L, SDL_Renderer* renderer);
 
 #endif // API_H
