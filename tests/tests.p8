@@ -3,9 +3,9 @@ local failed_tests = 0
 
 function assert_equal(actual, expected, test_name)
     if actual == expected then
-        print(test_name .. " passed")
+        log(test_name .. " passed")
     else
-        print(test_name .. " failed: expected " .. expected .. " but got " .. actual)
+        log(test_name .. " failed: expected " .. expected .. " but got " .. actual)
         failed_tests += 1
     end
 end

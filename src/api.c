@@ -644,7 +644,7 @@ static int pico8_srand(lua_State* L)
  * Debug functions. *
  ********************/
 
-static int pico8_SDL_log(lua_State* L)
+static int pico8_log(lua_State* L)
 {
     int n = lua_gettop(L);
     lua_getglobal(L, "tostring");
@@ -759,6 +759,6 @@ void register_api(lua_State* L)
     lua_setglobal(L, "srand");
 
     // Debug.
-    lua_pushcfunction(L, pico8_SDL_log);
-    lua_setglobal(L, "SDL_log");
+    lua_pushcfunction(L, pico8_log);
+    lua_setglobal(L, "log");
 }

@@ -4,6 +4,8 @@
 #include "z8lua/lualib.h"
 #include "api.h"
 
+static uint8_t ram[32768];
+
 int main()
 {
     lua_State* vm = luaL_newstate();
@@ -12,6 +14,7 @@ int main()
         SDL_Log("Couldn't create Lua state.");
         return EXIT_FAILURE;
     }
+    lua_setpico8memory(vm, ram);
     luaL_openlibs(vm);
     register_api(vm);
 

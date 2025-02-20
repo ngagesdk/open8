@@ -26,6 +26,7 @@ static int num_carts;
 
 static cart_t cart;
 static state_t state;
+static uint8_t ram[32768];
 static lua_State* vm;
 
 static int selection;
@@ -88,16 +89,11 @@ bool init_emulator(SDL_Renderer* renderer)
         SDL_Log("Couldn't create Lua state.");
         return false;
     }
+    lua_setpico8memory(vm, ram);
     luaL_openlibs(vm);
     register_api(vm);
 
-    if (luaL_dostring(vm, "print = function(...) SDL_log(...) end"))
-    {
-        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
-        return false;
-    }
-
-    if (luaL_dostring(vm, "print('Lua VM initialized successfully')"))
+    if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {
         SDL_Log("Lua error: %s", lua_tostring(vm, -1));
         return false;
