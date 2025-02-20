@@ -23,112 +23,6 @@ static Uint64 seed;
  * Auxiliary functions. *
  ************************/
 
-// Lookup sine using a full circle range [0,1]
-double sin_lookup(double x)
-{
-    if (x < 0.0 || x > 1.0)
-    {
-        x -= (int)x; // Ensure 0 <= x < 1 (handle periodicity).
-    }
-
-    double lookup_x = x * SIN_TABLE_SIZE * 2;  // Scale to full sine wave.
-    int index = (int)lookup_x;
-    double fraction = lookup_x - index;
-
-    // Determine actual lookup index based on sine symmetry.
-    if (index < SIN_TABLE_SIZE)
-    {
-        // First half (0 to 0.5).
-        double y1 = SIN_TABLE[index] / FIXED_SCALE;
-        double y2 = SIN_TABLE[index + 1] / FIXED_SCALE;
-        return y1 + fraction * (y2 - y1);
-    }
-    else
-    {
-        // Second half (0.5 to 1.0): Use mirroring (sin(x) = -sin(1-x)).
-        int mirrored_index = (2 * SIN_TABLE_SIZE - index);
-        double y1 = -SIN_TABLE[mirrored_index] / FIXED_SCALE;
-        double y2 = -SIN_TABLE[mirrored_index - 1] / FIXED_SCALE;
-        return y1 + fraction * (y2 - y1);
-    }
-}
-
-// Cosine lookup using phase shift.
-double cos_lookup(double x)
-{
-    x += 0.25;
-    if (x > 1.0)
-    {
-        x -= 1.0;
-    }
-    return sin_lookup(x);
-}
-
-double atan2_lookup(double dy, double dx)
-{
-    if (dy == 0.0 && dx == 0.0)
-    {
-        return 0.25;
-    }
-    else if (dy > 0.0 && dx == 0.0)
-    {
-        return 0.0;
-    }
-
-    double angle = SDL_atan2(dy, dx);
-
-    // Normalize the angle to the range [0, 1].
-    double normalized_angle = angle + M_PI;
-    normalized_angle *= 0.15915494309189535; // 1 / (2 * M_PI)
-
-    // Phase shift to match the lookup table.
-    normalized_angle += 0.25;
-    if (normalized_angle > 1.0)
-    {
-        normalized_angle -= 1.0;
-    }
-
-    unsigned int index = (unsigned int)(normalized_angle * ATAN2_TABLE_SIZE);
-
-    if (index >= ATAN2_TABLE_SIZE)
-    {
-        index = ATAN2_TABLE_SIZE - 1;
-    }
-
-    return ATAN2_TABLE[index];
-}
-
-#if 0
-static void generate_sin_lookup()
-{
-    FILE *file = fopen("sin_table.h", "w+");
-    if (!file)
-    {
-        SDL_Log("Error opening file!");
-        return;
-    }
-
-    fprintf(file, "static const short SIN_TABLE[%d] = {\n", SIN_TABLE_SIZE);
-
-    for (int i = 0; i < SIN_TABLE_SIZE; i++)
-    {
-        double angle = (double)i / SIN_TABLE_SIZE * M_PI; // Half-circle (0 to PI).
-        short value = (short)(sin(angle) * 32767); // Scale to 16-bit fixed point.
-        fprintf(file, "0x%04X%s", (unsigned short)value, (i < SIN_TABLE_SIZE - 1) ? ", " : "");
-        if ((i + 1) % 8 == 0) fprintf(file, "\n");
-    }
-
-    fprintf(file, "};\n");
-    fclose(file);
-
-    SDL_Log("Lookup table generated in sin_table.h");
-}
-#endif
-
-/***********************
- * Graphics functions. *
- ***********************/
-
 static void color_lookup(int col, Uint8* r, Uint8* g, Uint8* b)
 {
     switch (col)
@@ -312,6 +206,112 @@ static void color_lookup(int col, Uint8* r, Uint8* g, Uint8* b)
             break;
     }
 }
+
+// Lookup sine using a full circle range [0,1]
+double sin_lookup(double x)
+{
+    if (x < 0.0 || x > 1.0)
+    {
+        x -= (int)x; // Ensure 0 <= x < 1 (handle periodicity).
+    }
+
+    double lookup_x = x * SIN_TABLE_SIZE * 2;  // Scale to full sine wave.
+    int index = (int)lookup_x;
+    double fraction = lookup_x - index;
+
+    // Determine actual lookup index based on sine symmetry.
+    if (index < SIN_TABLE_SIZE)
+    {
+        // First half (0 to 0.5).
+        double y1 = SIN_TABLE[index] / FIXED_SCALE;
+        double y2 = SIN_TABLE[index + 1] / FIXED_SCALE;
+        return y1 + fraction * (y2 - y1);
+    }
+    else
+    {
+        // Second half (0.5 to 1.0): Use mirroring (sin(x) = -sin(1-x)).
+        int mirrored_index = (2 * SIN_TABLE_SIZE - index);
+        double y1 = -SIN_TABLE[mirrored_index] / FIXED_SCALE;
+        double y2 = -SIN_TABLE[mirrored_index - 1] / FIXED_SCALE;
+        return y1 + fraction * (y2 - y1);
+    }
+}
+
+// Cosine lookup using phase shift.
+double cos_lookup(double x)
+{
+    x += 0.25;
+    if (x > 1.0)
+    {
+        x -= 1.0;
+    }
+    return sin_lookup(x);
+}
+
+double atan2_lookup(double dy, double dx)
+{
+    if (dy == 0.0 && dx == 0.0)
+    {
+        return 0.25;
+    }
+    else if (dy > 0.0 && dx == 0.0)
+    {
+        return 0.0;
+    }
+
+    double angle = SDL_atan2(dy, dx);
+
+    // Normalize the angle to the range [0, 1].
+    double normalized_angle = angle + M_PI;
+    normalized_angle *= 0.15915494309189535; // 1 / (2 * M_PI)
+
+    // Phase shift to match the lookup table.
+    normalized_angle += 0.25;
+    if (normalized_angle > 1.0)
+    {
+        normalized_angle -= 1.0;
+    }
+
+    unsigned int index = (unsigned int)(normalized_angle * ATAN2_TABLE_SIZE);
+
+    if (index >= ATAN2_TABLE_SIZE)
+    {
+        index = ATAN2_TABLE_SIZE - 1;
+    }
+
+    return ATAN2_TABLE[index];
+}
+
+#if 0
+static void generate_sin_lookup()
+{
+    FILE *file = fopen("sin_table.h", "w+");
+    if (!file)
+    {
+        SDL_Log("Error opening file!");
+        return;
+    }
+
+    fprintf(file, "static const short SIN_TABLE[%d] = {\n", SIN_TABLE_SIZE);
+
+    for (int i = 0; i < SIN_TABLE_SIZE; i++)
+    {
+        double angle = (double)i / SIN_TABLE_SIZE * M_PI; // Half-circle (0 to PI).
+        short value = (short)(sin(angle) * 32767); // Scale to 16-bit fixed point.
+        fprintf(file, "0x%04X%s", (unsigned short)value, (i < SIN_TABLE_SIZE - 1) ? ", " : "");
+        if ((i + 1) % 8 == 0) fprintf(file, "\n");
+    }
+
+    fprintf(file, "};\n");
+    fclose(file);
+
+    SDL_Log("Lookup table generated in sin_table.h");
+}
+#endif
+
+/***********************
+ * Graphics functions. *
+ ***********************/
 
 static int pico8_camera(lua_State* L)
 {
