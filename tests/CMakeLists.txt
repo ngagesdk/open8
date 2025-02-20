@@ -17,8 +17,7 @@ message(STATUS "Extracted files are located in: ${sdl3_SOURCE_DIR}")
 
 set(PICO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
-set(tests_sources
-  ${CMAKE_CURRENT_SOURCE_DIR}/tests.c
+set(base_sources
   ${PICO_DIR}/api.c
   ${PICO_DIR}/z8lua/lapi.c
   ${PICO_DIR}/z8lua/lauxlib.c
@@ -54,13 +53,20 @@ set(tests_sources
   ${PICO_DIR}/z8lua/lvm.c
   ${PICO_DIR}/z8lua/lzio.c)
 
+set(tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/tests.c)
+set(graphics_sources ${CMAKE_CURRENT_SOURCE_DIR}/graphics.c)
+
 add_library(SDL3 STATIC IMPORTED)
 
 set_target_properties(SDL3 PROPERTIES
     IMPORTED_LOCATION "${sdl3_SOURCE_DIR}/lib/x86/SDL3.lib")
 
-add_executable(tests ${tests_sources})
+add_executable(tests ${base_sources} ${tests_sources})
 target_link_libraries(tests PRIVATE SDL3)
+
+add_executable(graphics WIN32 ${base_sources} ${graphics_sources})
+target_link_libraries(graphics PRIVATE SDL3)
+
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 configure_file("${sdl3_SOURCE_DIR}/lib/x86/SDL3.dll" ${CMAKE_CURRENT_SOURCE_DIR} COPYONLY)

@@ -91,7 +91,7 @@ bool init_emulator(SDL_Renderer* renderer)
     }
     lua_setpico8memory(vm, ram);
     luaL_openlibs(vm);
-    register_api(vm);
+    register_api(vm, renderer);
 
     if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {

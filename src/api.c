@@ -17,6 +17,7 @@
 #define FIXED_SCALE 32767.0 // Scale factor for fixed-point values.
 #define M_PI 3.14159265358979323846
 
+static SDL_Renderer* r;
 static Uint64 seed;
 
  /************************
@@ -309,6 +310,63 @@ static void generate_sin_lookup()
 }
 #endif
 
+static void draw_circle(double cx, double cy, double radius, int* color, bool fill)
+{
+    Uint8 r_set, g_set, b_set;
+    Uint8 r_prev, g_prev, b_rev, a_prev;
+
+    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
+
+    if (color)
+    {
+        color_lookup(*color, &r_set, &g_set, &b_set);
+        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+    }
+
+    int x = 0;
+    int y = (int)radius;
+    int d = 3 - 2 * (int)radius;
+
+    while (x <= y)
+    {
+        if (fill)
+        {
+            SDL_RenderLine(r, (float)(cx - x), (float)(cy + y), (float)(cx + x), (float)(cy + y));
+            SDL_RenderLine(r, (float)(cx - x), (float)(cy - y), (float)(cx + x), (float)(cy - y));
+            SDL_RenderLine(r, (float)(cx - y), (float)(cy + x), (float)(cx + y), (float)(cy + x));
+            SDL_RenderLine(r, (float)(cx - y), (float)(cy - x), (float)(cx + y), (float)(cy - x));
+        }
+        else
+        {
+            SDL_RenderPoint(r, (float)(cx + x), (float)(cy + y));
+            SDL_RenderPoint(r, (float)(cx - x), (float)(cy + y));
+            SDL_RenderPoint(r, (float)(cx + x), (float)(cy - y));
+            SDL_RenderPoint(r, (float)(cx - x), (float)(cy - y));
+            SDL_RenderPoint(r, (float)(cx + y), (float)(cy + x));
+            SDL_RenderPoint(r, (float)(cx - y), (float)(cy + x));
+            SDL_RenderPoint(r, (float)(cx + y), (float)(cy - x));
+            SDL_RenderPoint(r, (float)(cx - y), (float)(cy - x));
+        }
+
+        if (d < 0)
+        {
+            d += 4 * x + 6;
+        }
+        else
+        {
+            d += 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    }
+
+    if (color)
+    {
+        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
+    }
+}
+
+
 /***********************
  * Graphics functions. *
  ***********************/
@@ -320,11 +378,51 @@ static int pico8_camera(lua_State* L)
 
 static int pico8_circ(lua_State* L)
 {
+    if (!r)
+    {
+        return 0;
+    }
+
+    double cx = luaL_checknumber(L, 1);
+    double cy = luaL_checknumber(L, 2);
+    double radius = luaL_optnumber(L, 3, 4.0);
+    int color;
+
+    if (lua_gettop(L) == 4)
+    {
+        color = luaL_checkinteger(L, 4);
+        draw_circle(cx, cy, radius, &color, false);
+    }
+    else
+    {
+        draw_circle(cx, cy, radius, NULL, false);
+    }
+
     return 0;
 }
 
 static int pico8_circfill(lua_State* L)
 {
+    if (!r)
+    {
+        return 0;
+    }
+
+    double cx = luaL_checknumber(L, 1);
+    double cy = luaL_checknumber(L, 2);
+    double radius = luaL_optnumber(L, 3, 4.0);
+    int color;
+
+    if (lua_gettop(L) == 4)
+    {
+        color = luaL_checkinteger(L, 4);
+        draw_circle(cx, cy, radius, &color, true);
+    }
+    else
+    {
+        draw_circle(cx, cy, radius, NULL, true);
+    }
+
     return 0;
 }
 
@@ -668,8 +766,10 @@ static int pico8_log(lua_State* L)
  * API Registration. *
  *********************/
 
-void register_api(lua_State* L)
+void register_api(lua_State* L, SDL_Renderer* renderer)
 {
+    r = renderer;
+
     // Graphics.
     lua_pushcfunction(L, pico8_camera);
     lua_setglobal(L, "camera");
