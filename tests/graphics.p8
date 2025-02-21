@@ -11,5 +11,6 @@ function assert_equal(actual, expected, test_name)
 end
 
 circfill(64, 64, 32, 8)
+pset(2, 2, 8)
 
 return failed_tests

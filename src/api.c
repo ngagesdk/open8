@@ -310,6 +310,30 @@ static void generate_sin_lookup()
 }
 #endif
 
+static void draw_dot(double x, double y, int* color)
+{
+    if (!r)
+    {
+        return;
+    }
+
+    Uint8 r_set, g_set, b_set;
+    Uint8 r_prev, g_prev, b_rev, a_prev;
+    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
+    if (color)
+    {
+        color_lookup(*color, &r_set, &g_set, &b_set);
+        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+    }
+
+    SDL_RenderPoint(r, (float)x, (float)y);
+
+    if (color)
+    {
+        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
+    }
+}
+
 static void draw_circle(double cx, double cy, double radius, int* color, bool fill)
 {
     if (!r)
@@ -497,6 +521,19 @@ static int pico8_print(lua_State* L)
 
 static int pico8_pset(lua_State* L)
 {
+    double x = luaL_checknumber(L, 1);
+    double y = luaL_checknumber(L, 2);
+
+    if (lua_gettop(L) == 3)
+    {
+        int color = luaL_checkinteger(L, 3);
+        draw_dot(x, y, &color);
+    }
+    else
+    {
+        draw_dot(x, y, NULL);
+    }
+
     return 0;
 }
 
