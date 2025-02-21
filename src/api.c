@@ -395,6 +395,44 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
     }
 }
 
+static void draw_rect(double x0, double y0, double x1, double y1, int* color, bool fill)
+{
+    if (!r)
+    {
+        return;
+    }
+
+    SDL_FRect rect;
+    rect.x = (float)x0;
+    rect.y = (float)y0;
+    rect.w = (float)(x1 - x0);
+    rect.h = (float)(y1 - y0);
+
+    Uint8 r_set, g_set, b_set;
+    Uint8 r_prev, g_prev, b_rev, a_prev;
+    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
+
+    if (color)
+    {
+        color_lookup(*color, &r_set, &g_set, &b_set);
+        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+    }
+
+    if (fill)
+    {
+        SDL_RenderFillRect(r, &rect);
+    }
+    else
+    {
+        SDL_RenderRect(r, &rect);
+    }
+
+    if (color)
+    {
+        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
+    }
+}
+
 /***********************
  * Graphics functions. *
  ***********************/
@@ -469,8 +507,11 @@ static int pico8_fget(lua_State* L)
     return 0;
 }
 
+// Important! The set pattern affects:
+// circ(), circfill(), rect(), rectfill(), pset(), and line().
 static int pico8_fillp(lua_State* L)
 {
+
     return 0;
 }
 
@@ -539,11 +580,41 @@ static int pico8_pset(lua_State* L)
 
 static int pico8_rect(lua_State* L)
 {
+    double x0 = luaL_checknumber(L, 1);
+    double y0 = luaL_checknumber(L, 2);
+    double x1 = luaL_checknumber(L, 3);
+    double y1 = luaL_checknumber(L, 4);
+
+    if (lua_gettop(L) == 5)
+    {
+        int color = luaL_checkinteger(L, 5);
+        draw_rect(x0, y0, x1, y1, &color, false);
+    }
+    else
+    {
+        draw_rect(x0, y0, x1, y1, NULL, false);
+    }
+
     return 0;
 }
 
 static int pico8_rectfill(lua_State* L)
 {
+    double x0 = luaL_checknumber(L, 1);
+    double y0 = luaL_checknumber(L, 2);
+    double x1 = luaL_checknumber(L, 3);
+    double y1 = luaL_checknumber(L, 4);
+
+    if (lua_gettop(L) == 5)
+    {
+        int color = luaL_checkinteger(L, 5);
+        draw_rect(x0, y0, x1, y1, &color, true);
+    }
+    else
+    {
+        draw_rect(x0, y0, x1, y1, NULL, true);
+    }
+
     return 0;
 }
 
