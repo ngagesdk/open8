@@ -9,6 +9,7 @@
 
 #include <SDL3/SDL.h>
 #include <stdint.h>
+#include <wchar.h>
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 #include "atan2_table.h"
@@ -16,9 +17,13 @@
 
 #define FIXED_SCALE 32767.0 // Scale factor for fixed-point values.
 #define M_PI 3.14159265358979323846
+#define RAM_SIZE 0x8000
 
 static SDL_Renderer* r;
 static Uint64 seed;
+static Uint8 fill_mask[0x4000]; // Fill pattern mask.
+
+Uint8 pico8_ram[RAM_SIZE];
 
  /************************
  * Auxiliary functions. *
@@ -310,6 +315,15 @@ static void generate_sin_lookup()
 }
 #endif
 
+static void pset(double x, double y)
+{
+    int index = (int)y * 128 + (int)x;
+    if (!fill_mask[index])
+    {
+        SDL_RenderPoint(r, (float)x, (float)y);
+    }
+}
+
 static void draw_dot(double x, double y, int* color)
 {
     if (!r)
@@ -326,7 +340,7 @@ static void draw_dot(double x, double y, int* color)
         SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
     }
 
-    SDL_RenderPoint(r, (float)x, (float)y);
+    pset(x, y);
 
     if (color)
     {
@@ -360,21 +374,27 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
     {
         if (fill)
         {
-            SDL_RenderLine(r, (float)(cx - x), (float)(cy + y), (float)(cx + x), (float)(cy + y));
-            SDL_RenderLine(r, (float)(cx - x), (float)(cy - y), (float)(cx + x), (float)(cy - y));
-            SDL_RenderLine(r, (float)(cx - y), (float)(cy + x), (float)(cx + y), (float)(cy + x));
-            SDL_RenderLine(r, (float)(cx - y), (float)(cy - x), (float)(cx + y), (float)(cy - x));
+            for (int i = (int)(cx - x); i <= (int)(cx + x); i++)
+            {
+                pset(i, cy + y);
+                pset(i, cy - y);
+            }
+            for (int i = (int)(cx - y); i <= (int)(cx + y); i++)
+            {
+                pset(i, cy + x);
+                pset(i, cy - x);
+            }
         }
         else
         {
-            SDL_RenderPoint(r, (float)(cx + x), (float)(cy + y));
-            SDL_RenderPoint(r, (float)(cx - x), (float)(cy + y));
-            SDL_RenderPoint(r, (float)(cx + x), (float)(cy - y));
-            SDL_RenderPoint(r, (float)(cx - x), (float)(cy - y));
-            SDL_RenderPoint(r, (float)(cx + y), (float)(cy + x));
-            SDL_RenderPoint(r, (float)(cx - y), (float)(cy + x));
-            SDL_RenderPoint(r, (float)(cx + y), (float)(cy - x));
-            SDL_RenderPoint(r, (float)(cx - y), (float)(cy - x));
+            pset(cx + x, cy + y);
+            pset(cx - x, cy + y);
+            pset(cx + x, cy - y);
+            pset(cx - x, cy - y);
+            pset(cx + y, cy + x);
+            pset(cx - y, cy + x);
+            pset(cx + y, cy - x);
+            pset(cx - y, cy - x);
         }
 
         if (d < 0)
@@ -397,40 +417,67 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
 
 static void draw_rect(double x0, double y0, double x1, double y1, int* color, bool fill)
 {
-    if (!r)
+   if (!r)
+   {
+       return;
+   }
+
+   Uint8 r_set, g_set, b_set;
+   Uint8 r_prev, g_prev, b_rev, a_prev;
+   SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
+
+   if (color)
+   {
+       color_lookup(*color, &r_set, &g_set, &b_set);
+       SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+   }
+
+   if (fill)
+   {
+       for (int y = (int)y0; y <= (int)y1; y++)
+       {
+           for (int x = (int)x0; x <= (int)x1; x++)
+           {
+               pset(x, y);
+           }
+       }
+   }
+   else
+   {
+       for (int x = (int)x0; x <= (int)x1; x++)
+       {
+           pset(x, y0);
+           pset(x, y1);
+       }
+       for (int y = (int)y0; y <= (int)y1; y++)
+       {
+           pset(x0, y);
+           pset(x1, y);
+       }
+   }
+
+   if (color)
+   {
+       SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
+   }
+}
+
+static Uint8 peek(Uint16 addr)
+{
+    if (addr >= RAM_SIZE-1)
+    {
+        return 0;
+    }
+    return (pico8_ram[addr]);
+}
+
+static void poke(Uint16 addr, Uint8 data)
+{
+    if (addr >= RAM_SIZE-1)
     {
         return;
     }
-
-    SDL_FRect rect;
-    rect.x = (float)x0;
-    rect.y = (float)y0;
-    rect.w = (float)(x1 - x0);
-    rect.h = (float)(y1 - y0);
-
-    Uint8 r_set, g_set, b_set;
-    Uint8 r_prev, g_prev, b_rev, a_prev;
-    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
-
-    if (color)
-    {
-        color_lookup(*color, &r_set, &g_set, &b_set);
-        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
-    }
-
-    if (fill)
-    {
-        SDL_RenderFillRect(r, &rect);
-    }
-    else
-    {
-        SDL_RenderRect(r, &rect);
-    }
-
-    if (color)
-    {
-        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
-    }
+    pico8_ram[addr] = data;
 }
 
 /***********************
@@ -507,10 +554,69 @@ static int pico8_fget(lua_State* L)
     return 0;
 }
 
-// Important! The set pattern affects:
-// circ(), circfill(), rect(), rectfill(), pset(), and line().
 static int pico8_fillp(lua_State* L)
 {
+    Uint16 pattern = (Uint16)luaL_optunsigned(L, 1, 0);
+
+#if 0
+    // Predefined pattern values.
+    // P8SCI, 128 - 135.
+    switch (pattern)
+    {
+        case 0:
+        case 0x25CB: // 128, Solid.
+            pattern = 0x0000;
+            break;
+        case 0x2588: // 129, Checkerboard.
+            pattern = 0x5A5A;
+            break;
+        case 0x1F431: // 130, Jelpi.
+            pattern = 0x511F;
+            break;
+        case 0x2B07FE0F: // 131, Down key.
+            pattern = 0x0003;
+            break;
+        case 0x2591: // 132, Dot pattern.
+            pattern = 0x7070;
+            break;
+        case 0x273D: // 133, Throwing star.
+            pattern = 0x8810;
+            break;
+        case 0x25CF: // 134, Ball.
+            pattern = 0xF99F;
+            break;
+        case 0x2665: // 135, Heart.
+            pattern = 0x51BF;
+            break;
+        default:
+            break;
+    }
+#endif
+
+    Uint8 high = (pattern & 0xFF00) >> 8;
+    Uint8 low = pattern & 0x00FF;
+
+    poke(0x5f31, high);
+    poke(0x5f32, low);
+
+    // Set fill pattern mask.
+    for (int i = 0; i < 0x4000; i++)
+    {
+        int row = (i / 128) % 4;
+        int col = (i % 128) % 4;
+
+        Uint8 nibble = 0;
+        switch (row)
+        {
+            case 0: nibble = (pattern & 0xF000) >> 12; break;
+            case 1: nibble = (pattern & 0x0F00) >> 8;  break;
+            case 2: nibble = (pattern & 0x00F0) >> 4;  break;
+            case 3: nibble = (pattern & 0x000F);       break;
+        }
+
+        Uint8 pixel = (nibble >> (3 - col)) & 0x1;
+        fill_mask[i] = pixel ? 0xFF : 0x00;
+    }
 
     return 0;
 }
@@ -840,6 +946,117 @@ static int pico8_srand(lua_State* L)
     return 0;
 }
 
+/*********************
+ * Memory functions. *
+ *********************/
+
+static int pico8_peek(lua_State* L)
+{
+  unsigned int addr = luaL_checkunsigned(L, 1);
+  unsigned int len = luaL_optunsigned(L, 2, 1);
+
+  if (len > RAM_SIZE - 1)
+  {
+      len = RAM_SIZE - 1;
+  }
+
+  for (unsigned int i = 0; i < len; i++)
+  {
+      lua_pushnumber(L, (Uint8)peek(addr + i));
+  }
+  return len;
+}
+
+static int pico8_peek2(lua_State* L)
+{
+  unsigned int addr = luaL_checkunsigned(L, 1);
+  unsigned int len = luaL_optunsigned(L, 2, 1);
+
+  if (len > RAM_SIZE - 1)
+  {
+      len = RAM_SIZE - 1;
+  }
+
+  for (unsigned int i = 0; i < len; i++)
+  {
+      Uint16 data = (Uint16)peek(addr + i) << 8 | (Uint16)peek(addr + i + 1);
+      lua_pushnumber(L, data);
+  }
+  return len;
+}
+
+static int pico8_peek4(lua_State* L)
+{
+  unsigned int addr = luaL_checkunsigned(L, 1);
+  unsigned int len = luaL_optunsigned(L, 2, 1);
+
+  if (len > RAM_SIZE - 1)
+  {
+      len = RAM_SIZE - 1;
+  }
+
+  for (unsigned int i = 0; i < len; i++)
+  {
+      Uint32 data = (Uint32)peek(addr + i) << 24 | (Uint32)peek(addr + i + 1) << 16 | (Uint32)peek(addr + i + 2) << 8 | (Uint32)peek(addr + i + 3);
+      lua_pushnumber(L, data);
+  }
+  return len;
+}
+
+static int pico8_poke(lua_State* L)
+{
+    unsigned int addr = luaL_checkunsigned(L, 1);
+    unsigned int n = lua_gettop(L) - 1;
+
+    for (unsigned int i = 0; i < n; i++)
+    {
+        if (addr + i >= RAM_SIZE)
+        {
+            break;
+        }
+        Uint8 data = (Uint8)luaL_checkinteger(L, 2 + i);
+        poke(addr + i, data);
+    }
+
+    return 0;
+}
+
+static int pico8_poke2(lua_State* L)
+{
+    unsigned int addr = luaL_checkunsigned(L, 1);
+    unsigned int n = lua_gettop(L) - 1;
+    for (unsigned int i = 0; i < n; i++)
+    {
+        if (addr + i >= RAM_SIZE - 1)
+        {
+            break;
+        }
+        Uint16 data = (Uint16)luaL_checkinteger(L, 2 + i);
+        poke(addr + i, (Uint8)(data >> 8));
+        poke(addr + i + 1, (Uint8)(data & 0xFF));
+    }
+    return 0;
+}
+
+static int pico8_poke4(lua_State* L)
+{
+    unsigned int addr = luaL_checkunsigned(L, 1);
+    unsigned int n = lua_gettop(L) - 1;
+    for (unsigned int i = 0; i < n; i++)
+    {
+        if (addr + i >= RAM_SIZE - 3)
+        {
+            break;
+        }
+        Uint32 data = (Uint32)luaL_checkinteger(L, 2 + i);
+        poke(addr + i, (Uint8)(data >> 24));
+        poke(addr + i + 1, (Uint8)(data >> 16));
+        poke(addr + i + 2, (Uint8)(data >> 8));
+        poke(addr + i + 3, (Uint8)(data & 0xFF));
+    }
+    return 0;
+}
+
 /********************
  * Debug functions. *
  ********************/
@@ -871,6 +1088,7 @@ static int pico8_log(lua_State* L)
 void register_api(lua_State* L, SDL_Renderer* renderer)
 {
     r = renderer;
+    SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 
     // Graphics.
     lua_pushcfunction(L, pico8_camera);
@@ -959,6 +1177,20 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "sqrt");
     lua_pushcfunction(L, pico8_srand);
     lua_setglobal(L, "srand");
+
+    // Memory.
+    lua_pushcfunction(L, pico8_peek);
+    lua_setglobal(L, "peek");
+    lua_pushcfunction(L, pico8_peek2);
+    lua_setglobal(L, "peek2");
+    lua_pushcfunction(L, pico8_peek4);
+    lua_setglobal(L, "peek4");
+    lua_pushcfunction(L, pico8_poke);
+    lua_setglobal(L, "poke");
+    lua_pushcfunction(L, pico8_poke2);
+    lua_setglobal(L, "poke2");
+    lua_pushcfunction(L, pico8_poke4);
+    lua_setglobal(L, "poke4");
 
     // Debug.
     lua_pushcfunction(L, pico8_log);

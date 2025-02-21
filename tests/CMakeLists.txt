@@ -59,7 +59,7 @@ set(graphics_sources ${CMAKE_CURRENT_SOURCE_DIR}/graphics.c)
 add_library(SDL3 STATIC IMPORTED)
 
 set_target_properties(SDL3 PROPERTIES
-    IMPORTED_LOCATION "${sdl3_SOURCE_DIR}/lib/x86/SDL3.lib")
+  IMPORTED_LOCATION "${sdl3_SOURCE_DIR}/lib/x86/SDL3.lib")
 
 add_executable(tests ${base_sources} ${tests_sources})
 target_link_libraries(tests PRIVATE SDL3)

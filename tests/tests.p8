@@ -1,4 +1,4 @@
--- Unit tests.
+﻿-- Unit tests.
 local failed_tests = 0
 
 function assert_equal(actual, expected, test_name)
@@ -102,6 +102,9 @@ function run_tests()
     srand(5)
     assert_equal(rnd(num_list), 42, "rnd(num_list)")
     --]]
+
+    fillp(0b0011001111001100) -- 0x33CC
+    assert_equal(peek2(0x5F31), 0x33CC, "peek2(0x5F31)")
 end
 
 run_tests()

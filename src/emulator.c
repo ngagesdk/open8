@@ -10,8 +10,9 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include "lexaloffle/p8_compress.h"
-#include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
+#include "z8lua/lualib.h"
+#include "api.h"
 #include "emulator.h"
 #include "image_loader.h"
 #include "stb_image.h"
@@ -26,7 +27,6 @@ static int num_carts;
 
 static cart_t cart;
 static state_t state;
-static uint8_t ram[32768];
 static lua_State* vm;
 
 static int selection;
@@ -89,7 +89,7 @@ bool init_emulator(SDL_Renderer* renderer)
         SDL_Log("Couldn't create Lua state.");
         return false;
     }
-    lua_setpico8memory(vm, ram);
+    lua_setpico8memory(vm, pico8_ram);
     luaL_openlibs(vm);
     register_api(vm, renderer);
 
