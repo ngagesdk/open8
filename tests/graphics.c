@@ -1,11 +1,12 @@
 ﻿#include <SDL3/SDL.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
 #include "api.h"
 #include "Windows.h"
 
-SDL_Renderer* renderer = NULL;
+static SDL_Renderer* renderer = NULL;
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
