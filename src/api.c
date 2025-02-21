@@ -312,6 +312,11 @@ static void generate_sin_lookup()
 
 static void draw_circle(double cx, double cy, double radius, int* color, bool fill)
 {
+    if (!r)
+    {
+        return;
+    }
+
     Uint8 r_set, g_set, b_set;
     Uint8 r_prev, g_prev, b_rev, a_prev;
 
@@ -366,7 +371,6 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
     }
 }
 
-
 /***********************
  * Graphics functions. *
  ***********************/
@@ -378,11 +382,6 @@ static int pico8_camera(lua_State* L)
 
 static int pico8_circ(lua_State* L)
 {
-    if (!r)
-    {
-        return 0;
-    }
-
     double cx = luaL_checknumber(L, 1);
     double cy = luaL_checknumber(L, 2);
     double radius = luaL_optnumber(L, 3, 4.0);
@@ -403,11 +402,6 @@ static int pico8_circ(lua_State* L)
 
 static int pico8_circfill(lua_State* L)
 {
-    if (!r)
-    {
-        return 0;
-    }
-
     double cx = luaL_checknumber(L, 1);
     double cy = luaL_checknumber(L, 2);
     double radius = luaL_optnumber(L, 3, 4.0);
