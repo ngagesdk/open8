@@ -17,6 +17,7 @@
 #include  "config.h"
 
 void register_api(lua_State* L, SDL_Renderer* renderer);
+void reset_draw_state(SDL_Renderer* renderer);
 void update_time(void);
 
 extern Uint8 pico8_ram[RAM_SIZE];

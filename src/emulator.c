@@ -96,6 +96,7 @@ bool init_emulator(SDL_Renderer* renderer)
 
 void destroy_emulator(void)
 {
+    reset_draw_state(r);
     destroy_vm();
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
@@ -187,7 +188,6 @@ bool run_selection(SDL_Renderer* renderer)
     return true;
 }
 
-#if 0
 void run_tests(void)
 {
     SDL_Log("Run unit tests.");
@@ -196,7 +196,6 @@ void run_tests(void)
         SDL_Log("Lua error: %s", lua_tostring(vm, -1));
     }
 }
-#endif
 
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
 {
@@ -222,6 +221,12 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
                 if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
                 {
                     run_selection(renderer);
+                    return true;
+                }
+
+                if (event->key.key == SDLK_7)
+                {
+                    run_tests();
                     return true;
                 }
 
