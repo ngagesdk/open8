@@ -174,7 +174,10 @@ bool run_selection(SDL_Renderer* renderer)
             lua_pop(vm, 1);
             return false;
         }
-        call_pico8_function(vm, "_init");
+        if (is_function_present(vm, "_init"))
+        {
+            call_pico8_function(vm, "_init");
+        }
     }
     else
     {
@@ -267,8 +270,19 @@ bool iterate_emulator(SDL_Renderer* renderer)
     }
     else if (state == STATE_EMULATOR)
     {
-        call_pico8_function(vm, "_update");
-        call_pico8_function(vm, "_draw");
+        if (is_function_present(vm, "_update"))
+        {
+            call_pico8_function(vm, "_update");
+        }
+        else if (is_function_present(vm, "_update60"))
+        {
+            call_pico8_function(vm, "_update60");
+        }
+
+        if (is_function_present(vm, "_draw"))
+        {
+            call_pico8_function(vm, "_draw");
+        }
         SDL_RenderPresent(renderer);
     }
 
@@ -466,13 +480,10 @@ static bool is_function_present(lua_State* L, const char* func_name)
 
 static void call_pico8_function(lua_State* L, const char* func_name)
 {
-    if (is_function_present(L, func_name))
+    lua_getglobal(L, func_name);
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        lua_getglobal(L, func_name);
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-        {
-            SDL_Log("Error calling function %s: %s", func_name, lua_tostring(L, -1));
-            lua_pop(L, 1);
-        }
+        SDL_Log("Error calling function %s: %s", func_name, lua_tostring(L, -1));
+        lua_pop(L, 1);
     }
 }
