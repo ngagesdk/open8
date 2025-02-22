@@ -273,10 +273,12 @@ bool iterate_emulator(SDL_Renderer* renderer)
         if (is_function_present(vm, "_update"))
         {
             call_pico8_function(vm, "_update");
+            update_time();
         }
         else if (is_function_present(vm, "_update60"))
         {
             call_pico8_function(vm, "_update60");
+            update_time();
         }
 
         if (is_function_present(vm, "_draw"))
