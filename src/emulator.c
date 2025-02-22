@@ -32,6 +32,8 @@ static lua_State* vm;
 
 static int selection;
 
+static bool init_vm(SDL_Renderer* renderer);
+static void destroy_vm(void);
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart);
 static void destroy_cart(cart_t* cart);
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
@@ -89,29 +91,12 @@ bool init_emulator(SDL_Renderer* renderer)
         return false;
     }
 
-    vm = luaL_newstate();
-    if (!vm)
-    {
-        SDL_Log("Couldn't create Lua state.");
-        return false;
-    }
-    lua_setpico8memory(vm, pico8_ram);
-    luaL_openlibs(vm);
-    register_api(vm, renderer);
-
-    if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
-    {
-        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
-        return false;
-    }
-
-    return true;
+    return init_vm(renderer);
 }
 
 void destroy_emulator(void)
 {
-    lua_close(vm);
-
+    destroy_vm();
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
     {
@@ -260,6 +245,8 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             {
                 if (event->key.key == SDLK_SOFTLEFT)
                 {
+                    destroy_vm();
+                    init_vm(renderer);
                     state = STATE_MENU;
                     render_selection(renderer, true);
                     return true;
@@ -286,6 +273,31 @@ bool iterate_emulator(SDL_Renderer* renderer)
     }
 
     return true;
+}
+
+static bool init_vm(SDL_Renderer* renderer)
+{
+    vm = luaL_newstate();
+    if (!vm)
+    {
+        SDL_Log("Couldn't create Lua state.");
+        return false;
+    }
+    lua_setpico8memory(vm, pico8_ram);
+    luaL_openlibs(vm);
+    register_api(vm, renderer);
+
+    if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
+    {
+        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        return false;
+    }
+    return true;
+}
+
+static void destroy_vm(void)
+{
+    lua_close(vm);
 }
 
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart)
