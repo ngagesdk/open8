@@ -1092,6 +1092,45 @@ static int pico8_poke4(lua_State* L)
 }
 
 /********************
+ * Table functions. *
+ ********************/
+
+static int pico8_add(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+    int n = luaL_len(L, 1);
+    int index = luaL_optinteger(L, 3, n + 1);
+    luaL_argcheck(L, 1 <= index && index <= n + 1, 3, "index out of range");
+
+    for (int i = n; i >= index; i--)
+    {
+        lua_rawgeti(L, 1, i);
+        lua_rawseti(L, 1, i + 1);
+    }
+
+    lua_pushvalue(L, 2);
+    lua_rawseti(L, 1, index);
+    lua_settop(L, 2);
+    return 1;
+}
+
+static int pico8_foreach(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    int n = luaL_len(L, 1);
+    for (int i = 1; i <= n; i++)
+    {
+        lua_rawgeti(L, 1, i);
+        lua_pushvalue(L, 2);
+        lua_pushvalue(L, -3);
+        lua_pushinteger(L, i);
+        lua_call(L, 2, 0);
+    }
+    return 0;
+}
+
+/********************
  * Debug functions. *
  ********************/
 
@@ -1225,6 +1264,12 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "poke2");
     lua_pushcfunction(L, pico8_poke4);
     lua_setglobal(L, "poke4");
+
+    // Tables.
+    lua_pushcfunction(L, pico8_add);
+    lua_setglobal(L, "add");
+    lua_pushcfunction(L, pico8_foreach);
+    lua_setglobal(L, "foreach");
 
     // Debug.
     lua_pushcfunction(L, pico8_log);
