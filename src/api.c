@@ -340,7 +340,7 @@ static void pset(int x, int y)
     SDL_RenderPoint(r, x, y);
 }
 
-static void draw_dot(double x, double y, int* color)
+static void draw_dot(int x, int y, int* color)
 {
     if (!r)
     {
@@ -365,7 +365,7 @@ static void draw_dot(double x, double y, int* color)
     }
 }
 
-static void draw_circle(double cx, double cy, double radius, int* color, bool fill)
+static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
 {
     if (!r)
     {
@@ -384,19 +384,19 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
     }
 
     int x = 0;
-    int y = (int)radius;
-    int d = 3 - 2 * (int)radius;
+    int y = radius;
+    int d = 3 - 2 * radius;
 
     while (x <= y)
     {
         if (fill)
         {
-            for (int i = (int)(cx - x); i <= (int)(cx + x); i++)
+            for (int i = (cx - x); i <= (cx + x); i++)
             {
                 pset(i, cy + y);
                 pset(i, cy - y);
             }
-            for (int i = (int)(cx - y); i <= (int)(cx + y); i++)
+            for (int i = (cx - y); i <= (cx + y); i++)
             {
                 pset(i, cy + x);
                 pset(i, cy - x);
@@ -432,7 +432,7 @@ static void draw_circle(double cx, double cy, double radius, int* color, bool fi
     }
 }
 
-static void draw_rect(double x0, double y0, double x1, double y1, int* color, bool fill)
+static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
 {
    if (!r)
    {
@@ -451,9 +451,9 @@ static void draw_rect(double x0, double y0, double x1, double y1, int* color, bo
 
    if (fill)
    {
-       for (int y = (int)y0; y <= (int)y1; y++)
+       for (int y = y0; y <= y1; y++)
        {
-           for (int x = (int)x0; x <= (int)x1; x++)
+           for (int x = x0; x <= x1; x++)
            {
                pset(x, y);
            }
@@ -461,12 +461,12 @@ static void draw_rect(double x0, double y0, double x1, double y1, int* color, bo
    }
    else
    {
-       for (int x = (int)x0; x <= (int)x1; x++)
+       for (int x = x0; x <= x1; x++)
        {
            pset(x, y0);
            pset(x, y1);
        }
-       for (int y = (int)y0; y <= (int)y1; y++)
+       for (int y = y0; y <= y1; y++)
        {
            pset(x0, y);
            pset(x1, y);
@@ -839,7 +839,7 @@ static int pico8_cos(lua_State* L)
     else
     {
         double rounded_cos = ((int)(cos * 10000.0 + (cos >= 0 ? 0.5 : -0.5))) / 10000.0;
-        lua_pushnumber(L, rounded_cos);
+        lua_pushnumber(L, cos);
     }
 
     return 1;
@@ -963,8 +963,8 @@ static int pico8_sin(lua_State* L)
     }
     else
     {
-        double rounded_sin = ((int)(sin * 10000.0 + (sin >= 0 ? 0.5 : -0.5))) / 10000.0;
-        lua_pushnumber(L, -rounded_sin);
+        //double rounded_sin = ((int)(sin * 10000.0 + (sin >= 0 ? 0.5 : -0.5))) / 10000.0;
+        lua_pushnumber(L, -sin);
     }
 
     return 1;

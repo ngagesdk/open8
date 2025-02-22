@@ -96,7 +96,6 @@ bool init_emulator(SDL_Renderer* renderer)
 
 void destroy_emulator(void)
 {
-    reset_draw_state(r);
     destroy_vm();
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
