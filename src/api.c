@@ -316,33 +316,28 @@ static void generate_sin_lookup()
 }
 #endif
 
-// This is slow and should be optimized!
-// Is there a better way to apply a fill mask?
-static void pset(double x, double y)
+static void pset(int x, int y)
 {
-   if (x < 0 || x >= 128 || y < 0 || y >= 128)
-   {
-       return;
-   }
+    if ((unsigned)x >= 128 || (unsigned)y >= 128)
+    {
+        return;
+    }
 
-   Uint32* fill_mask_ptr = (Uint32*)fill_mask;
-   if (!*fill_mask_ptr)
-   {
-       x += SCREEN_OFFSET_X;
-       y += SCREEN_OFFSET_Y;
-       SDL_RenderPoint(r, (float)x, (float)y);
-   }
-   else
-   {
-       int index = (int)y * 128 + (int)x;
+    Uint32* fill_mask_ptr = (Uint32*)fill_mask;
 
-       if (!fill_mask[index])
-       {
-           x += SCREEN_OFFSET_X;
-           y += SCREEN_OFFSET_Y;
-           SDL_RenderPoint(r, (float)x, (float)y);
-       }
-   }
+    if (*fill_mask_ptr)
+    {
+        int index = y * 128 + x;
+        if (fill_mask[index])
+        {
+            return;
+        }
+    }
+
+    x += SCREEN_OFFSET_X;
+    y += SCREEN_OFFSET_Y;
+
+    SDL_RenderPoint(r, x, y);
 }
 
 static void draw_dot(double x, double y, int* color)
