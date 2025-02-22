@@ -12,6 +12,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_mixer/SDL_mixer.h>
+#include "config.h"
 #include "emulator.h"
 
 static SDL_Window* window;
@@ -70,7 +71,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 // This function runs once per frame, and is the heart of the program.
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
-    SDL_RenderPresent(renderer);
+    iterate_emulator(renderer);
     return SDL_APP_CONTINUE;
 }
 

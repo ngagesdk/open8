@@ -14,9 +14,10 @@
 #include <stdint.h>
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
+#include  "config.h"
 
 void register_api(lua_State* L, SDL_Renderer* renderer);
 
-extern Uint8 pico8_ram[32768];
+extern Uint8 pico8_ram[RAM_SIZE];
 
 #endif // API_H
