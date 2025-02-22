@@ -1323,7 +1323,7 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "log");
 }
 
-static void reset_draw_state(SDL_Renderer* renderer)
+void reset_draw_state(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
