@@ -972,15 +972,40 @@ static int pico8_sin(lua_State* L)
 
 static int pico8_sqrt(lua_State* L)
 {
-    double x = luaL_checknumber(L, 1);
-    double root = 0.0;
+    // Scale by 10^8 for precision.
+    long long x = luaL_checknumber(L, 1) * 100000000LL;
 
-    if (x > 0)
+    if (x < 0) // Handle negative input safely.
     {
-        root = SDL_sqrt(x);
+        lua_pushinteger(L, 0);
+        return 1;
     }
 
-    lua_pushnumber(L, (int)(root * 10000) / 10000.0);
+    long long root = 0, bit = 1LL << 62; // Start with the highest bit.
+
+    // Find the highest set bit that is <= x
+    while (bit > x)
+    {
+        bit >>= 2;
+    }
+
+    // Compute square root bit by bit.
+    while (bit != 0)
+    {
+        if (x >= root + bit)
+        {
+            x -= root + bit;
+            root = (root >> 1) + bit;
+        }
+        else
+        {
+            root >>= 1;
+        }
+        bit >>= 2;
+    }
+
+    // Convert back to 4 decimal places.
+    lua_pushnumber(L, root / 10000.0);
     return 1;
 }
 
@@ -1296,6 +1321,12 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     // Debug.
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
+}
+
+static void reset_draw_state(SDL_Renderer* renderer)
+{
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+    SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 }
 
 void update_time(void)
