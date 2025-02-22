@@ -13,6 +13,7 @@
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
 #include "api.h"
+#include "config.h"
 #include "emulator.h"
 #include "image_loader.h"
 #include "stb_image.h"
@@ -34,6 +35,8 @@ static int selection;
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart);
 static void destroy_cart(cart_t* cart);
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
+static bool is_function_present(lua_State* L, const char* func_name);
+static void call_pico8_function(lua_State *L, const char *func_name);
 
 bool init_emulator(SDL_Renderer* renderer)
 {
@@ -145,6 +148,8 @@ void select_prev(SDL_Renderer* renderer)
 
 void render_selection(SDL_Renderer* renderer, bool with_frame)
 {
+    SDL_SetRenderTarget(renderer, NULL);
+
     SDL_FRect source;
     SDL_FRect dest;
 
@@ -153,8 +158,8 @@ void render_selection(SDL_Renderer* renderer, bool with_frame)
     source.w = SCREEN_SIZE;
     source.h = SCREEN_SIZE;
 
-    dest.x = 24.f;
-    dest.y = 25.f;
+    dest.x = SCREEN_OFFSET_X;
+    dest.y = SCREEN_OFFSET_Y;
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
@@ -169,23 +174,19 @@ void render_selection(SDL_Renderer* renderer, bool with_frame)
 
 bool run_selection(SDL_Renderer* renderer)
 {
-    char path[256];
+    SDL_memset(pico8_ram, 0x00, RAM_SIZE);
 
     if (!cart.is_corrupt)
     {
-        SDL_snprintf(path, sizeof(path), "%scart.p8", SDL_GetUserFolder(SDL_FOLDER_SAVEDGAMES));
-        FILE* code_file = fopen(path, "wb+");
-        if (code_file)
-        {
-            fwrite(cart.code, 1, cart.code_size, code_file);
-            fclose(code_file);
-        }
+        state = STATE_EMULATOR;
 
-        if (luaL_dostring(vm, "dofile('cart.p8')"))
+        if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
         {
             SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+            lua_pop(vm, 1);
             return false;
         }
+        call_pico8_function(vm, "_init");
     }
     else
     {
@@ -195,6 +196,7 @@ bool run_selection(SDL_Renderer* renderer)
     return true;
 }
 
+#if 0
 void run_tests(void)
 {
     SDL_Log("Run unit tests.");
@@ -203,6 +205,7 @@ void run_tests(void)
         SDL_Log("Lua error: %s", lua_tostring(vm, -1));
     }
 }
+#endif
 
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
 {
@@ -218,44 +221,65 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             {
                 break;
             }
-
-            if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
+            if (state == STATE_MENU)
             {
-                run_selection(renderer);
-                return true;
+                if (event->key.key == SDLK_SOFTLEFT)
+                {
+                    return false;
+                }
+
+                if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
+                {
+                    run_selection(renderer);
+                    return true;
+                }
+
+                if (event->key.key == SDLK_LEFT)
+                {
+                    select_prev(renderer);
+                    render_selection(renderer, false);
+                    return true;
+                }
+
+                if (event->key.key == SDLK_RIGHT)
+                {
+                    select_next(renderer);
+                    render_selection(renderer, false);
+                    return true;
+                }
+
+                if (event->key.key == SDLK_HASH);
+                {
+                    render_selection(renderer, true);
+                }
             }
-
-            if (event->key.key == SDLK_7)
+            else if (state == STATE_EMULATOR)
             {
-                run_tests();
-                return true;
-            }
-
-            if (event->key.key == SDLK_LEFT)
-            {
-                select_prev(renderer);
-                render_selection(renderer, false);
-                return true;
-            }
-
-            if (event->key.key == SDLK_RIGHT)
-            {
-                select_next(renderer);
-                render_selection(renderer, false);
-                return true;
-            }
-
-            if (event->key.key == SDLK_SOFTLEFT)
-            {
-                return false;
-            }
-
-            if (event->key.key == SDLK_HASH);
-            {
-                render_selection(renderer, true);
+                if (event->key.key == SDLK_SOFTLEFT)
+                {
+                    state = STATE_MENU;
+                    render_selection(renderer, true);
+                    return true;
+                }
             }
             break;
         }
+    }
+
+    return true;
+}
+
+bool iterate_emulator(SDL_Renderer* renderer)
+{
+    if (state == STATE_MENU)
+    {
+        render_selection(renderer, false);
+    }
+    else if (state == STATE_EMULATOR)
+    {
+        call_pico8_function(vm, "_update");
+        call_pico8_function(vm, "_draw");
+        SDL_RenderPresent(renderer);
     }
 
     return true;
@@ -290,7 +314,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     cart->size = file_size;
     fclose(file);
 
-    Uint32* image_data = stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
+    Uint32* image_data = (Uint32*)stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
@@ -414,5 +438,26 @@ static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data)
 
         cart_data[data_index] = byte;
         data_index++;
+    }
+}
+
+static bool is_function_present(lua_State* L, const char* func_name)
+{
+    lua_getglobal(L, func_name);
+    bool exists = lua_isfunction(L, -1);
+    lua_pop(L, 1);
+    return exists;
+}
+
+static void call_pico8_function(lua_State* L, const char* func_name)
+{
+    if (is_function_present(L, func_name))
+    {
+        lua_getglobal(L, func_name);
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            SDL_Log("Error calling function %s: %s", func_name, lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
     }
 }

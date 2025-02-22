@@ -13,11 +13,11 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 #include "atan2_table.h"
+#include "config.h"
 #include "sin_table.h"
 
 #define FIXED_SCALE 32767.0 // Scale factor for fixed-point values.
 #define M_PI 3.14159265358979323846
-#define RAM_SIZE 0x8000
 
 static SDL_Renderer* r;
 static Uint64 seed;
@@ -26,8 +26,8 @@ static Uint8 fill_mask[0x4000]; // Fill pattern mask.
 Uint8 pico8_ram[RAM_SIZE];
 
  /************************
- * Auxiliary functions. *
- ************************/
+  * Auxiliary functions. *
+  ************************/
 
 static void color_lookup(int col, Uint8* r, Uint8* g, Uint8* b)
 {
@@ -315,9 +315,20 @@ static void generate_sin_lookup()
 }
 #endif
 
+// This is slow and should be optimized!
+// Is there a better way to apply a fill mask?
 static void pset(double x, double y)
 {
+    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+    {
+        return;
+    }
+
     int index = (int)y * 128 + (int)x;
+
+    x += SCREEN_OFFSET_X;
+    y += SCREEN_OFFSET_Y;
+
     if (!fill_mask[index])
     {
         SDL_RenderPoint(r, (float)x, (float)y);
@@ -331,8 +342,9 @@ static void draw_dot(double x, double y, int* color)
         return;
     }
 
-    Uint8 r_set, g_set, b_set;
+    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
     Uint8 r_prev, g_prev, b_rev, a_prev;
+
     SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
     if (color)
     {
@@ -480,7 +492,7 @@ static void poke(Uint16 addr, Uint8 data)
     pico8_ram[addr] = data;
 }
 
-/***********************
+ /***********************
  * Graphics functions. *
  ***********************/
 
@@ -531,11 +543,32 @@ static int pico8_circfill(lua_State* L)
 
 static int pico8_clip(lua_State* L)
 {
+    // Reset region when calling cls().
     return 0;
 }
 
+// Todo: Reset clip region, reset cursor position to 0,0.
 static int pico8_cls(lua_State* L)
 {
+    int color = luaL_optinteger(L, 1, 0);
+
+    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
+    Uint8 r_prev, g_prev, b_rev, a_prev;
+
+    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
+    if (color)
+    {
+        color_lookup(color, &r_set, &g_set, &b_set);
+        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+    }
+
+    SDL_RenderClear(r);
+
+    if (color)
+    {
+        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
+    }
+
     return 0;
 }
 
@@ -546,6 +579,7 @@ static int pico8_color(lua_State* L)
 
 static int pico8_cursor(lua_State* L)
 {
+    // Reset position when calling cls().
     return 0;
 }
 

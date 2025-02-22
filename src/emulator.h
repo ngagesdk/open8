@@ -12,11 +12,6 @@
 
 #include <SDL3/SDL.h>
 
-#define NGAGE_W 176
-#define NGAGE_H 208
-
-#define SCREEN_SIZE 128
-
 #define CART_WIDTH 160
 #define CART_HEIGHT 205
 #define CART_DATA_SIZE 0x8020
@@ -48,10 +43,11 @@ bool init_emulator(SDL_Renderer* renderer);
 void destroy_emulator(void);
 void select_next(SDL_Renderer* renderer);
 void select_prev(SDL_Renderer* renderer);
-void render_selection(SDL_Renderer* renderer, bool with_frame);
+void render(SDL_Renderer* renderer, bool with_frame);
 bool run_selection(SDL_Renderer* renderer);
 void run_tests(void);
 
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event);
+bool iterate_emulator(SDL_Renderer* renderer);
 
 #endif // EMULATOR_H
