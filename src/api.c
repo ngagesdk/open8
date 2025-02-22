@@ -839,7 +839,7 @@ static int pico8_cos(lua_State* L)
     else
     {
         double rounded_cos = ((int)(cos * 10000.0 + (cos >= 0 ? 0.5 : -0.5))) / 10000.0;
-        lua_pushnumber(L, cos);
+        lua_pushnumber(L, rounded_cos);
     }
 
     return 1;
