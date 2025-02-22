@@ -325,6 +325,8 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     int width, height, bpp;
     char path[256];
 
+    reset_draw_state(renderer);
+
     SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), file_name);
 
     FILE* file = fopen(path, "rb");
