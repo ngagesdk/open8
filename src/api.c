@@ -963,8 +963,8 @@ static int pico8_sin(lua_State* L)
     }
     else
     {
-        //double rounded_sin = ((int)(sin * 10000.0 + (sin >= 0 ? 0.5 : -0.5))) / 10000.0;
-        lua_pushnumber(L, -sin);
+        double rounded_sin = ((int)(sin * 10000.0 + (sin >= 0 ? 0.5 : -0.5))) / 10000.0;
+        lua_pushnumber(L, -rounded_sin);
     }
 
     return 1;
