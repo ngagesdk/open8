@@ -324,14 +324,22 @@ static void pset(double x, double y)
         return;
     }
 
-    int index = (int)y * 128 + (int)x;
-
-    x += SCREEN_OFFSET_X;
-    y += SCREEN_OFFSET_Y;
-
-    if (!fill_mask[index])
+    if (!*(Uint32*)fill_mask)
     {
+        x += SCREEN_OFFSET_X;
+        y += SCREEN_OFFSET_Y;
         SDL_RenderPoint(r, (float)x, (float)y);
+    }
+    else
+    {
+        int index = (int)y * 128 + (int)x;
+
+        if (!fill_mask[index])
+        {
+            x += SCREEN_OFFSET_X;
+            y += SCREEN_OFFSET_Y;
+            SDL_RenderPoint(r, (float)x, (float)y);
+        }
     }
 }
 
