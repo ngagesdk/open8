@@ -22,6 +22,7 @@
 static SDL_Renderer* r;
 static Uint64 seed;
 static Uint8 fill_mask[0x4000]; // Fill pattern mask.
+static Uint64 seconds_since_start;
 
 Uint8 pico8_ram[RAM_SIZE];
 
@@ -319,28 +320,29 @@ static void generate_sin_lookup()
 // Is there a better way to apply a fill mask?
 static void pset(double x, double y)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 128)
-    {
-        return;
-    }
+   if (x < 0 || x >= 128 || y < 0 || y >= 128)
+   {
+       return;
+   }
 
-    if (!*(Uint32*)fill_mask)
-    {
-        x += SCREEN_OFFSET_X;
-        y += SCREEN_OFFSET_Y;
-        SDL_RenderPoint(r, (float)x, (float)y);
-    }
-    else
-    {
-        int index = (int)y * 128 + (int)x;
+   Uint32* fill_mask_ptr = (Uint32*)fill_mask;
+   if (!*fill_mask_ptr)
+   {
+       x += SCREEN_OFFSET_X;
+       y += SCREEN_OFFSET_Y;
+       SDL_RenderPoint(r, (float)x, (float)y);
+   }
+   else
+   {
+       int index = (int)y * 128 + (int)x;
 
-        if (!fill_mask[index])
-        {
-            x += SCREEN_OFFSET_X;
-            y += SCREEN_OFFSET_Y;
-            SDL_RenderPoint(r, (float)x, (float)y);
-        }
-    }
+       if (!fill_mask[index])
+       {
+           x += SCREEN_OFFSET_X;
+           y += SCREEN_OFFSET_Y;
+           SDL_RenderPoint(r, (float)x, (float)y);
+       }
+   }
 }
 
 static void draw_dot(double x, double y, int* color)
@@ -500,9 +502,20 @@ static void poke(Uint16 addr, Uint8 data)
     pico8_ram[addr] = data;
 }
 
+ /***************************
+  * Flow-control functions. *
+  ***************************/
+
+static int pico8_time(lua_State* L)
+{
+    double time = (double)seconds_since_start;
+    lua_pushnumber(L, time);
+    return 1;
+}
+
  /***********************
- * Graphics functions. *
- ***********************/
+  * Graphics functions. *
+  ***********************/
 
 static int pico8_camera(lua_State* L)
 {
@@ -1171,6 +1184,12 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     r = renderer;
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 
+    // Flow-control.
+    lua_pushcfunction(L, pico8_time);
+    lua_setglobal(L, "time");
+    lua_pushcfunction(L, pico8_time);
+    lua_setglobal(L, "t");
+
     // Graphics.
     lua_pushcfunction(L, pico8_camera);
     lua_setglobal(L, "camera");
@@ -1282,4 +1301,9 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     // Debug.
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
+}
+
+void update_time(void)
+{
+    seconds_since_start = (SDL_GetPerformanceCounter() * 3435973837ULL) >> 35;
 }
