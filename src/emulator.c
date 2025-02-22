@@ -70,9 +70,12 @@ bool init_emulator(SDL_Renderer* renderer)
     struct dirent* entry;
     while ((entry = readdir(dir)))
     {
-        available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
-        available_carts[num_carts] = SDL_strdup(entry->d_name);
-        num_carts++;
+       if (SDL_strstr(entry->d_name, ".p8.png"))
+       {
+           available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
+           available_carts[num_carts] = SDL_strdup(entry->d_name);
+           num_carts++;
+       }
     }
     closedir(dir);
 
