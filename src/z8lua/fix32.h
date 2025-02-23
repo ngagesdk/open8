@@ -10,19 +10,19 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
-#pragma once
+#ifndef FIX32_H
+#define FIX32_H
 
-#include <stdint.h>    // int32_t, int64_t, …
-#include <cmath>       // std::abs
-#include <algorithm>   // std::min
-#include <type_traits> // std::enable_if
-
-namespace z8
-{
+#include <stdint.h> // int32_t, int64_t, …
+#include <math.h> // std::abs
 
 struct fix32
 {
-    inline fix32() = default;
+    // Member variable
+    int32_t m_bits;
+
+    // Constructors
+    inline fix32() : m_bits(0) {}
 
     // Convert from/to double
     inline fix32(double d)
@@ -44,42 +44,20 @@ struct fix32
     // one as explicit.
     inline fix32(int32_t x)  : m_bits(int32_t(x << 16)) {}
 
-    inline explicit fix32(uint16_t x) : m_bits(int32_t(x << 16)) {}
-    inline explicit fix32(uint32_t x) : m_bits(int32_t(x << 16)) {}
-    inline explicit fix32(int64_t x)  : m_bits(int32_t(x << 16)) {}
-    inline explicit fix32(uint64_t x) : m_bits(int32_t(x << 16)) {}
-
-    // Support for long and unsigned long when it is a distinct
-    // type from the standard int*_t types, e.g. on Windows.
-    template<typename T,
-             typename std::enable_if<(std::is_same<T, long>::value ||
-                                      std::is_same<T, unsigned long>::value) &&
-                                     !std::is_same<T, int32_t>::value &&
-                                     !std::is_same<T, uint32_t>::value &&
-                                     !std::is_same<T, int64_t>::value &&
-                                     !std::is_same<T, uint64_t>::value>::type *...>
-    inline explicit fix32(T x) : m_bits(int32_t(x << 16)) {}
+    inline fix32(uint16_t x) : m_bits(int32_t(x << 16)) {}
+    inline fix32(uint32_t x) : m_bits(int32_t(x << 16)) {}
+    inline fix32(int64_t x)  : m_bits(int32_t(x << 16)) {}
+    inline fix32(uint64_t x) : m_bits(int32_t(x << 16)) {}
 
     // Explicit casts are all allowed
-    inline explicit operator int8_t()   const { return m_bits >> 16; }
-    inline explicit operator uint8_t()  const { return m_bits >> 16; }
-    inline explicit operator int16_t()  const { return m_bits >> 16; }
-    inline explicit operator uint16_t() const { return m_bits >> 16; }
-    inline explicit operator int32_t()  const { return m_bits >> 16; }
-    inline explicit operator uint32_t() const { return m_bits >> 16; }
-    inline explicit operator int64_t()  const { return m_bits >> 16; }
-    inline explicit operator uint64_t() const { return m_bits >> 16; }
-
-    // Additional casts for long and unsigned long on architectures where
-    // these are not the same types as their cstdint equivalents.
-    template<typename T,
-             typename std::enable_if<(std::is_same<T, long>::value ||
-                                      std::is_same<T, unsigned long>::value) &&
-                                     !std::is_same<T, int32_t>::value &&
-                                     !std::is_same<T, uint32_t>::value &&
-                                     !std::is_same<T, int64_t>::value &&
-                                     !std::is_same<T, uint64_t>::value>::type *...>
-    inline explicit operator T() const { return T(m_bits >> 16); }
+    inline operator int8_t()   const { return m_bits >> 16; }
+    inline operator uint8_t()  const { return m_bits >> 16; }
+    inline operator int16_t()  const { return m_bits >> 16; }
+    inline operator uint16_t() const { return m_bits >> 16; }
+    inline operator int32_t()  const { return m_bits >> 16; }
+    inline operator uint32_t() const { return m_bits >> 16; }
+    inline operator int64_t()  const { return m_bits >> 16; }
+    inline operator uint64_t() const { return m_bits >> 16; }
 
     // Directly initialise bits
     static inline fix32 frombits(int32_t x)
@@ -90,7 +68,7 @@ struct fix32
     inline int32_t bits() const { return m_bits; }
 
     // Comparisons
-    inline explicit operator bool() const { return bool(m_bits); }
+    inline operator bool() const { return bool(m_bits); }
     inline bool operator ==(fix32 x) const { return m_bits == x.m_bits; }
     inline bool operator !=(fix32 x) const { return m_bits != x.m_bits; }
     inline bool operator  <(fix32 x) const { return m_bits  < x.m_bits; }
@@ -123,19 +101,20 @@ struct fix32
     fix32 operator /(fix32 x) const
     {
         // This special case ensures 0x8000/0x1 = 0x8000, not 0x8000.0001
-        if (x.m_bits == 0x1'0000)
+        if (x.m_bits == 0x10000) {
             return *this;
+        }
 
         if (x.m_bits)
         {
-            using std::abs;
-            int64_t result = int64_t(m_bits) * 0x1'0000 / x.m_bits;
-            if (abs(result) <= 0x7fff'ffffu)
+            int64_t result = int64_t(m_bits) * 0x10000 / x.m_bits;
+            if (int64_t(abs(result)) <= 0x7fffffff) {
                 return frombits(int32_t(result));
+            }
         }
 
         // Return 0x8000.0001 (not 0x8000.0000) for -Inf, just like PICO-8
-        return frombits((m_bits ^ x.m_bits) >= 0 ? 0x7fff'ffffu : 0x8000'0001u);
+        return frombits((m_bits ^ x.m_bits) >= 0 ? 0x7fffffff : 0x80000001);
     }
 
     fix32 operator %(fix32 x) const
@@ -155,9 +134,8 @@ struct fix32
 
     inline fix32 operator >>(int y) const
     {
-        using std::min;
         // If y is negative, use << instead.
-        return y < 0 ? *this << -y : frombits(bits() >> min(y, 31));
+        return y < 0 ? *this << -y : frombits(bits() >> (y >= 31 ? 31 : y));
     }
 
     inline fix32& operator +=(fix32 x) { return *this = *this + x; }
@@ -178,7 +156,7 @@ struct fix32
     static inline fix32 max(fix32 a, fix32 b) { return a > b ? a : b; }
 
     static inline fix32 ceil(fix32 x) { return -floor(-x); }
-    static inline fix32 floor(fix32 x) { return frombits(x.m_bits & 0xffff'0000); }
+    static inline fix32 floor(fix32 x) { return frombits(x.m_bits & 0xffff0000); }
 
     static fix32 pow(fix32 x, fix32 y) { return fix32(std::pow(double(x), double(y))); }
 
@@ -199,10 +177,6 @@ struct fix32
         y &= 0x1f;
         return frombits((uint32_t(x.bits()) >> y) | (x.bits() << (32 - y)));
     }
-
-private:
-    int32_t m_bits;
 };
 
-}
-
+#endif // FIX32_H
