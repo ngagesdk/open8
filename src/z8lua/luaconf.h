@@ -383,14 +383,14 @@
 ** ===================================================================
 */
 
-#define LUA_NUMBER_DOUBLE
-#define LUA_NUMBER	double
+//#define LUA_NUMBER_DOUBLE
+//#define LUA_NUMBER	double
 
 /*
 @@ LUAI_UACNUMBER is the result of an 'usual argument conversion'
 @* over a number.
 */
-#define LUAI_UACNUMBER	double
+//#define LUAI_UACNUMBER	double
 
 
 /*
@@ -575,9 +575,11 @@ static int lua_number2str(char* s, fix32_t n) {
 
 #define lua_str2number fix32_from_string
 
-#define LUA_NUMBER_FRMLEN ""
+#undef LUA_NUMBER_SCAN
 #undef LUA_NUMBER_FMT
-#define LUA_NUMBER_FMT  "%d"
+
+#define LUA_NUMBER_SCAN "%d"
+#define LUA_NUMBER_FMT "%d"
 
 #define LUA_PROGNAME   "z8lua"
 #define LUA_INTEGER    int32_t
