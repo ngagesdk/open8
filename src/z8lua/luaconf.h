@@ -545,51 +545,60 @@
 ** without modifying the main part of the file.
 */
 
-#include <math.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include <limits.h>
+#include <stdio.h>
+#include "fix32.h"
 
-// Convert double to int64_t safely
-static inline int64_t dbl_to_int(double x) {
-    return (int64_t)x;  // Truncate towards zero
+#undef LUA_USE_STRTODHEX
+#undef LUA_USE_LONGLONG
+#undef LUA_INTEGER
+#undef LUA_NUMBER_DOUBLE
+#undef LUA_NUMBER
+#undef LUA_IEEE754TRICK
+#undef LUA_MSASMTRICK
+#undef LUAI_UACNUMBER
+
+#undef lua_number2str
+#undef lua_str2number
+
+static int lua_number2str(char* s, fix32_t n) {
+    int i = sprintf(s, "%1.4f", fix32_to_double(n));
+    while (i > 0 && s[i - 1] == '0') {
+		s[--i] = '\0';
+	}
+    if (i > 0 && s[i - 1] == '.') {
+		s[--i] = '\0';
+	}
+    return i;
 }
 
-// Convert int64_t back to double
-static inline double int_to_dbl(int64_t x) {
-    return (double)x;
-}
+#define lua_str2number fix32_from_string
 
-#define luai_numidiv(L,a,b)  (floor((a) / (b)))  // Integer division as floor division
+#define LUA_NUMBER_FRMLEN ""
+#undef LUA_NUMBER_FMT
+#define LUA_NUMBER_FMT  "%d"
 
-#define luai_numband(L,a,b)  int_to_dbl(dbl_to_int(a) & dbl_to_int(b))
-#define luai_numbor(L,a,b)   int_to_dbl(dbl_to_int(a) | dbl_to_int(b))
-#define luai_numbxor(L,a,b)  int_to_dbl(dbl_to_int(a) ^ dbl_to_int(b))
-#define luai_numshl(L,a,b)   int_to_dbl(dbl_to_int(a) << (int)(b))
-#define luai_numshr(L,a,b)   int_to_dbl(dbl_to_int(a) >> (int)(b))
+#define LUA_PROGNAME   "z8lua"
+#define LUA_INTEGER    int32_t
+#define LUA_NUMBER     fix32_t
+#define LUAI_UACNUMBER fix32_t
 
-// Logical shift right (lshr)
-static inline int64_t logical_shift_right(int64_t value, int shift) {
-    return (uint64_t)value >> shift;
-}
-#define luai_numlshr(L,a,b)  int_to_dbl(logical_shift_right(dbl_to_int(a), (int)(b)))
+#define luai_numidiv(L,a,b) (fix32_floor(fix32_div((a),(b))))
+#define luai_numband(L,a,b) (fix32_and((a),(b)))
+#define luai_numbor(L,a,b)  (fix32_or((a),(b)))
+#define luai_numbxor(L,a,b) (fix32_xor((a),(b)))
+#define luai_numshl(L,a,b)  (fix32_shl((a),(b)))
+#define luai_numshr(L,a,b)  (fix32_shr((a),(b)))
+#define luai_numlshr(L,a,b) (fix32_lshr((a),(b)))
+#define luai_numrotl(L,a,b) (fix32_rotl((a),(b)))
+#define luai_numrotr(L,a,b) (fix32_rotr((a),(b)))
+#define luai_numbnot(L,a)   (fix32_not((a)))
+#define luai_numpeek(L,a) (luaV_peek(L,a,1))
+#define luai_numpeek2(L,a) (luaV_peek(L,a,2))
+#define luai_numpeek4(L,a) (luaV_peek(L,a,4))
 
-// Rotate left (rotl)
-static inline int64_t rotate_left(int64_t value, int shift) {
-    return (value << shift) | ((uint64_t)value >> (64 - shift));
-}
-#define luai_numrotl(L,a,b)  int_to_dbl(rotate_left(dbl_to_int(a), (int)(b)))
-
-// Rotate right (rotr)
-static inline int64_t rotate_right(int64_t value, int shift) {
-    return ((uint64_t)value >> shift) | (value << (64 - shift));
-}
-#define luai_numrotr(L,a,b)  int_to_dbl(rotate_right(dbl_to_int(a), (int)(b)))
-
-#define luai_numbnot(L,a)    int_to_dbl(~dbl_to_int(a))
-
-#define luai_numpeek(L,a)	(luaV_peek(L,a,1))
-#define luai_numpeek2(L,a)	(luaV_peek(L,a,2))
-#define luai_numpeek4(L,a)	(luaV_peek(L,a,4))
+#define luai_hashnum(i,n) (i = fix32_mul(n, 2654435769u))
 
 #endif
 

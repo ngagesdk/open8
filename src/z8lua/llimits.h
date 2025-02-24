@@ -200,6 +200,10 @@ typedef lu_int32 Instruction;
 ** both small and large values (outside the range of integers).
 */
 
+#define lua_number2int(i,n)     ((i) = fix32_to_int32((fix32_t)(n)))
+#define lua_number2integer(i,n) ((i) = (lua_Integer)(n))
+#define lua_number2unsigned(i,n)  ((i) = (lua_Unsigned)(n))
+
 #if defined(MS_ASMTRICK) || defined(LUA_MSASMTRICK)	/* { */
 /* trick with Microsoft assembler for X86 */
 
