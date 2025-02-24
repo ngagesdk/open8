@@ -95,7 +95,8 @@ static int pico8_atan2(lua_State *l) {
 static int pico8_sqrt(lua_State *l) {
     int64_t root = 0, x = ((int64_t)lua_tonumber(l, 1)) << 16;
     if (x > 0) {
-        for (int64_t a = ((int64_t)1) << 46; a; a >>= 2, root >>= 1) {
+        int64_t a;
+        for (a = ((int64_t)1) << 46; a; a >>= 2, root >>= 1) {
             if (x >= a + root) {
                 x -= a + root;
                 root += a << 1;
@@ -227,10 +228,12 @@ static int pico8_tonum(lua_State *l) {
             uint16_t flags = lua_gettop(l) >= 2 ? lua_tointeger(l, 2) : 0;
             if (flags & 0x1) {
                 char buffer[9];
-                for (size_t i = 0; s[i] != '\0'; ++i) {
+                uint32_t bits;
+                size_t i;
+                for (i = 0; s[i] != '\0'; ++i) {
                     buffer[i] = isxdigit(s[i]) ? s[i] : '0';
                 }
-                uint32_t bits = strtol(buffer, NULL, 16);
+                bits = strtol(buffer, NULL, 16);
                 if (flags & 0x2) bits >>= 16;
                 lua_pushnumber(l, bits);
                 return 1;
@@ -254,9 +257,10 @@ static int pico8_tonum(lua_State *l) {
 
 static int pico8_chr(lua_State *l) {
     char s[248];
+    size_t i;
     size_t numargs = lua_gettop(l);
     if (numargs > sizeof(s)) numargs = sizeof(s);
-    for (size_t i = 0; i < numargs; i++) {
+    for (i = 0; i < numargs; i++) {
         s[i] = (char)(uint8_t)lua_tonumber(l, i + 1);
     }
     lua_pushlstring(l, s, numargs);
@@ -265,6 +269,7 @@ static int pico8_chr(lua_State *l) {
 
 static int pico8_ord(lua_State *l) {
     size_t len;
+    int i;
     int n = 0;
     int count = 1;
     char const *s = luaL_checklstring(l, 1, &len);
@@ -283,24 +288,30 @@ static int pico8_ord(lua_State *l) {
         count = len - n;
     }
     lua_checkstack(l, count);
-    for (int i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         lua_pushnumber(l, (uint8_t)s[n + i]);
     }
     return count;
 }
 
 static int pico8_split(lua_State *l) {
+    size_t count = 0, hlen;
+    char const* haystack;
+    int size = 0;
+    char needle = ',';
+    int convert;
+    char const* end;
+    char const* parser;
+
     if (lua_isnil(l, 1)) {
         return 0;
     }
-    size_t count = 0, hlen;
-    char const *haystack = luaL_checklstring(l, 1, &hlen);
+    count = 0, hlen;
+    haystack = luaL_checklstring(l, 1, &hlen);
     if (!haystack) {
         return 0;
     }
     lua_newtable(l);
-    int size = 0;
-    char needle = ',';
     if (lua_isnumber(l, 2)) {
         size = (int)lua_tonumber(l, 2);
         if (size <= 0)
@@ -308,16 +319,17 @@ static int pico8_split(lua_State *l) {
     } else if (lua_isstring(l, 2)) {
         needle = *lua_tostring(l, 2);
     }
-    int convert = lua_isnone(l, 3) || lua_toboolean(l, 3);
-    char const *end = haystack + hlen + (!size && needle);
-    for (char const *parser = haystack; parser < end; ) {
+    convert = lua_isnone(l, 3) || lua_toboolean(l, 3);
+    end = haystack + hlen + (!size && needle);
+    for (parser = haystack; parser < end; ) {
         fix32_t num;
+        char saved;
         char const *next = size ? parser + size
                          : needle ? (char const*)memchr(parser, needle, end - parser) : parser + 1;
         if (!next || next > end) {
             next = haystack + hlen;
         }
-        char saved = *next;
+        saved = *next;
         *(char *)next = '\0';
         if (convert && luaO_str2d(parser, next - parser, &num)) {
             lua_pushnumber(l, num);

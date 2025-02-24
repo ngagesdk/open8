@@ -14,6 +14,7 @@
 #define FIX32_H
 
 #include <stdint.h> // int32_t, int64_t, …
+#include <math.h> // pow()
 
 typedef int32_t fix32_t;
 
@@ -251,7 +252,7 @@ static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
 
     if (b) {
         int64_t result = (int64_t)a * 0x10000 / b;
-        if (llabs(result) <= 0x7fffffff) {
+        if (abs(result) <= 0x7fffffff) {
             return (int32_t)result;
         }
     }
@@ -260,8 +261,9 @@ static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
 }
 
 static inline fix32_t fix32_mod(fix32_t a, fix32_t b) {
+    int32_t result;
     b = fix32_abs(b);
-    int32_t result = b ? a % b : 0;
+    result = b ? a % b : 0;
     return result >= 0 ? result : result + b;
 }
 
