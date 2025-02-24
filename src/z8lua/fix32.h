@@ -16,6 +16,8 @@
 #include <stdint.h> // int32_t, int64_t, …
 #include <math.h> // pow()
 
+extern long long llabs(long long n);
+
 typedef int32_t fix32_t;
 
 static inline fix32_t fix32_from_string(const char* s, char** endptr);
@@ -252,7 +254,7 @@ static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
 
     if (b) {
         int64_t result = (int64_t)a * 0x10000 / b;
-        if (abs(result) <= 0x7fffffff) {
+        if (llabs(result) <= 0x7fffffff) {
             return (int32_t)result;
         }
     }
