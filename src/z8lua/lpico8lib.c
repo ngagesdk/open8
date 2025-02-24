@@ -113,7 +113,16 @@ static int pico8_abs(lua_State *l) {
 }
 
 static int pico8_sgn(lua_State *l) {
-    lua_pushnumber(l, lua_tonumber(l, 1) >= 0 ? 1 : -1);
+    int32_t number = fix32_to_int32(lua_tonumber(l, 1));
+    fix32_t result;
+
+    if (number >= 0) {
+        result = fix32_from_int32(1);
+    } else {
+        result = fix32_from_int32(-1);
+    }
+
+    lua_pushnumber(l, result);
     return 1;
 }
 
