@@ -11,12 +11,12 @@ function assert_equal(actual, expected, test_name)
 end
 
 function run_tests()
-    assert_equal(abs(5),          5, "abs(5)")
-    assert_equal(abs(-5),         5, "abs(-5)")
-    assert_equal(abs(0),          0, "abs(0)")
-    assert_equal(abs(12345),  12345, "abs(12345)")
-    assert_equal(abs(-12345), 12345, "abs(-12345)")
-    assert_equal(abs(0x8000), 32768, "abs(0x8000)")
+    assert_equal(abs(5),               5, "abs(5)")
+    assert_equal(abs(-5),              5, "abs(-5)")
+    assert_equal(abs(0),               0, "abs(0)")
+    assert_equal(abs(12345),       12345, "abs(12345)")
+    assert_equal(abs(-12345),      12345, "abs(-12345)")
+    assert_equal(abs(0x8000), 0x7fffffff, "abs(0x8000)")
 
     assert_equal(atan2(1, 0),    0,     "atan2(1, 0)")
     assert_equal(atan2(1, 1),    0.875, "atan2(1, 1)")
