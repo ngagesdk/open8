@@ -74,20 +74,24 @@ static int pico8_sin(lua_State *l) {
 }
 
 static int pico8_atan2(lua_State *l) {
-    fix32_t x = lua_tonumber(l, 1);
-    fix32_t y = lua_tonumber(l, 2);
+    lua_Number x = lua_tonumber(l, 1);
+    lua_Number y = lua_tonumber(l, 2);
     int32_t bits = 0x4000;
     if (x) {
-        fix32_t q = (fix32_abs(y) << 16) / fix32_abs(x);
+        // Use std::abs() instead of fix32::abs() to emulate PICO-8’s behaviour
+        // with e.g. atan2(0x8000, 0x8000.0001)
+        fix32_t q = (abs((int64_t)y) << 16) / abs((int64_t)x);
         if (q > 0x10000) {
-            bits -= atantable[((int64_t)(1) << 32) / q >> 5];
-        } else {
+            bits -= atantable[((int64_t)1 << 32) / q >> 5];
+        }
+        else {
             bits = atantable[q >> 5];
         }
     }
     if (x < 0) { bits = 0x8000 - bits; }
     if (y > 0) { bits = -bits & 0xffff; }
-    if (x && y == (int32_t)(0x80000000)) { bits = -bits & 0xffff; }
+    // Emulate a bug in PICO-8 with e.g. atan2(1, 0x8000)
+    if (x && y == (int32_t)0x80000000) bits = -bits & 0xffff;
     lua_pushnumber(l, bits);
     return 1;
 }
