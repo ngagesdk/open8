@@ -35,13 +35,13 @@ set(base_sources
   ${PICO_DIR}/z8lua/linit.c
   ${PICO_DIR}/z8lua/liolib.c
   ${PICO_DIR}/z8lua/llex.c
-  ${PICO_DIR}/z8lua/lmathlib.c
   ${PICO_DIR}/z8lua/lmem.c
   ${PICO_DIR}/z8lua/loadlib.c
   ${PICO_DIR}/z8lua/lobject.c
   ${PICO_DIR}/z8lua/lopcodes.c
   ${PICO_DIR}/z8lua/loslib.c
   ${PICO_DIR}/z8lua/lparser.c
+  ${PICO_DIR}/z8lua/lpico8lib.c
   ${PICO_DIR}/z8lua/lstate.c
   ${PICO_DIR}/z8lua/lstring.c
   ${PICO_DIR}/z8lua/lstrlib.c
