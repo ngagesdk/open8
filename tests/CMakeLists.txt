@@ -22,7 +22,6 @@ set(base_sources
   ${PICO_DIR}/z8lua/lapi.c
   ${PICO_DIR}/z8lua/lauxlib.c
   ${PICO_DIR}/z8lua/lbaselib.c
-  ${PICO_DIR}/z8lua/lbitlib.c
   ${PICO_DIR}/z8lua/lcode.c
   ${PICO_DIR}/z8lua/lcorolib.c
   ${PICO_DIR}/z8lua/lctype.c
@@ -33,21 +32,17 @@ set(base_sources
   ${PICO_DIR}/z8lua/lfunc.c
   ${PICO_DIR}/z8lua/lgc.c
   ${PICO_DIR}/z8lua/linit.c
-  ${PICO_DIR}/z8lua/liolib.c
   ${PICO_DIR}/z8lua/llex.c
-  ${PICO_DIR}/z8lua/lmathlib.c
   ${PICO_DIR}/z8lua/lmem.c
-  ${PICO_DIR}/z8lua/loadlib.c
   ${PICO_DIR}/z8lua/lobject.c
   ${PICO_DIR}/z8lua/lopcodes.c
-  ${PICO_DIR}/z8lua/loslib.c
   ${PICO_DIR}/z8lua/lparser.c
+  ${PICO_DIR}/z8lua/lpico8lib.c
   ${PICO_DIR}/z8lua/lstate.c
   ${PICO_DIR}/z8lua/lstring.c
   ${PICO_DIR}/z8lua/lstrlib.c
   ${PICO_DIR}/z8lua/ltable.c
   ${PICO_DIR}/z8lua/ltablib.c
-  ${PICO_DIR}/z8lua/ltests.c
   ${PICO_DIR}/z8lua/ltm.c
   ${PICO_DIR}/z8lua/lundump.c
   ${PICO_DIR}/z8lua/lvm.c
