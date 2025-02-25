@@ -11,12 +11,15 @@ function assert_equal(actual, expected, test_name)
 end
 
 function run_tests()
-    assert_equal(abs(5),               5, "abs(5)")
-    assert_equal(abs(-5),              5, "abs(-5)")
-    assert_equal(abs(0),               0, "abs(0)")
-    assert_equal(abs(12345),       12345, "abs(12345)")
-    assert_equal(abs(-12345),      12345, "abs(-12345)")
-    assert_equal(abs(0x8000), 0x7fffffff, "abs(0x8000)")
+    local epsilon = 0.0000152587890625
+    local lt_one = 1.0 - epsilon
+
+    assert_equal(abs(5),                    5, "abs(5)")
+    assert_equal(abs(-5),                   5, "abs(-5)")
+    assert_equal(abs(0),                    0, "abs(0)")
+    assert_equal(abs(12345),            12345, "abs(12345)")
+    assert_equal(abs(-12345),           12345, "abs(-12345)")
+    assert_equal(abs(0x8000), 0x7fff + lt_one, "abs(0x8000)")
 
     assert_equal(atan2(1, 0),    0,     "atan2(1, 0)")
     assert_equal(atan2(1, 1),    0.875, "atan2(1, 1)")
@@ -29,6 +32,8 @@ function run_tests()
     assert_equal(atan2(0, 0),    0.25,  "atan2(0, 0)")
     assert_equal(atan2(99, 99),  0.875, "atan2(99, 99)")
 
+    -- These tests aren't right. The results of the functions aren't raw fixed
+    -- point integers from the perspective of this Lua code.
     assert_equal(cos(0),     0x00010000, "cos(0)")
     assert_equal(cos(0.125), 0x0000b505, "cos(0.125)")
     assert_equal(cos(0.25),  0x00000000, "cos(0.25)")

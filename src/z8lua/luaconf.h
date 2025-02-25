@@ -433,21 +433,21 @@
 /* the following operations need the math library */
 #if defined(lobject_c) || defined(lvm_c)
 #include <math.h>
-#define luai_nummod(L,a,b)	((a) - l_mathop(floor)((a)/(b))*(b))
-#define luai_numpow(L,a,b)	(l_mathop(pow)(a,b))
+#define luai_nummod(L,a,b)	((a) - l_mathop(fix32_floor)((a)/(b))*(b))
+#define luai_numpow(L,a,b)	(l_mathop(fix32_pow)((a),(b)))
 #endif
 
 /* these are quite standard operations */
 #if defined(LUA_CORE)
-#define luai_numadd(L,a,b)	((a)+(b))
-#define luai_numsub(L,a,b)	((a)-(b))
-#define luai_nummul(L,a,b)	((a)*(b))
-#define luai_numdiv(L,a,b)	((a)/(b))
-#define luai_numunm(L,a)	(-(a))
-#define luai_numeq(a,b)		((a)==(b))
-#define luai_numlt(L,a,b)	((a)<(b))
-#define luai_numle(L,a,b)	((a)<=(b))
-#define luai_numisnan(L,a)	(!luai_numeq((a), (a)))
+#define luai_numadd(L,a,b)	(l_mathop(fix32_add)((a),(b)))
+#define luai_numsub(L,a,b)	(l_mathop(fix32_sub)((a),(b)))
+#define luai_nummul(L,a,b)	(l_mathop(fix32_mul)((a),(b)))
+#define luai_numdiv(L,a,b)	(l_mathop(fix32_div)((a),(b)))
+#define luai_numunm(L,a)	(l_mathop(fix32_neg)((a)))
+#define luai_numeq(a,b)		(l_mathop(fix32_eq)((a),(b)))
+#define luai_numlt(L,a,b)	(l_mathop(fix32_lt)((a),(b)))
+#define luai_numle(L,a,b)	(l_mathop(fix32_le)((a),(b)))
+#define luai_numisnan(L,a)	!!0
 #endif
 
 
