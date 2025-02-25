@@ -231,7 +231,7 @@ static void pset(int x, int y)
     x += SCREEN_OFFSET_X;
     y += SCREEN_OFFSET_Y;
 
-    SDL_RenderPoint(r, x, y);
+    SDL_RenderPoint(r, (float)x, (float)y);
 }
 
 static void draw_dot(int x, int y, int* color)
@@ -397,8 +397,7 @@ static void poke(Uint16 addr, Uint8 data)
 
 static int pico8_time(lua_State* L)
 {
-    double time = (double)seconds_since_start;
-    lua_pushnumber(L, time);
+    lua_pushnumber(L, fix32_from_uint64(seconds_since_start));
     return 1;
 }
 
@@ -413,14 +412,14 @@ static int pico8_camera(lua_State* L)
 
 static int pico8_circ(lua_State* L)
 {
-    double cx = luaL_checknumber(L, 1);
-    double cy = luaL_checknumber(L, 2);
-    double radius = luaL_optnumber(L, 3, 4.0);
+    int cx = fix32_to_int(luaL_checknumber(L, 1));
+    int cy = fix32_to_int(luaL_checknumber(L, 2));
+    int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
     int color;
 
     if (lua_gettop(L) == 4)
     {
-        color = luaL_checkinteger(L, 4);
+        color = fix32_to_int(luaL_checkinteger(L, 4));
         draw_circle(cx, cy, radius, &color, false);
     }
     else
@@ -433,14 +432,14 @@ static int pico8_circ(lua_State* L)
 
 static int pico8_circfill(lua_State* L)
 {
-    double cx = luaL_checknumber(L, 1);
-    double cy = luaL_checknumber(L, 2);
-    double radius = luaL_optnumber(L, 3, 4.0);
+    int cx = fix32_to_int(luaL_checknumber(L, 1));
+    int cy = fix32_to_int(luaL_checknumber(L, 2));
+    int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
     int color;
 
     if (lua_gettop(L) == 4)
     {
-        color = luaL_checkinteger(L, 4);
+        color = fix32_to_int(luaL_checkinteger(L, 4));
         draw_circle(cx, cy, radius, &color, true);
     }
     else
@@ -612,8 +611,8 @@ static int pico8_print(lua_State* L)
 
 static int pico8_pset(lua_State* L)
 {
-    double x = luaL_checknumber(L, 1);
-    double y = luaL_checknumber(L, 2);
+    int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
+    int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
 
     if (lua_gettop(L) == 3)
     {
@@ -630,14 +629,14 @@ static int pico8_pset(lua_State* L)
 
 static int pico8_rect(lua_State* L)
 {
-    double x0 = luaL_checknumber(L, 1);
-    double y0 = luaL_checknumber(L, 2);
-    double x1 = luaL_checknumber(L, 3);
-    double y1 = luaL_checknumber(L, 4);
+    int x0 = fix32_to_int(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int(luaL_checknumber(L, 4));
 
     if (lua_gettop(L) == 5)
     {
-        int color = luaL_checkinteger(L, 5);
+        int color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_rect(x0, y0, x1, y1, &color, false);
     }
     else
@@ -650,14 +649,14 @@ static int pico8_rect(lua_State* L)
 
 static int pico8_rectfill(lua_State* L)
 {
-    double x0 = luaL_checknumber(L, 1);
-    double y0 = luaL_checknumber(L, 2);
-    double x1 = luaL_checknumber(L, 3);
-    double y1 = luaL_checknumber(L, 4);
+    int x0 = fix32_to_int(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int(luaL_checknumber(L, 4));
 
     if (lua_gettop(L) == 5)
     {
-        int color = luaL_checkinteger(L, 5);
+        int color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_rect(x0, y0, x1, y1, &color, true);
     }
     else
@@ -716,22 +715,21 @@ static int pico8_rnd(lua_State* L)
     }
     else
     {
-        double limit = luaL_optnumber(L, 1, 1.0);
+        fix32_t limit = luaL_optnumber(L, 1, fix32_value(1, 0));
 
-        if (limit <= 0.0)
+        if (limit <= 0)
         {
-            lua_pushnumber(L, 0.0);
+            lua_pushnumber(L, 0);
         }
         else
         {
-            if (limit == 1.0) // Always returns 0.0, why?
+            if (limit == fix32_value(1, 0)) // Always returns 0.0, why?
             {
-                limit = 0.9999;
+                limit = fix32_value(0, 0xffff);
             }
 
-            double result = SDL_randf() * (limit - 0.0001);
-            double rounded_result = ((int)(result * 10000.0 + (result >= 0 ? 0.5 : -0.5))) / 10000.0;
-            lua_pushnumber(L, rounded_result);
+            fix32_t result = SDL_rand(0x10000) * (limit - fix32_value(0, 0x0001));
+            lua_pushnumber(L, result);
         }
     }
 

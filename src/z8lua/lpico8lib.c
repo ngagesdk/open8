@@ -151,27 +151,27 @@ static int pico8_bnot(lua_State *l) {
 }
 
 static int pico8_shl(lua_State *l) {
-    lua_pushnumber(l, fix32_shl(lua_tonumber(l, 1), (int)lua_tonumber(l, 2)));
+    lua_pushnumber(l, fix32_shl(lua_tonumber(l, 1), fix32_to_int(lua_tonumber(l, 2))));
     return 1;
 }
 
 static int pico8_lshr(lua_State *l) {
-    lua_pushnumber(l, fix32_lshr(lua_tonumber(l, 1), (int)lua_tonumber(l, 2)));
+    lua_pushnumber(l, fix32_lshr(lua_tonumber(l, 1), fix32_to_int(lua_tonumber(l, 2))));
     return 1;
 }
 
 static int pico8_shr(lua_State *l) {
-    lua_pushnumber(l, fix32_shr(lua_tonumber(l, 1), (int)lua_tonumber(l, 2)));
+    lua_pushnumber(l, fix32_shr(lua_tonumber(l, 1), fix32_to_int(lua_tonumber(l, 2))));
     return 1;
 }
 
 static int pico8_rotl(lua_State *l) {
-    lua_pushnumber(l, fix32_rotl(lua_tonumber(l, 1), (int)lua_tonumber(l, 2)));
+    lua_pushnumber(l, fix32_rotl(lua_tonumber(l, 1), fix32_to_int(lua_tonumber(l, 2))));
     return 1;
 }
 
 static int pico8_rotr(lua_State *l) {
-    lua_pushnumber(l, fix32_rotr(lua_tonumber(l, 1), (int)lua_tonumber(l, 2)));
+    lua_pushnumber(l, fix32_rotr(lua_tonumber(l, 1), fix32_to_int(lua_tonumber(l, 2))));
     return 1;
 }
 
