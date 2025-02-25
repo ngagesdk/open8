@@ -260,7 +260,7 @@ static inline fix32_t fix32_xor(fix32_t a, fix32_t b) {
 }
 
 static inline fix32_t fix32_mul(fix32_t a, fix32_t b) {
-    return (int32_t)((int64_t)a * (b >> 16));
+    return (int32_t)(((int64_t)a * b) >> 16);
 }
 
 static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
