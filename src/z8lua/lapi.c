@@ -1290,3 +1290,13 @@ LUA_API void lua_upvaluejoin (lua_State *L, int fidx1, int n1,
   luaC_objbarrier(L, f1, *up2);
 }
 
+int lua_number2str(char* s, fix32_t n) {
+    int i = sprintf(s, "%1.4f", fix32_to_double(n));
+    while (i > 0 && s[i - 1] == '0') {
+		s[--i] = '\0';
+	}
+    if (i > 0 && s[i - 1] == '.') {
+		s[--i] = '\0';
+	}
+    return i;
+}
