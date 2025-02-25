@@ -16,13 +16,16 @@
 #include <stdint.h> // int32_t, int64_t, …
 #include <math.h> // pow()
 
-extern long long llabs(long long n);
-
 typedef int32_t fix32_t;
+#define FIX32_MAX INT32_MAX
+#define FIX32_MIN INT32_MIN
 
+static inline fix32_t fix32_value(int16_t i, uint16_t f);
 static inline fix32_t fix32_from_string(const char* s, char** endptr);
 static inline fix32_t fix32_from_double(double d);
 static inline double fix32_to_double(fix32_t x);
+static inline fix32_t fix32_from_int(int i);
+static inline int fix32_to_int(fix32_t x);
 static inline fix32_t fix32_from_int8(int8_t x);
 static inline fix32_t fix32_from_uint8(uint8_t x);
 static inline fix32_t fix32_from_int16(int16_t x);
@@ -81,6 +84,11 @@ static inline fix32_t fix32_lshr(fix32_t x, int y);
 static inline fix32_t fix32_rotl(fix32_t x, int y);
 static inline fix32_t fix32_rotr(fix32_t x, int y);
 
+static inline fix32_t fix32_value(int16_t i, uint16_t f)
+{
+    return (fix32_t)(((uint32_t)i << 16) | ((uint32_t)f & 0xffffu));
+}
+
 static inline fix32_t fix32_from_string(const char* s, char** endptr)
 {
     return fix32_from_double(strtod(s, endptr));
@@ -92,6 +100,14 @@ static inline fix32_t fix32_from_double(double d) {
 
 static inline double fix32_to_double(fix32_t x) {
     return (double)x * (1.0 / 65536.0);
+}
+
+static inline fix32_t fix32_from_int(int i) {
+    return (int)(i << 16);
+}
+
+static inline int fix32_to_int(fix32_t x) {
+    return (int)(x >> 16);
 }
 
 // Conversions up to int16_t are safe.
@@ -244,7 +260,7 @@ static inline fix32_t fix32_xor(fix32_t a, fix32_t b) {
 }
 
 static inline fix32_t fix32_mul(fix32_t a, fix32_t b) {
-    return (int32_t)((int64_t)a * b >> 16);
+    return (int32_t)(((int64_t)a * b) >> 16);
 }
 
 static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
@@ -321,7 +337,7 @@ static inline fix32_t fix32_mod_assign(fix32_t *a, fix32_t b) {
 
 // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
 static inline fix32_t fix32_abs(fix32_t a) {
-    if (a == 0x8000) {
+    if (a == 0x80000000) {
         return 0x7fffffff;
     }
     return a >= 0 ? a : a << 1 == 0 ? fix32_not(a) : fix32_neg(a);
