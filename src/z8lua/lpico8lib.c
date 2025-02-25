@@ -152,7 +152,7 @@ static int pico8_bxor(lua_State *l) {
 }
 
 static int pico8_bnot(lua_State *l) {
-    lua_pushnumber(l, ~lua_tonumber(l, 1));
+    lua_pushnumber(l, fix32_not(lua_tonumber(l, 1)));
     return 1;
 }
 

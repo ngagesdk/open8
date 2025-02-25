@@ -5,7 +5,7 @@ function assert_equal(actual, expected, test_name)
     if actual == expected then
         log(test_name .. " passed")
     else
-        log(test_name .. " failed: expected " .. expected .. " but got " .. actual)
+        log(test_name .. " failed: expected " .. string.format("0x%x", expected) .. " but got " .. string.format("0x%x", actual))
         failed_tests += 1
     end
 end
@@ -28,6 +28,28 @@ function run_tests()
     assert_equal(atan2(1, -1),   0.125, "atan2(1, -1)")
     assert_equal(atan2(0, 0),    0.25,  "atan2(0, 0)")
     assert_equal(atan2(99, 99),  0.875, "atan2(99, 99)")
+
+    assert_equal(band(0b1010, 0b1100), 0b1000, "band(0b1010, 0b1100)")
+    assert_equal(band(0b1010, 0b0011), 0b0010, "band(0b1010, 0b0011)")
+    assert_equal(band(0b1010, 0b0001), 0b0000, "band(0b1010, 0b0001)")
+    assert_equal(band(0b1010, 0b0000), 0b0000, "band(0b1010, 0b0000)")
+
+    assert_equal(bor(0b1010, 0b1100), 0b1110, "bor(0b1010, 0b1100)")
+    assert_equal(bor(0b1010, 0b0011), 0b1011, "bor(0b1010, 0b0011)")
+    assert_equal(bor(0b1010, 0b0001), 0b1011, "bor(0b1010, 0b0001)")
+    assert_equal(bor(0b1010, 0b0000), 0b1010, "bor(0b1010, 0b0000)")
+
+    assert_equal(bxor(0b1010, 0b1100), 0b0110, "bxor(0b1010, 0b1100)")
+    assert_equal(bxor(0b1010, 0b0011), 0b1001, "bxor(0b1010, 0b0011)")
+    assert_equal(bxor(0b1010, 0b0001), 0b1011, "bxor(0b1010, 0b0001)")
+    assert_equal(bxor(0b1010, 0b0000), 0b1010, "bxor(0b1010, 0b0000)")
+
+    assert_equal(bnot(0xb),   -11,         "bnot(0xb)")
+    assert_equal(bnot(0x1234), 0xedcbffff, "bnot(0x1234)")
+
+    assert_equal(ceil(1.1),   2, "ceil(1.1)")
+    assert_equal(ceil(-1.9), -1, "ceil(-1.9)")
+    assert_equal(ceil(3),     3, "ceil(3)")
 
     assert_equal(cos(0),     0x00010000, "cos(0)")
     assert_equal(cos(0.125), 0x0000b505, "cos(0.125)")
@@ -53,6 +75,31 @@ function run_tests()
 
     assert_equal(min(1, 2), 1, "min(1, 2)")
     assert_equal(min(2, 1), 1, "min(2, 1)")
+
+    assert_equal(rotl(8, 3),         64,  "rotl(8, 3)")
+    assert_equal(rotl(0.125, 3),       1, "rotl(0.125, 3)")
+    assert_equal(rotl(-4096, 12), 0.0586, "rotl(-4096, 12)")
+    assert_equal(rotl(1,3),            8, "rotl(1,3)")
+
+    assert_equal(rotr(64, 3),          8, "rotr(64, 3)")
+    assert_equal(rotr(1, 3),       0.125, "rotr(1, 3)")
+    assert_equal(rotr(-4096,12),      15, "rotr(-4096,12)")
+    assert_equal(rotr(0x8000, 1), 0x4000, "rotr(0x8000, 1)")
+
+    assert_equal(lshr(0b1010, 1), 0b0101, "lshr(0b1010, 1)")
+    assert_equal(lshr(0b1010, 2), 0b0010, "lshr(0b1010, 2)")
+    assert_equal(lshr(0b1010, 3), 0b0001, "lshr(0b1010, 3)")
+    assert_equal(lshr(0b1010, 4), 0b0000, "lshr(0b1010, 4)")
+
+    assert_equal(shl(0b1010, 1), 0b10100, "shl(0b1010, 1)")
+    assert_equal(shl(0b1010, 2), 0b101000, "shl(0b1010, 2)")
+    assert_equal(shl(0b1010, 3), 0b1010000, "shl(0b1010, 3)")
+    assert_equal(shl(0b1010, 4), 0b10100000, "shl(0b1010, 4)")
+
+    assert_equal(shr(0b1010, 1), 0b101, "shr(0b1010, 1)")
+    assert_equal(shr(0b1010, 2), 0b10, "shr(0b1010, 2)")
+    assert_equal(shr(0b1010, 3), 0b1, "shr(0b1010, 3)")
+    assert_equal(shr(0b1010, 4), 0b0, "shr(0b1010, 4)")
 
     assert_equal(sin(0),     0x00000000, "sin(0)")
     assert_equal(sin(0.125), 0xffff4afb, "sin(0.125)")
