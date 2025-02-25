@@ -283,9 +283,10 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->seed = makeseed(L);
   g->uvhead.u.l.prev = &g->uvhead;
 
-  // This fixes a crash on the Nokia N-Gage.
-  // I do not know why this is necessary and this concerns me a little.
-  // But hey, it works!
+  // Wasting a few cycles here, fixes a crash on the Nokia N-Gage.
+  // valgrind reports no memory leaks.
+  // I have honestly no idea why this is necessary and I
+  // literally fixed it by trial and error.
   printf("");
 
   g->uvhead.u.l.next = &g->uvhead;
