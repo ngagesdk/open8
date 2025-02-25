@@ -174,7 +174,7 @@ static lua_Number readany (const char **s, lua_Number r, int *count, int base, i
     if (max > 0) {
       int d = luaO_hexavalue(cast_uchar(**s));
       if (d >= base) break;
-      r = fix32_add(fix32_mul(r, cast_num(base)), cast_num(d));
+      r = r * cast_num(base) + cast_num(d);
       (*count)++;
     }
   }
@@ -199,7 +199,7 @@ static lua_Number lua_Number_from_bits(uint64_t bits) {
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   uint64_t r_bits;
   uint64_t f_bits;
-  lua_Number r = 0, f = 0;
+  lua_Number r = 0.0, f = 0.0;
   int e = 0, i = 0;
   int neg = 0;  /* 1 if number is negative */
   *endptr = cast(char *, s);  /* nothing is valid yet */
@@ -207,15 +207,15 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   neg = isneg(&s);  /* check sign */
   if (*s != '0' || (base == 2 && *(s + 1) != 'b' && *(s + 1) != 'B')
                 || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
-    return 0;  /* invalid format (no '0b' or '0x') */
+    return 0.0;  /* invalid format (no '0b' or '0x') */
   s += 2;  /* skip '0x' or '0b' */
-  r = readany(&s, r, &i, base, FIX32_MAX);  /* read integer part */
+  r = readany(&s, r, &i, base, INT_MAX);  /* read integer part */
   if (*s == '.') {
     s++;  /* skip dot */
     f = readany(&s, f, &e, base, base == 2 ? 16 : 4);  /* read fractional part */
   }
   if (i == 0 && e == 0)
-    return 0;  /* invalid format (no digit) */
+    return 0.0;  /* invalid format (no digit) */
   *endptr = cast(char *, s);  /* valid up to here */
   r_bits = lua_Number_to_bits(r);
   f_bits = lua_Number_to_bits(f);
@@ -230,7 +230,7 @@ int luaO_str2d (const char *s, size_t len, lua_Number *result) {
   if (strpbrk(s, "nN"))  /* reject 'inf' and 'nan' */
     return 0;
   else if (strpbrk(s, "xX"))  /* hexa? */
-      *result = lua_strany2number(s, &endptr, 16);
+    *result = lua_strany2number(s, &endptr, 16);
   else if (strpbrk(s, "bB"))  /* binary? */
     *result = lua_strany2number(s, &endptr, 2);
   else
