@@ -265,17 +265,18 @@ static inline fix32_t fix32_mul(fix32_t a, fix32_t b) {
 
 static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
     if (b == 0x10000) {
-        return a;
+        return a; // Special case: division by 1 (0x10000)
     }
 
     if (b) {
-        int64_t result = (int64_t)a * 0x10000 / b;
-        if (llabs(result) <= 0x7fffffff) {
-            return (int32_t)result;
+        int64_t result = ((int64_t)a * 0x10000) / b;
+        if (llabs(result) <= 0x7FFFFFFF) {
+            return (fix32_t)result;
         }
     }
 
-    return (a ^ b) >= 0 ? 0x7fffffff : 0x80000001;
+    // Return 0x80000001 (not 0x80000000) for -Inf, mimicking PICO-8 behavior.
+    return ((a ^ b) >= 0) ? 0x7FFFFFFF : 0x80000001;
 }
 
 static inline fix32_t fix32_mod(fix32_t a, fix32_t b) {
