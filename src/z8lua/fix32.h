@@ -16,6 +16,18 @@
 #include <stdint.h> // int32_t, int64_t, …
 #include <math.h> // pow()
 
+#ifdef __SYMBIAN32__
+static inline long long llabs(long long x) {
+    if (x < 0) {
+        if (x == (-9223372036854775807LL - 1)) {
+            return 9223372036854775807LL;
+        }
+        return -x;
+    }
+    return x;
+}
+#endif
+
 typedef int32_t fix32_t;
 #define FIX32_MAX INT32_MAX
 #define FIX32_MIN INT32_MIN

@@ -401,7 +401,7 @@
 */
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"
-#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
+//#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
 
 
@@ -559,19 +559,9 @@
 #undef LUA_MSASMTRICK
 #undef LUAI_UACNUMBER
 
-#undef lua_number2str
 #undef lua_str2number
 
-static int lua_number2str(char* s, fix32_t n) {
-    int i = sprintf(s, "%1.4f", fix32_to_double(n));
-    while (i > 0 && s[i - 1] == '0') {
-		s[--i] = '\0';
-	}
-    if (i > 0 && s[i - 1] == '.') {
-		s[--i] = '\0';
-	}
-    return i;
-}
+LUAI_FUNC int lua_number2str(char* s, fix32_t n);
 
 #define lua_str2number fix32_from_string
 
