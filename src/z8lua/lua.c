@@ -186,6 +186,7 @@ static int docall (lua_State *L, int narg, int nres) {
 
 static void print_version (void) {
   luai_writestring(LUA_COPYRIGHT, strlen(LUA_COPYRIGHT));
+  luai_writestring(" (https://github.com/ngagesdk/Pico-8)", 37);
   luai_writeline();
 }
 
