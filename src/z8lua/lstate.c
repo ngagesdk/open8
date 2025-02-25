@@ -282,6 +282,12 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->mainthread = L;
   g->seed = makeseed(L);
   g->uvhead.u.l.prev = &g->uvhead;
+
+  // This fixes a crash on the Nokia N-Gage.
+  // I do not know why this i necessary and this concerns me a little.
+  // But hey, it works!
+  printf("");
+
   g->uvhead.u.l.next = &g->uvhead;
   g->gcrunning = 0;  /* no GC while building state */
   g->GCestimate = 0;
