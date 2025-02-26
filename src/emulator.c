@@ -377,6 +377,14 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     Uint32 header = *(Uint32*)&cart->cart_data[0x4300];
     int status = 0;
 
+    cart->code = SDL_calloc(MAX_CODE_SIZE, sizeof(Uint8));
+    if (!cart->code)
+    {
+        SDL_Log("Could not allocate code memory: %s", SDL_GetError());
+        stbi_image_free(image_data);
+        return 0;
+    }
+
     if (0x003a633a == header) // :c: followed by \x00
     {
         // Code is compressed (old format).
@@ -402,6 +410,15 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
                 cart->code[cart->code_size] = cart->cart_data[0x4300 + cart->code_size];
             }
         }
+    }
+
+    // Release the allocated memory we don't need.
+    cart->code = SDL_realloc(cart->code, cart->code_size);
+    if (!cart->code)
+    {
+        SDL_Log("Could not re-allocate code memory: %s", SDL_GetError());
+        stbi_image_free(image_data);
+        return 0;
     }
 
     if (status == 1)
@@ -438,10 +455,17 @@ static void destroy_cart(cart_t* cart)
         SDL_DestroyTexture(cart->image);
     }
 
+    if (cart->code)
+    {
+        SDL_free(cart->code);
+    }
+    cart->code = NULL;
+
     if (cart->data)
     {
         SDL_free(cart->data);
     }
+    cart->data = NULL;
 }
 
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data)
