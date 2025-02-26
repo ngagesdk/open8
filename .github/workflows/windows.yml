@@ -22,12 +22,8 @@ jobs:
           cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build
 
-      - name: Zip export directory
-        run: Compress-Archive -Path export -DestinationPath Pico-8-Windows-x86.zip
-        shell: pwsh
-
-      - name: Archive Pico-8.zip
+      - name: Archive Pico-8
         uses: actions/upload-artifact@v4
         with:
           name: Pico-8-Windows-x86.zip
-          path: Pico-8-Windows-x86.zip
+          path: export
