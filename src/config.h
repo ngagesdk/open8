@@ -10,6 +10,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#if __SYMBIAN32__
+#define SCALE 1
+#else
+#define SCALE 2
+#endif
+
 #define NGAGE_W 176
 #define NGAGE_H 208
 

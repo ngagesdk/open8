@@ -33,11 +33,19 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer("Celeste", NGAGE_W, NGAGE_H, 0, &window, &renderer))
+    if (!SDL_CreateWindowAndRenderer("Pico-8", NGAGE_W * SCALE, NGAGE_H * SCALE, 0, &window, &renderer))
     {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+#if SCALE > 1
+    if (!SDL_SetRenderScale(renderer, SCALE, SCALE))
+    {
+        SDL_Log("Could not apply drawing scale factor: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+#endif
 
 #ifdef __SYMBIAN32__
     SDL_AudioSpec spec;
