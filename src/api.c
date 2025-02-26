@@ -471,7 +471,16 @@ static int pico8_cls(lua_State* L)
         SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
     }
 
-    SDL_RenderClear(r);
+    Uint8 mask_high = peek(0x5f31);
+    Uint8 mask_low = peek(0x5f32);
+    Uint8 solid = 0x00;
+    poke(0x5f31, solid);
+    poke(0x5f32, solid);
+
+    draw_rect(0, 0, SCREEN_SIZE, SCREEN_SIZE, &color, true);
+
+    poke(0x5f31, mask_high);
+    poke(0x5f32, mask_low);
 
     if (color)
     {

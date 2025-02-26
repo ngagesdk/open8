@@ -24,6 +24,9 @@ static SDL_Renderer* renderer;
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     SDL_SetHint("SDL_RENDER_VSYNC", "1");
+#ifndef __SYMBIAN32__
+    SDL_SetHint("SDL_RENDER_DRIVER", "software");
+#endif
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
     SDL_SetAppMetadata("Pico-8", "1.0", "com.pico-8.ngagesdk");
 
@@ -33,11 +36,27 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer("Pico-8", NGAGE_W * SCALE, NGAGE_H * SCALE, 0, &window, &renderer))
+    SDL_WindowFlags window_flags;
+#ifdef __SYMBIAN32__
+    window_flags = 0;
+#else
+    window_flags = SDL_WINDOW_UTILITY;
+#endif
+
+    window = SDL_CreateWindow("Pico-8", NGAGE_W * SCALE, NGAGE_H * SCALE, window_flags);
+    if (!window)
+    {
+        SDL_Log("Couldn't create window: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    renderer = SDL_CreateRenderer(window, 0);
+    if (!renderer)
     {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
 
 #if SCALE > 1
     if (!SDL_SetRenderScale(renderer, SCALE, SCALE))
@@ -64,7 +83,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         SDL_Log("Couldn't initialize emulator.");
         return SDL_APP_FAILURE;
     }
-    render_selection(renderer, true);
+    render_selection(renderer);
+    SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
 }
