@@ -43,7 +43,7 @@ bool init_emulator(SDL_Renderer* renderer);
 void destroy_emulator(void);
 void select_next(SDL_Renderer* renderer);
 void select_prev(SDL_Renderer* renderer);
-void render(SDL_Renderer* renderer, bool with_frame);
+void render_selection(SDL_Renderer* renderer, bool with_frame);
 bool run_selection(SDL_Renderer* renderer);
 void run_tests(void);
 
