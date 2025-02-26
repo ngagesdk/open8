@@ -1,0 +1,40 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout toolchain
+      uses: actions/checkout@v2
+
+    - name: Install Ninja
+      run: choco install ninja --confirm
+      shell: pwsh
+
+    - name: Clone Pico-8
+      run: git clone https://github.com/ngagesdk/Pico-8.git
+      shell: pwsh
+
+    - name: Build Pico-8
+      run: |
+        cmake -G "Ninja" -S Pico-8 -B Pico-8/build
+        cmake --build Pico-8/build
+      shell: pwsh
+
+    - name: Zip export directory
+      run: Compress-Archive -Path Pico-8/export -DestinationPath Pico-8/Pico-8-Windows-x86.zip
+      shell: pwsh
+
+    - name: Archive Pico-8.zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: Pico-8-Windows-x86.zip
+        path: Pico-8/Pico-8-Windows-x86.zip
