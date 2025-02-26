@@ -212,7 +212,7 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             }
             if (state == STATE_MENU)
             {
-                if (event->key.key == SDLK_SOFTLEFT)
+                if (event->key.key == SDLK_SOFTLEFT || event->key.key == SDLK_ESCAPE)
                 {
                     return false;
                 }
@@ -250,7 +250,7 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             }
             else if (state == STATE_EMULATOR)
             {
-                if (event->key.key == SDLK_SOFTLEFT)
+                if (event->key.key == SDLK_SOFTLEFT || event->key.key == SDLK_ESCAPE)
                 {
                     destroy_vm();
                     init_vm(renderer);
