@@ -7,11 +7,13 @@
  *
  **/
 
-#define SDL_MAIN_USE_CALLBACKS 1
-
-#include <SDL3/SDL.h>
+#define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL.h>
+
+#ifdef __SYMBIAN32__
 #include <SDL3_mixer/SDL_mixer.h>
+#endif
 #include "config.h"
 #include "emulator.h"
 
@@ -37,6 +39,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
 
+#ifdef __SYMBIAN32__
     SDL_AudioSpec spec;
     spec.channels = 1;
     spec.format = SDL_AUDIO_S16;
@@ -46,6 +49,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     {
         SDL_Log("Mix_Init: %s", SDL_GetError());
     }
+#endif
 
     if (!init_emulator(renderer))
     {
@@ -54,7 +58,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     }
     render_selection(renderer, true);
 
-    return SDL_APP_SUCCESS;
+    return SDL_APP_CONTINUE;
 }
 
 // This function runs when a new event (Keypresses, etc) occurs.
@@ -79,7 +83,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     destroy_emulator();
+#ifdef __SYMBIAN32__
     Mix_CloseAudio();
     Mix_Quit();
+#endif
     // SDL will clean up the window/renderer for us.
 }

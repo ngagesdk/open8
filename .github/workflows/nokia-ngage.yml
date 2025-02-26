@@ -56,7 +56,7 @@ jobs:
 
     - name: Build Pico-8
       run: |
-        cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+        cmake -DBUILD_FOR_NOKIA_NGAGE=ON -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
         cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
       shell: pwsh
 
