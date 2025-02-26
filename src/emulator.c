@@ -134,7 +134,7 @@ void select_prev(SDL_Renderer* renderer)
     load_cart(renderer, available_carts[selection], &cart);
 }
 
-void render_selection(SDL_Renderer* renderer, bool with_frame)
+void render_selection(SDL_Renderer* renderer)
 {
     SDL_SetRenderTarget(renderer, NULL);
 
@@ -151,13 +151,9 @@ void render_selection(SDL_Renderer* renderer, bool with_frame)
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
-    if (with_frame)
-    {
-        SDL_RenderClear(renderer);
-        SDL_RenderTexture(renderer, frame, NULL, NULL);
-    }
+    SDL_RenderClear(renderer);
+    SDL_RenderTexture(renderer, frame, NULL, NULL);
     SDL_RenderTexture(renderer, cart.image, &source, &dest);
-    SDL_RenderPresent(renderer);
 }
 
 bool run_selection(SDL_Renderer* renderer)
@@ -232,20 +228,20 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
                 if (event->key.key == SDLK_LEFT)
                 {
                     select_prev(renderer);
-                    render_selection(renderer, false);
+                    render_selection(renderer);
                     return true;
                 }
 
                 if (event->key.key == SDLK_RIGHT)
                 {
                     select_next(renderer);
-                    render_selection(renderer, false);
+                    render_selection(renderer);
                     return true;
                 }
 
                 if (event->key.key == SDLK_HASH);
                 {
-                    render_selection(renderer, true);
+                    render_selection(renderer);
                 }
             }
             else if (state == STATE_EMULATOR)
@@ -255,7 +251,6 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
                     destroy_vm();
                     init_vm(renderer);
                     state = STATE_MENU;
-                    render_selection(renderer, true);
                     return true;
                 }
             }
@@ -270,7 +265,7 @@ bool iterate_emulator(SDL_Renderer* renderer)
 {
     if (state == STATE_MENU)
     {
-        render_selection(renderer, false);
+        render_selection(renderer);
     }
     else if (state == STATE_EMULATOR)
     {
@@ -289,8 +284,9 @@ bool iterate_emulator(SDL_Renderer* renderer)
         {
             call_pico8_function(vm, "_draw");
         }
-        SDL_RenderPresent(renderer);
     }
+    SDL_RenderPresent(renderer);
+    SDL_Delay(1);
 
     return true;
 }
@@ -430,8 +426,6 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         cart->is_corrupt = false;
     }
 
-    stbi_image_free(image_data);
-
     cart->image = SDL_CreateTextureFromSurface(renderer, surface);
     if (!cart->image)
     {
@@ -439,6 +433,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         return 0;
     }
     SDL_DestroySurface(surface);
+    stbi_image_free(image_data);
 
     return 1;
 }

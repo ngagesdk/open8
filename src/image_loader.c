@@ -34,7 +34,11 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
         fclose(file);
         return NULL;
     }
-    fread(data, 1, file_size, file);
+    if (fread(data, 1, file_size, file) != file_size)  {
+        SDL_Log("Couldn't read memory for image file data");
+        fclose(file);
+        return NULL;
+    }
     fclose(file);
 
     Uint32* image_data = (Uint32*)stbi_load_from_memory(data, file_size, width, height, bpp, 4);
@@ -51,7 +55,6 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
         stbi_image_free(image_data);
         return NULL;
     }
-    stbi_image_free(image_data);
 
     SDL_Texture* image = SDL_CreateTextureFromSurface(renderer, surface);
     if (!image)
@@ -60,6 +63,7 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
         return NULL;
     }
     SDL_DestroySurface(surface);
+    stbi_image_free(image_data);
 
     return image;
 }
