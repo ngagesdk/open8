@@ -25,7 +25,7 @@ typedef struct cart
     Uint32 size;
 
     Uint8 cart_data[0x8020];
-    Uint8 code[MAX_CODE_SIZE];
+    Uint8* code;
     Uint32 code_size;
 
     bool is_corrupt;
