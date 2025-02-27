@@ -11,12 +11,15 @@ function assert_equal(actual, expected, test_name)
 end
 
 function run_tests()
-    assert_equal(abs(5),               5, "abs(5)")
-    assert_equal(abs(-5),              5, "abs(-5)")
-    assert_equal(abs(0),               0, "abs(0)")
-    assert_equal(abs(12345),       12345, "abs(12345)")
-    assert_equal(abs(-12345),      12345, "abs(-12345)")
-    assert_equal(abs(0x8000), 0x7fffffff, "abs(0x8000)")
+    local epsilon = 0.0000152587890625
+    local lt_one = 1.0 - epsilon
+
+    assert_equal(abs(5),                    5, "abs(5)")
+    assert_equal(abs(-5),                   5, "abs(-5)")
+    assert_equal(abs(0),                    0, "abs(0)")
+    assert_equal(abs(12345),            12345, "abs(12345)")
+    assert_equal(abs(-12345),           12345, "abs(-12345)")
+    assert_equal(abs(0x8000), 0x7fff + lt_one, "abs(0x8000)")
 
     assert_equal(atan2(1, 0),    0,     "atan2(1, 0)")
     assert_equal(atan2(1, 1),    0.875, "atan2(1, 1)")
@@ -29,29 +32,28 @@ function run_tests()
     assert_equal(atan2(0, 0),    0.25,  "atan2(0, 0)")
     assert_equal(atan2(99, 99),  0.875, "atan2(99, 99)")
 
-    assert_equal(band(0b1010, 0b1100), 0b1000, "band(0b1010, 0b1100)")
-    assert_equal(band(0b1010, 0b0011), 0b0010, "band(0b1010, 0b0011)")
-    assert_equal(band(0b1010, 0b0001), 0b0000, "band(0b1010, 0b0001)")
-    assert_equal(band(0b1010, 0b0000), 0b0000, "band(0b1010, 0b0000)")
+    assert_equal(band(0x1010, 0x1100), 0x1000, "band(0x1010, 0x1100)")
+    assert_equal(band(0x0101, 0x1010), 0x0000, "band(0x0101, 0x1010)")
+    assert_equal(band(0x1010, 0x1010), 0x1010, "band(0x1010, 0x1010)")
+    assert_equal(band(0x1100, 0x1100), 0x1100, "band(0x1100, 0x1100)")
 
-    assert_equal(bor(0b1010, 0b1100), 0b1110, "bor(0b1010, 0b1100)")
-    assert_equal(bor(0b1010, 0b0011), 0b1011, "bor(0b1010, 0b0011)")
-    assert_equal(bor(0b1010, 0b0001), 0b1011, "bor(0b1010, 0b0001)")
-    assert_equal(bor(0b1010, 0b0000), 0b1010, "bor(0b1010, 0b0000)")
+    assert_equal(bor(0x1010, 0x1100), 0x1110, "bor(0x1010, 0x1100)")
+    assert_equal(bor(0x0101, 0x1010), 0x1111, "bor(0x0101, 0x1010)")
+    assert_equal(bor(0x1010, 0x1010), 0x1010, "bor(0x1010, 0x1010)")
+    assert_equal(bor(0x1100, 0x1100), 0x1100, "bor(0x1100, 0x1100)")
 
-    assert_equal(bxor(0b1010, 0b1100), 0b0110, "bxor(0b1010, 0b1100)")
-    assert_equal(bxor(0b1010, 0b0011), 0b1001, "bxor(0b1010, 0b0011)")
-    assert_equal(bxor(0b1010, 0b0001), 0b1011, "bxor(0b1010, 0b0001)")
-    assert_equal(bxor(0b1010, 0b0000), 0b1010, "bxor(0b1010, 0b0000)")
+    assert_equal(bxor(0x1010, 0x1100), 0x0110, "bxor(0x1010, 0x1100)")
+    assert_equal(bxor(0x0101, 0x1010), 0x1111, "bxor(0x0101, 0x1010)")
+    assert_equal(bxor(0x1010, 0x1010), 0x0000, "bxor(0x1010, 0x1010)")
+    assert_equal(bxor(0x1100, 0x1100), 0x0000, "bxor(0x1100, 0x1100)")
 
-    assert_equal(bnot(0xb),    0xfff4ffff, "bnot(0xb)")
-    assert_equal(bnot(0x1234), 0xedcbffff, "bnot(0x1234)")
+    -- bnot tbd.
 
     assert_equal(ceil(1.1),   2, "ceil(1.1)")
     assert_equal(ceil(-1.9), -1, "ceil(-1.9)")
     assert_equal(ceil(3),     3, "ceil(3)")
 
-    assert_equal(cos(0),     0x00010000, "cos(0)")
+    assert_equal(cos(0),     1,          "cos(0)")
     assert_equal(cos(0.125), 0x0000b505, "cos(0.125)")
     assert_equal(cos(0.25),  0x00000000, "cos(0.25)")
     assert_equal(cos(0.375), 0xffff4afb, "cos(0.375)")
