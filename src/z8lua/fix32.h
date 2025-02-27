@@ -248,7 +248,7 @@ static inline fix32_t fix32_neg(fix32_t x) {
 }
 
 static inline fix32_t fix32_not(fix32_t x) {
-    return ~x;
+    return ((~x & 0xFFFF) << 16) | 0xFFFF;
 }
 
 static inline fix32_t fix32_add(fix32_t a, fix32_t b) {
