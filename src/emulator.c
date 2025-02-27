@@ -39,6 +39,7 @@ static void destroy_cart(cart_t* cart);
 static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
 static bool is_function_present(lua_State* L, const char* func_name);
 static void call_pico8_function(lua_State *L, const char *func_name);
+static void print_memory_usage(lua_State* L);
 
 bool init_emulator(SDL_Renderer* renderer)
 {
@@ -157,6 +158,7 @@ void render_selection(SDL_Renderer* renderer)
 }
 
 
+
 bool run_script(SDL_Renderer* renderer, const char* file_name)
 {
     char path[256];
@@ -165,9 +167,13 @@ bool run_script(SDL_Renderer* renderer, const char* file_name)
     if (luaL_loadfile(vm, path) || lua_pcall(vm, 0, 0, 0))
     {
         SDL_Log("Could not run .p8 script: %s", lua_tostring(vm, -1));
+        print_memory_usage(vm);
         lua_pop(vm, 1);
         return false;
     }
+
+    print_memory_usage(vm);
+
     if (is_function_present(vm, "_init"))
     {
         call_pico8_function(vm, "_init");
@@ -187,16 +193,12 @@ bool run_selection(SDL_Renderer* renderer)
         if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
         {
             SDL_Log("Could not run cartridge: %s", lua_tostring(vm, -1));
+            print_memory_usage(vm);
             lua_pop(vm, 1);
-
-            SDL_Log("Lua memory usage: %d bytes",
-                lua_gc(vm, LUA_GCCOUNT, 0) * 1024 + lua_gc(vm, LUA_GCCOUNTB, 0));
-
             return false;
         }
 
-        SDL_Log("Lua memory usage: %d bytes",
-            lua_gc(vm, LUA_GCCOUNT, 0) * 1024 + lua_gc(vm, LUA_GCCOUNTB, 0));
+        print_memory_usage(vm);
 
         if (is_function_present(vm, "_init"))
         {
@@ -530,4 +532,10 @@ static void call_pico8_function(lua_State* L, const char* func_name)
         SDL_Log("Error calling function %s: %s", func_name, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
+}
+
+static void print_memory_usage(lua_State* L)
+{
+    SDL_Log("Lua memory usage: %d bytes",
+        lua_gc(L, LUA_GCCOUNT, 0) * 1024 + lua_gc(L, LUA_GCCOUNTB, 0));
 }
