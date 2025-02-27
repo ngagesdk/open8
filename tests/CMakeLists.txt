@@ -49,7 +49,6 @@ set(base_sources
   ${PICO_DIR}/z8lua/lzio.c)
 
 set(tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/tests.c)
-set(graphics_sources ${CMAKE_CURRENT_SOURCE_DIR}/graphics.c)
 
 add_library(SDL3 STATIC IMPORTED)
 
@@ -58,9 +57,6 @@ set_target_properties(SDL3 PROPERTIES
 
 add_executable(tests ${base_sources} ${tests_sources})
 target_link_libraries(tests PRIVATE SDL3)
-
-add_executable(graphics WIN32 ${base_sources} ${graphics_sources})
-target_link_libraries(graphics PRIVATE SDL3)
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 

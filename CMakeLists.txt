@@ -159,7 +159,7 @@ else()
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lvm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lzio.c)
 
-  add_executable(Pico-8 WIN32 ${project_sources} ${z8lua_sources})
+  add_executable(Pico-8 ${project_sources} ${z8lua_sources})
   target_link_libraries(Pico-8 PRIVATE SDL3)
 
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)

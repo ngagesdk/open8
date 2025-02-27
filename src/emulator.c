@@ -156,6 +156,26 @@ void render_selection(SDL_Renderer* renderer)
     SDL_RenderTexture(renderer, cart.image, &source, &dest);
 }
 
+
+bool run_script(SDL_Renderer* renderer, const char* file_name)
+{
+    char path[256];
+    SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), file_name);
+
+    if (luaL_loadfile(vm, path) || lua_pcall(vm, 0, 0, 0))
+    {
+        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        lua_pop(vm, 1);
+        return false;
+    }
+    if (is_function_present(vm, "_init"))
+    {
+        call_pico8_function(vm, "_init");
+    }
+    state = STATE_EMULATOR;
+    return true;
+}
+
 bool run_selection(SDL_Renderer* renderer)
 {
     SDL_memset(pico8_ram, 0x00, RAM_SIZE);
@@ -183,15 +203,6 @@ bool run_selection(SDL_Renderer* renderer)
     return true;
 }
 
-void run_tests(void)
-{
-    SDL_Log("Run unit tests.");
-    if (luaL_dostring(vm, "dofile('tests.p8')"))
-    {
-        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
-    }
-}
-
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
 {
     switch (event->type)
@@ -208,56 +219,50 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
             }
             if (state == STATE_MENU)
             {
-                if (event->key.key == SDLK_SOFTLEFT || event->key.key == SDLK_ESCAPE)
+                switch (event->key.key)
                 {
-                    return false;
-                }
-
-                if (event->key.key == SDLK_5 || event->key.key == SDLK_SELECT)
-                {
-                    run_selection(renderer);
-                    return true;
-                }
-
-                if (event->key.key == SDLK_7)
-                {
-                    run_tests();
-                    return true;
-                }
-
-                if (event->key.key == SDLK_LEFT)
-                {
-                    select_prev(renderer);
-                    render_selection(renderer);
-                    return true;
-                }
-
-                if (event->key.key == SDLK_RIGHT)
-                {
-                    select_next(renderer);
-                    render_selection(renderer);
-                    return true;
-                }
-
-                if (event->key.key == SDLK_HASH);
-                {
-                    render_selection(renderer);
+                    case SDLK_SOFTLEFT:
+                    case SDLK_ESCAPE:
+                        return false;
+                    case SDLK_5:
+                    case SDLK_KP_5:
+                    case SDLK_SELECT:
+                    case SDLK_SPACE:
+                        run_selection(renderer);
+                        return true;
+                    case SDLK_LALT:
+                        SDL_Log("Running test script");
+                        run_script(renderer, "api_test.p8");
+                        return true;
+                    case SDLK_LEFT:
+                    case SDLK_A:
+                        select_prev(renderer);
+                        render_selection(renderer);
+                        return true;
+                    case SDLK_RIGHT:
+                    case SDLK_D:
+                        select_next(renderer);
+                        render_selection(renderer);
+                        return true;
+                    case SDLK_HASH: // Show FPS on the N-Gage.
+                        render_selection(renderer);
                 }
             }
             else if (state == STATE_EMULATOR)
             {
-                if (event->key.key == SDLK_SOFTLEFT || event->key.key == SDLK_ESCAPE)
+                switch (event->key.key)
                 {
-                    destroy_vm();
-                    init_vm(renderer);
-                    state = STATE_MENU;
-                    return true;
+                    case SDLK_SOFTLEFT:
+                    case SDLK_ESCAPE:
+                        destroy_vm();
+                        init_vm(renderer);
+                        state = STATE_MENU;
+                        return true;
                 }
             }
             break;
         }
     }
-
     return true;
 }
 
