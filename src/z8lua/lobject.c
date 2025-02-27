@@ -210,7 +210,12 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   fixed_value = (uint32_t)strtoul(s, endptr, base);  /* read full 32-bit value */
   if (s == *endptr)
     return 0;  /* invalid format (no valid number found) */
-  r = (double)fixed_value / 65536.0;  /* convert to 16:16 fixed-point float */
+  if (base == 16) {
+    fixed_value = (fixed_value & 0xFFFF) << 16;
+  } else if (base == 2) {
+    fixed_value = (fixed_value & 0xFFFF) << 16;
+  }
+  r = (double)fixed_value / 65536.0;
   return fix32_from_double(neg ? -r : r);
 }
 
