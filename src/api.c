@@ -459,7 +459,7 @@ static int pico8_clip(lua_State* L)
 // Todo: Reset clip region, reset cursor position to 0,0.
 static int pico8_cls(lua_State* L)
 {
-    int color = luaL_optinteger(L, 1, 0);
+    int color = fix32_to_int32(luaL_optinteger(L, 1, 0));
 
     Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
     Uint8 r_prev, g_prev, b_rev, a_prev;

@@ -44,8 +44,8 @@ void destroy_emulator(void);
 void select_next(SDL_Renderer* renderer);
 void select_prev(SDL_Renderer* renderer);
 void render_selection(SDL_Renderer* renderer);
+bool run_script(SDL_Renderer* renderer, const char* file_name);
 bool run_selection(SDL_Renderer* renderer);
-void run_tests(void);
 
 bool handle_event(SDL_Renderer* renderer, SDL_Event* event);
 bool iterate_emulator(SDL_Renderer* renderer);
