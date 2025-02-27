@@ -197,10 +197,8 @@ static double lua_double_from_bits(uint64_t bits) {
 ** convert an hexadecimal or binary numeric string to a number
 */
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
-  uint64_t r_bits;
-  uint64_t f_bits;
-  double r = 0.0, f = 0.0;
-  int e = 0, i = 0;
+  uint32_t fixed_value;
+  double r = 0.0;
   int neg = 0;  /* 1 if number is negative */
   *endptr = cast(char *, s);  /* nothing is valid yet */
   while (lisspace(cast_uchar(*s))) s++;  /* skip initial spaces */
@@ -209,18 +207,10 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
                 || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
     return 0;  /* invalid format (no '0b' or '0x') */
   s += 2;  /* skip '0x' or '0b' */
-  r = readany(&s, r, &i, base, INT_MAX);  /* read integer part */
-  if (*s == '.') {
-    s++;  /* skip dot */
-    f = readany(&s, f, &e, base, base == 2 ? 16 : 4);  /* read fractional part */
-  }
-  if (i == 0 && e == 0)
-    return 0;  /* invalid format (no digit) */
-  *endptr = cast(char *, s);  /* valid up to here */
-  r_bits = lua_double_to_bits(r);
-  f_bits = lua_double_to_bits(f);
-  r_bits |= f_bits >> (base == 2 ? e : e * 4);
-  r = lua_double_from_bits(r_bits);
+  fixed_value = (uint32_t)strtoul(s, endptr, base);  /* read full 32-bit value */
+  if (s == *endptr)
+    return 0;  /* invalid format (no valid number found) */
+  r = (double)fixed_value / 65536.0;  /* convert to 16:16 fixed-point float */
   return fix32_from_double(neg ? -r : r);
 }
 
