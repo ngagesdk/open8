@@ -164,7 +164,7 @@ bool run_script(SDL_Renderer* renderer, const char* file_name)
 
     if (luaL_loadfile(vm, path) || lua_pcall(vm, 0, 0, 0))
     {
-        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        SDL_Log("Could not run .p8 script: %s", lua_tostring(vm, -1));
         lua_pop(vm, 1);
         return false;
     }
@@ -186,10 +186,18 @@ bool run_selection(SDL_Renderer* renderer)
 
         if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
         {
-            SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+            SDL_Log("Could not run cartridge: %s", lua_tostring(vm, -1));
             lua_pop(vm, 1);
+
+            SDL_Log("Lua memory usage: %d bytes",
+                lua_gc(vm, LUA_GCCOUNT, 0) * 1024 + lua_gc(vm, LUA_GCCOUNTB, 0));
+
             return false;
         }
+
+        SDL_Log("Lua memory usage: %d bytes",
+            lua_gc(vm, LUA_GCCOUNT, 0) * 1024 + lua_gc(vm, LUA_GCCOUNTB, 0));
+
         if (is_function_present(vm, "_init"))
         {
             call_pico8_function(vm, "_init");
@@ -230,6 +238,7 @@ bool handle_event(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_SPACE:
                         run_selection(renderer);
                         return true;
+                    case SDLK_7:
                     case SDLK_LALT:
                         SDL_Log("Running test script");
                         run_script(renderer, "api_test.p8");
@@ -310,9 +319,12 @@ static bool init_vm(SDL_Renderer* renderer)
 
     if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {
-        SDL_Log("Lua error: %s", lua_tostring(vm, -1));
+        SDL_Log("Lua VM could not be initialised: %s", lua_tostring(vm, -1));
         return false;
     }
+    SDL_Log("Lua memory usage: %d bytes",
+        lua_gc(vm, LUA_GCCOUNT, 0) * 1024 + lua_gc(vm, LUA_GCCOUNTB, 0));
+
     return true;
 }
 
