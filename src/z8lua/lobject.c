@@ -169,7 +169,7 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
 #endif
 
 
-static lua_Number readany (const char **s, lua_Number r, int *count, int base, int max) {
+static double readany (const char **s, double r, int *count, int base, int max) {
   for (; lisxdigit(cast_uchar(**s)); (*s)++, max--) {
     if (max > 0) {
       int d = luaO_hexavalue(cast_uchar(**s));
@@ -181,16 +181,16 @@ static lua_Number readany (const char **s, lua_Number r, int *count, int base, i
   return r;
 }
 
-static uint64_t lua_Number_to_bits(lua_Number num) {
+static uint64_t lua_double_to_bits(double dbl) {
     uint64_t bits;
-    memcpy(&bits, &num, sizeof(bits));
+    memcpy(&bits, &dbl, sizeof(bits));
     return bits;
 }
 
-static lua_Number lua_Number_from_bits(uint64_t bits) {
-    lua_Number num;
-    memcpy(&num, &bits, sizeof(num));
-    return num;
+static double lua_double_from_bits(uint64_t bits) {
+    double dbl;
+    memcpy(&dbl, &bits, sizeof(dbl));
+    return dbl;
 }
 
 /*
@@ -199,7 +199,7 @@ static lua_Number lua_Number_from_bits(uint64_t bits) {
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   uint64_t r_bits;
   uint64_t f_bits;
-  lua_Number r = 0.0, f = 0.0;
+  double r = 0.0, f = 0.0;
   int e = 0, i = 0;
   int neg = 0;  /* 1 if number is negative */
   *endptr = cast(char *, s);  /* nothing is valid yet */
@@ -207,7 +207,7 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   neg = isneg(&s);  /* check sign */
   if (*s != '0' || (base == 2 && *(s + 1) != 'b' && *(s + 1) != 'B')
                 || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
-    return 0.0;  /* invalid format (no '0b' or '0x') */
+    return 0;  /* invalid format (no '0b' or '0x') */
   s += 2;  /* skip '0x' or '0b' */
   r = readany(&s, r, &i, base, INT_MAX);  /* read integer part */
   if (*s == '.') {
@@ -215,13 +215,13 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
     f = readany(&s, f, &e, base, base == 2 ? 16 : 4);  /* read fractional part */
   }
   if (i == 0 && e == 0)
-    return 0.0;  /* invalid format (no digit) */
+    return 0;  /* invalid format (no digit) */
   *endptr = cast(char *, s);  /* valid up to here */
-  r_bits = lua_Number_to_bits(r);
-  f_bits = lua_Number_to_bits(f);
+  r_bits = lua_double_to_bits(r);
+  f_bits = lua_double_to_bits(f);
   r_bits |= f_bits >> (base == 2 ? e : e * 4);
-  r = lua_Number_from_bits(r_bits);
-  return neg ? -r : r;
+  r = lua_double_from_bits(r_bits);
+  return fix32_from_double(neg ? -r : r);
 }
 
 
