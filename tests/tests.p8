@@ -44,7 +44,7 @@ function run_tests()
     assert_equal(bxor(0b1010, 0b0001), 0b1011, "bxor(0b1010, 0b0001)")
     assert_equal(bxor(0b1010, 0b0000), 0b1010, "bxor(0b1010, 0b0000)")
 
-    assert_equal(bnot(0xb),   -11,         "bnot(0xb)")
+    assert_equal(bnot(0xb),    0xfff4ffff, "bnot(0xb)")
     assert_equal(bnot(0x1234), 0xedcbffff, "bnot(0x1234)")
 
     assert_equal(ceil(1.1),   2, "ceil(1.1)")
