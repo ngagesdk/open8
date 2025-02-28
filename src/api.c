@@ -16,7 +16,7 @@
 #include "config.h"
 
 static SDL_Renderer* r;
-static Uint64 seed;
+static fix32_t seed_lo, seed_hi;
 static Uint8 fill_mask[0x4000]; // Fill pattern mask.
 static Uint64 seconds_since_start;
 
@@ -705,41 +705,59 @@ static int pico8_tline(lua_State* L)
  * Math functions. *
  *******************/
 
-// This function does not return the same values as PICO-8's rnd() function (yet).
-// Not sure how important this is, but it might be worth looking into.
-static int pico8_rnd(lua_State* L)
+// Special thanks to pancelor for documenting rnd() and srand()!
+// https://www.lexaloffle.com/bbs/?pid=81103#p
+// https://www.lexaloffle.com/bbs/?pid=153638#p
+
+static fix32_t pico8_random(fix32_t limit)
 {
-    if (lua_istable(L, 1))
+    fix32_t result;
+    seed_hi = fix32_rotl(seed_hi, 16);
+    seed_hi += seed_lo;
+    seed_lo += seed_hi;
+    if (limit < 0)
     {
-        int len = luaL_len(L, 1);
-        if (len == 0)
+        if (limit <= seed_hi && seed_hi < 0)
         {
-            lua_pushnil(L);
+            return seed_hi - limit;
         }
         else
         {
-            int index = SDL_rand(0xb00b) % len + 1;
-            lua_rawgeti(L, 1, index);
+            return seed_hi;
         }
     }
     else
     {
-        fix32_t limit = luaL_optnumber(L, 1, fix32_value(1, 0));
-
-        if (limit <= 0)
+        if (seed_hi < 0)
         {
-            lua_pushnumber(L, 0);
+            result = fix32_mod(fix32_value(0x7fff, 0), limit) + fix32_value(1, 0);
         }
-        else
-        {
-            if (limit == fix32_value(1, 0)) // Always returns 0.0, why?
-            {
-                limit = fix32_value(0, 0xffff);
-            }
+        else {
+            result = 0;
+        }
+        result += fix32_mod(seed_hi & 0x7fffffff, limit);
+        result = fix32_mod(result, limit);
+        return result;
+    }
+}
 
-            fix32_t result = SDL_rand(0x10000) * (limit - fix32_value(0, 0x0001));
-            lua_pushnumber(L, result);
+static int pico8_rnd(lua_State* L)
+{
+    if (lua_istable(L, 1))
+    {
+        const fix32_t value = pico8_random(lua_rawlen(L, 1) << 8);
+        lua_pushnumber(L, ((value >> 8) + 1) * fix32_value(1, 0));
+        lua_gettable(L, -2);
+    }
+    else
+    {
+        fix32_t value = fix32_value(1, 0);
+        if (lua_gettop(L) > 0)
+        {
+            value = lua_tonumberx(L, 1, NULL);
         }
+        value = pico8_random(value);
+        lua_pushnumber(L, value);
     }
 
     return 1;
@@ -747,13 +765,22 @@ static int pico8_rnd(lua_State* L)
 
 static int pico8_srand(lua_State* L)
 {
-    double new_seed = luaL_checknumber(L, 1);
-    memcpy(&seed, &new_seed, sizeof(seed));
-    if (seed == 0)
+    fix32_t new_seed = luaL_checknumber(L, 1);
+    if (new_seed == 0)
     {
-        seed = 1;
+        seed_hi = 0x60009755;
+        seed_lo = 0xdeadbeef;
     }
-    SDL_srand(seed);
+    else
+    {
+        new_seed &= 0x7fffffff;
+        seed_hi = new_seed ^ 0xbead29ba;
+        seed_lo = new_seed;
+    }
+    for (int i = 0; i < 32; i++)
+    {
+        pico8_random(0);
+    }
     return 0;
 }
 
@@ -1004,9 +1031,10 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     static bool seed_initialized = false;
     if (!seed_initialized)
     {
-        seed = SDL_GetPerformanceCounter();
+        seed_lo = (fix32_t)SDL_GetPerformanceCounter();
+        SDL_DelayNS(SDL_NS_PER_US);
+        seed_hi = (fix32_t)SDL_GetPerformanceCounter();
         seed_initialized = true;
-        SDL_srand(seed);
     }
 
     lua_pushcfunction(L, pico8_rnd);
