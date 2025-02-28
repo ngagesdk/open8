@@ -1,8 +1,8 @@
 # open8
 
-[![Continuous Integration](https://github.com/ngagesdk/Pico-8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/Pico-8/actions/workflows/nokia-ngage.yml)
-[![Windows Build](https://github.com/ngagesdk/Pico-8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/Pico-8/actions/workflows/windows.yml)
-[![API Tests](https://github.com/ngagesdk/Pico-8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/Pico-8/actions/workflows/api-tests.yml)
+[![Continuous Integration](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml)
+[![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
+[![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 
 open8 is an unfinished PICO-8 emulator written in C to support as many platforms as possible, including the Nokia N-Gage.
 
