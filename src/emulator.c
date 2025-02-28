@@ -40,6 +40,7 @@ static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data);
 static bool is_function_present(lua_State* L, const char* func_name);
 static void call_pico8_function(lua_State *L, const char *func_name);
 static void print_memory_usage(lua_State* L);
+static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize);
 
 bool init_emulator(SDL_Renderer* renderer)
 {
@@ -309,7 +310,7 @@ bool iterate_emulator(SDL_Renderer* renderer)
 
 static bool init_vm(SDL_Renderer* renderer)
 {
-    vm = luaL_newstate();
+    vm = lua_newstate(mem_allocator, NULL);
     if (!vm)
     {
         SDL_Log("Couldn't create Lua state.");
@@ -538,4 +539,20 @@ static void print_memory_usage(lua_State* L)
 {
     SDL_Log("Lua memory usage: %d bytes",
         lua_gc(L, LUA_GCCOUNT, 0) * 1024 + lua_gc(L, LUA_GCCOUNTB, 0));
+}
+
+static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
+{
+    (void)ud;
+    (void)osize;
+
+    if (nsize == 0)
+    {
+        SDL_free(ptr);
+        return NULL;
+    }
+    else
+    {
+        return SDL_realloc(ptr, nsize);
+    }
 }
