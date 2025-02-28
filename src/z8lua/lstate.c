@@ -287,7 +287,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   // valgrind reports no memory leaks.
   // I have honestly no idea why this is necessary and I
   // literally fixed it by trial and error.
-  printf("");
+  printf(" ");
 
   g->uvhead.u.l.next = &g->uvhead;
   g->gcrunning = 0;  /* no GC while building state */

@@ -169,36 +169,13 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
 #endif
 
 
-static double readany (const char **s, double r, int *count, int base, int max) {
-  for (; lisxdigit(cast_uchar(**s)); (*s)++, max--) {
-    if (max > 0) {
-      int d = luaO_hexavalue(cast_uchar(**s));
-      if (d >= base) break;
-      r = r * cast_num(base) + cast_num(d);
-      (*count)++;
-    }
-  }
-  return r;
-}
-
-static uint64_t lua_double_to_bits(double dbl) {
-    uint64_t bits;
-    memcpy(&bits, &dbl, sizeof(bits));
-    return bits;
-}
-
-static double lua_double_from_bits(uint64_t bits) {
-    double dbl;
-    memcpy(&dbl, &bits, sizeof(dbl));
-    return dbl;
-}
-
 /*
 ** convert an hexadecimal or binary numeric string to a number
 */
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   uint32_t fixed_value = 0;
   uint32_t fractional_value = 0;
+  const char* frac_part;
   double r = 0.0;
   int neg = 0;  /* 1 if number is negative */
   *endptr = cast(char *, s);  /* nothing is valid yet */
@@ -214,7 +191,7 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
   s += 2;  /* Skip '0x' or '0b' */
 
   /* Look for the fractional point */
-  const char *frac_part = strchr(s, '.');
+  frac_part = strchr(s, '.');
 
   /* Process integer part */
   fixed_value = (uint32_t)strtoul(s, endptr, base);
@@ -222,12 +199,14 @@ static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
 
   /* Process fractional part if present */
   if (frac_part) {
+    int frac_digits;
+    uint32_t scale_factor;
     s = frac_part + 1;
     fractional_value = (uint32_t)strtoul(s, endptr, base);
 
     /* Determine the scaling factor */
-    int frac_digits = *endptr - s;
-    uint32_t scale_factor = 1;
+    frac_digits = *endptr - s;
+    scale_factor = 1;
     while (frac_digits-- > 0) scale_factor *= base;
 
     /* Scale fractional part to fixed-point */
