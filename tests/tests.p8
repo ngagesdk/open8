@@ -19,7 +19,7 @@ function run_tests()
     assert_equal(abs(0),                    0, "abs(0)")
     assert_equal(abs(12345),            12345, "abs(12345)")
     assert_equal(abs(-12345),           12345, "abs(-12345)")
-    assert_equal(abs(0x8000), 0x7fff + lt_one, "abs(0x8000)")
+    assert_equal(abs(0x8000), 0x7fff.ffff,     "abs(0x8000)")
 
     assert_equal(atan2(1, 0),    0,     "atan2(1, 0)")
     assert_equal(atan2(1, 1),    0.875, "atan2(1, 1)")
