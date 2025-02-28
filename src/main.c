@@ -40,7 +40,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 #ifdef __SYMBIAN32__
     window_flags = 0;
 #else
-    window_flags = SDL_WINDOW_UTILITY;
+    window_flags = SDL_WINDOW_UTILITY | SDL_WINDOW_ALWAYS_ON_TOP;
 #endif
 
     window = SDL_CreateWindow("Pico-8", NGAGE_W * SCALE, NGAGE_H * SCALE, window_flags);

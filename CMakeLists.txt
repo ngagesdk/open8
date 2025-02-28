@@ -56,7 +56,7 @@ if (BUILD_FOR_NOKIA_NGAGE)
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_appview.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage_document.cpp")
 
-  add_library(game STATIC ${project_sources})
+  add_library(game STATIC ${project_sources} ${CMAKE_CURRENT_SOURCE_DIR}/src/api_ngage.cpp)
   add_library(Pico-8 STATIC ${Pico-8_sources})
   build_exe_static(game exe ${UID1} ${UID2} ${UID3} "${game_static_libs}" "${game_libs}")
   build_dll(Pico-8 app ${UID1} ${UID2} ${APP_UID} "${Pico-8_libs}")

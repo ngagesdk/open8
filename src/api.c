@@ -18,9 +18,9 @@
 static SDL_Renderer* r;
 static Uint64 seed;
 static Uint8 fill_mask[0x4000]; // Fill pattern mask.
-static Uint64 seconds_since_start;
 
 Uint8 pico8_ram[RAM_SIZE];
+fix32_t seconds_since_start;
 
  /************************
   * Auxiliary functions. *
@@ -170,6 +170,7 @@ static void color_lookup(int col, Uint8* r, Uint8* g, Uint8* b)
             *r = 0xff;
             *g = 0x6c;
             *b = 0x24;
+            *b = 0x24;
             break;
         case -6: // lime-green
         case 138:
@@ -266,7 +267,7 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
         return;
     }
 
-    Uint8 r_set, g_set, b_set;
+    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
     Uint8 r_prev, g_prev, b_rev, a_prev;
 
     SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
@@ -333,7 +334,7 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
        return;
    }
 
-   Uint8 r_set, g_set, b_set;
+   Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
    Uint8 r_prev, g_prev, b_rev, a_prev;
    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
 
@@ -397,7 +398,7 @@ static void poke(Uint16 addr, Uint8 data)
 
 static int pico8_time(lua_State* L)
 {
-    lua_pushnumber(L, fix32_from_uint64(seconds_since_start));
+    lua_pushnumber(L, seconds_since_start);
     return 1;
 }
 
@@ -471,16 +472,7 @@ static int pico8_cls(lua_State* L)
         SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
     }
 
-    Uint8 mask_high = peek(0x5f31);
-    Uint8 mask_low = peek(0x5f32);
-    Uint8 solid = 0x00;
-    poke(0x5f31, solid);
-    poke(0x5f32, solid);
-
-    draw_rect(0, 0, SCREEN_SIZE, SCREEN_SIZE, &color, true);
-
-    poke(0x5f31, mask_high);
-    poke(0x5f32, mask_low);
+    SDL_RenderClear(r);
 
     if (color)
     {
@@ -1045,7 +1037,19 @@ void reset_draw_state(SDL_Renderer* renderer)
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 }
 
+#ifndef __SYMBIAN32__
+#include <time.h>
+
 void update_time(void)
 {
-    seconds_since_start = (SDL_GetPerformanceCounter() * 3435973837ULL) >> 35;
+    static clock_t start_time = 0;
+    if (start_time == 0)
+    {
+        start_time = clock();
+    }
+
+    clock_t current_time = clock();
+    double elapsed_time = (double)(current_time - start_time) / CLOCKS_PER_SEC;
+    seconds_since_start = fix32_from_double(elapsed_time);
 }
+#endif

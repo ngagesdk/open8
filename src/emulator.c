@@ -158,8 +158,6 @@ void render_selection(SDL_Renderer* renderer)
     SDL_RenderTexture(renderer, cart.image, &source, &dest);
 }
 
-
-
 bool run_script(SDL_Renderer* renderer, const char* file_name)
 {
     char path[256];
@@ -289,17 +287,16 @@ bool iterate_emulator(SDL_Renderer* renderer)
         if (is_function_present(vm, "_update"))
         {
             call_pico8_function(vm, "_update");
-            update_time();
         }
         else if (is_function_present(vm, "_update60"))
         {
             call_pico8_function(vm, "_update60");
-            update_time();
         }
 
         if (is_function_present(vm, "_draw"))
         {
             call_pico8_function(vm, "_draw");
+            update_time();
         }
     }
     SDL_RenderPresent(renderer);
@@ -320,6 +317,7 @@ static bool init_vm(SDL_Renderer* renderer)
     luaL_openlibs(vm);
     register_api(vm, renderer);
 
+    puts("\r");
     if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {
         SDL_Log("Lua VM could not be initialised: %s", lua_tostring(vm, -1));
