@@ -433,7 +433,7 @@
 /* the following operations need the math library */
 #if defined(lobject_c) || defined(lvm_c)
 #include <math.h>
-#define luai_nummod(L,a,b)	((a) - l_mathop(fix32_floor)((a)/(b))*(b))
+#define luai_nummod(L,a,b)	(l_mathop(fix32_mod)((a),(b)))
 #define luai_numpow(L,a,b)	(l_mathop(fix32_pow)((a),(b)))
 #endif
 
