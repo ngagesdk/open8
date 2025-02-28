@@ -380,6 +380,7 @@ static Uint8 peek(Uint16 addr)
     {
         return 0;
     }
+
     return (pico8_ram[addr]);
 }
 
@@ -500,7 +501,7 @@ static int pico8_fget(lua_State* L)
 
 static int pico8_fillp(lua_State* L)
 {
-    Uint16 pattern = (Uint16)luaL_optunsigned(L, 1, 0);
+    Uint16 pattern = fix32_to_uint16(luaL_optnumber(L, 1, 0));
 
 #if 0
     // Predefined pattern values.
@@ -782,69 +783,71 @@ static int pico8_srand(lua_State* L)
 
 static int pico8_peek(lua_State* L)
 {
-  unsigned int addr = luaL_checkunsigned(L, 1);
-  unsigned int len = luaL_optunsigned(L, 2, 1);
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-  if (len > RAM_SIZE - 1)
-  {
-      len = RAM_SIZE - 1;
-  }
+    if (len > RAM_SIZE - 1)
+    {
+        len = RAM_SIZE - 1;
+    }
 
-  for (unsigned int i = 0; i < len; i++)
-  {
-      lua_pushnumber(L, (Uint8)peek(addr + i));
-  }
-  return len;
+    for (unsigned int i = 0; i < len; i++)
+    {
+        Uint8 data = peek(addr + i);
+        lua_pushnumber(L, fix32_from_uint8(data));
+    }
+    return len;
 }
 
 static int pico8_peek2(lua_State* L)
 {
-  unsigned int addr = luaL_checkunsigned(L, 1);
-  unsigned int len = luaL_optunsigned(L, 2, 1);
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-  if (len > RAM_SIZE - 1)
-  {
-      len = RAM_SIZE - 1;
-  }
+    if (len > RAM_SIZE - 1)
+    {
+        len = RAM_SIZE - 1;
+    }
 
-  for (unsigned int i = 0; i < len; i++)
-  {
-      Uint16 data = (Uint16)peek(addr + i) << 8 | (Uint16)peek(addr + i + 1);
-      lua_pushnumber(L, data);
-  }
-  return len;
+    for (unsigned int i = 0; i < len; i++)
+    {
+        Uint16 data = (Uint16)peek(addr + i) << 8 | (Uint16)peek(addr + i + 1);
+        lua_pushnumber(L, fix32_from_uint16(data));
+    }
+
+    return len;
 }
 
 static int pico8_peek4(lua_State* L)
 {
-  unsigned int addr = luaL_checkunsigned(L, 1);
-  unsigned int len = luaL_optunsigned(L, 2, 1);
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-  if (len > RAM_SIZE - 1)
-  {
-      len = RAM_SIZE - 1;
-  }
+    if (len > RAM_SIZE - 1)
+    {
+        len = RAM_SIZE - 1;
+    }
 
-  for (unsigned int i = 0; i < len; i++)
-  {
-      Uint32 data = (Uint32)peek(addr + i) << 24 | (Uint32)peek(addr + i + 1) << 16 | (Uint32)peek(addr + i + 2) << 8 | (Uint32)peek(addr + i + 3);
-      lua_pushnumber(L, data);
-  }
-  return len;
+    for (unsigned int i = 0; i < len; i++)
+    {
+        Uint32 data = (Uint32)peek(addr + i) << 24 | (Uint32)peek(addr + i + 1) << 16 | (Uint32)peek(addr + i + 2) << 8 | (Uint32)peek(addr + i + 3);
+        lua_pushnumber(L, fix32_from_uint32(data));
+    }
+    return len;
 }
 
 static int pico8_poke(lua_State* L)
 {
-    unsigned int addr = luaL_checkunsigned(L, 1);
-    unsigned int n = lua_gettop(L) - 1;
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-    for (unsigned int i = 0; i < n; i++)
+    for (unsigned int i = 0; i < len; i++)
     {
         if (addr + i >= RAM_SIZE)
         {
             break;
         }
-        Uint8 data = (Uint8)luaL_checkinteger(L, 2 + i);
+        Uint8 data = fix32_to_uint8(luaL_checkinteger(L, 2 + i));
         poke(addr + i, data);
     }
 
@@ -853,15 +856,16 @@ static int pico8_poke(lua_State* L)
 
 static int pico8_poke2(lua_State* L)
 {
-    unsigned int addr = luaL_checkunsigned(L, 1);
-    unsigned int n = lua_gettop(L) - 1;
-    for (unsigned int i = 0; i < n; i++)
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
+
+    for (unsigned int i = 0; i < len; i++)
     {
         if (addr + i >= RAM_SIZE - 1)
         {
             break;
         }
-        Uint16 data = (Uint16)luaL_checkinteger(L, 2 + i);
+        Uint16 data = fix32_to_uint16(luaL_checkinteger(L, 2 + i));
         poke(addr + i, (Uint8)(data >> 8));
         poke(addr + i + 1, (Uint8)(data & 0xFF));
     }
@@ -870,15 +874,16 @@ static int pico8_poke2(lua_State* L)
 
 static int pico8_poke4(lua_State* L)
 {
-    unsigned int addr = luaL_checkunsigned(L, 1);
-    unsigned int n = lua_gettop(L) - 1;
-    for (unsigned int i = 0; i < n; i++)
+    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
+
+    for (unsigned int i = 0; i < len; i++)
     {
         if (addr + i >= RAM_SIZE - 3)
         {
             break;
         }
-        Uint32 data = (Uint32)luaL_checkinteger(L, 2 + i);
+        Uint32 data = fix32_to_uint32(luaL_checkinteger(L, 2 + i));
         poke(addr + i, (Uint8)(data >> 24));
         poke(addr + i + 1, (Uint8)(data >> 16));
         poke(addr + i + 2, (Uint8)(data >> 8));

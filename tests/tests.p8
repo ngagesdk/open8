@@ -5,15 +5,12 @@ function assert_equal(actual, expected, test_name)
     if actual == expected then
         log(test_name .. " passed")
     else
-        log(test_name .. " failed: expected " .. string.format("0x%x", expected) .. " but got " .. string.format("0x%x", actual))
+        log(test_name .. " failed: expected " .. string.format("0x%04x", expected) .. " but got " .. string.format("0x%04x", actual))
         failed_tests += 1
     end
 end
 
 function run_tests()
-    local epsilon = 0.0000152587890625
-    local lt_one = 1.0 - epsilon
-
     assert_equal(abs(5),                5, "abs(5)")
     assert_equal(abs(-5),               5, "abs(-5)")
     assert_equal(abs(0),                0, "abs(0)")
@@ -172,6 +169,7 @@ function run_tests()
 
     fillp(0b0011001111001100) -- 0x33CC
     assert_equal(peek2(0x5F31), 0x33CC, "peek2(0x5F31)")
+
 end
 
 run_tests()
