@@ -197,20 +197,48 @@ static double lua_double_from_bits(uint64_t bits) {
 ** convert an hexadecimal or binary numeric string to a number
 */
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
-  uint32_t fixed_value;
+  uint32_t fixed_value = 0;
+  uint32_t fractional_value = 0;
   double r = 0.0;
   int neg = 0;  /* 1 if number is negative */
   *endptr = cast(char *, s);  /* nothing is valid yet */
-  while (lisspace(cast_uchar(*s))) s++;  /* skip initial spaces */
+
+  while (lisspace(cast_uchar(*s))) s++; /* skip initial spaces */
   neg = isneg(&s);  /* check sign */
+
+  /* Validate prefix */
   if (*s != '0' || (base == 2 && *(s + 1) != 'b' && *(s + 1) != 'B')
                 || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
-    return 0;  /* invalid format (no '0b' or '0x') */
-  s += 2;  /* skip '0x' or '0b' */
-  fixed_value = (uint32_t)strtoul(s, endptr, base);  /* read full 32-bit value */
-  if (s == *endptr)
-    return 0;  /* invalid format (no valid number found) */
-  r = (double)fixed_value / 65536.0;  /* convert to 16:16 fixed-point float */
+    return 0;  /* invalid format */
+
+  s += 2;  /* Skip '0x' or '0b' */
+
+  /* Look for the fractional point */
+  const char *frac_part = strchr(s, '.');
+
+  /* Process integer part */
+  fixed_value = (uint32_t)strtoul(s, endptr, base);
+  if (s == *endptr) return 0;  /* No valid integer part */
+
+  /* Process fractional part if present */
+  if (frac_part) {
+    s = frac_part + 1;
+    fractional_value = (uint32_t)strtoul(s, endptr, base);
+
+    /* Determine the scaling factor */
+    int frac_digits = *endptr - s;
+    uint32_t scale_factor = 1;
+    while (frac_digits-- > 0) scale_factor *= base;
+
+    /* Scale fractional part to fixed-point */
+    r = (double)fixed_value + ((double)fractional_value / scale_factor);
+  } else {
+    r = (double)fixed_value;
+  }
+
+  /* Convert to 16:16 fixed point */
+  fixed_value = (uint32_t)(r * 65536.0);
+
   return fix32_from_double(neg ? -r : r);
 }
 

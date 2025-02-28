@@ -350,8 +350,8 @@ static inline fix32_t fix32_mod_assign(fix32_t *a, fix32_t b) {
 
 // PICO-8 0.2.3 changelog: abs(0x8000) should be 0x7fff.ffff
 static inline fix32_t fix32_abs(fix32_t a) {
-    if (a == 0x8000) {
-        return 0x17ffe; // 0x7fff.ffff
+    if (a == 0x80000000) {
+        return 0x7fffffff;
     }
     return a >= 0 ? a : a << 1 == 0 ? fix32_not(a) : fix32_neg(a);
 }
