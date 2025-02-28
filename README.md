@@ -4,13 +4,13 @@
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 
-open8 is an unfinished PICO-8 emulator written in C to support as many platforms as possible, including the Nokia N-Gage.
+open8 is an unfinished PICO-8 emulator written in C to support as many platforms as possible,
+including the Nokia N-Gage.  All platforms supported by SDL3 should be capable of running
+this emulator.
 
 This project is built on [Simple DirectMedia Layer 3](https://www.libsdl.org/).
 
 ![Screenshot 1](media/screenshot_1.png) ![Screenshot 2](media/screenshot_2.png) ![Screenshot 3](media/screenshot_3.png) ![Screenshot 4](media/screenshot_4.png)
-
-The emulator is not yet in a playable state.  All platforms supported by SDL3 should be capable of running this emulator.
 
 ## Licence and Credits
 
