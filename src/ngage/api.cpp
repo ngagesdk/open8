@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include "api.h"
+#include "../api.h"
 
 void update_time(void)
 {
