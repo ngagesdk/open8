@@ -81,15 +81,17 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
 
     if (SDL_LockTexture(screen, NULL, &pixels, &pitch))
     {
+        uint32_t* dst = (uint32_t*)pixels;
         for (int y = 0; y < SCREEN_SIZE; y++)
         {
+            uint32_t row[SCREEN_SIZE];
             for (int x = 0; x < SCREEN_SIZE; x++)
             {
                 uint8_t byte = peek(0x6000 + y * 64 + x / 2);
                 uint8_t color = (x % 2 == 0) ? byte & 0x0F : byte >> 4;
-                uint32_t* pixel = (uint32_t*)pixels + y * SCREEN_SIZE + x;
-                *pixel = lookup_color(color);
+                row[x] = lookup_color(color);
             }
+            SDL_memcpy(dst + y * (pitch / sizeof(uint32_t)), row, SCREEN_SIZE * sizeof(uint32_t));
         }
         SDL_UnlockTexture(screen);
     }
