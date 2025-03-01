@@ -17,7 +17,8 @@
 
 extern uint8_t pico8_ram[RAM_SIZE];
 
-void init_memory(void);
+bool init_memory(SDL_Renderer* renderer);
+void destroy_memory(void);
 void update_from_virtual_memory(SDL_Renderer* renderer);
 
 uint8_t peek(uint16_t addr);

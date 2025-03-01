@@ -30,7 +30,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     {
         return SDL_APP_FAILURE;
     }
-    init_memory();
+    if (!init_memory(renderer))
+    {
+        return SDL_APP_FAILURE;
+    }
 
     return SDL_APP_CONTINUE;
 }
@@ -56,6 +59,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 // This function runs once at shutdown.
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
+    destroy_memory();
     destroy_core();
     destroy_app();
 

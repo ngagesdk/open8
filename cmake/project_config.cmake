@@ -4,6 +4,7 @@ set(project_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/api.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/app.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/auxiliary.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/core.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/image_loader.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
