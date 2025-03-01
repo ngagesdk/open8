@@ -23,7 +23,7 @@ static SDL_Renderer* renderer;
 // This function runs once at startup.
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
-    if (!init_app(&(SDL_Renderer*)renderer, window))
+    if (!init_app((SDL_Renderer**)&renderer, window))
     {
         return SDL_APP_FAILURE;
     }

@@ -43,6 +43,6 @@ typedef enum state
 bool init_core(SDL_Renderer* renderer);
 void destroy_core(void);
 bool handle_events(SDL_Renderer* renderer, SDL_Event* event);
-bool iterate_emulator(SDL_Renderer* renderer);
+bool iterate_core(SDL_Renderer* renderer);
 
 #endif // CORE_H
