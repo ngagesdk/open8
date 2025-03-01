@@ -19,6 +19,7 @@ set(PICO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
 set(base_sources
   ${PICO_DIR}/api.c
+  ${PICO_DIR}/auxiliary.c
   ${PICO_DIR}/memory.c
   ${PICO_DIR}/z8lua/lapi.c
   ${PICO_DIR}/z8lua/lauxlib.c

@@ -548,6 +548,8 @@ bool iterate_core(SDL_Renderer* renderer)
             update_time();
         }
     }
+
+    // Todo: this should be handled when the memory handler copied the screen data.
     SDL_RenderPresent(renderer);
     SDL_Delay(1);
 
