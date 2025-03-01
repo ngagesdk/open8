@@ -23,8 +23,10 @@
 
 #ifdef __SYMBIAN32__
 #define SCALE 1
+#define WINDOW_FLAGS
 #else
 #define SCALE 3
+#define WINDOW_FLAGS (SDL_WINDOW_UTILITY | SDL_WINDOW_ALWAYS_ON_TOP)
 #endif
 
 #endif // CONFIG_H

@@ -1,4 +1,4 @@
-/** @file emulator.h
+/** @file core.h
  *
  *  A portable PICO-8 emulator written in C.
  *
@@ -7,8 +7,8 @@
  *
  **/
 
-#ifndef EMULATOR_H
-#define EMULATOR_H
+#ifndef CORE_H
+#define CORE_H
 
 #include <SDL3/SDL.h>
 
@@ -39,15 +39,9 @@ typedef enum state
 
 } state_t;
 
-bool init_emulator(SDL_Renderer* renderer);
-void destroy_emulator(void);
-void select_next(SDL_Renderer* renderer);
-void select_prev(SDL_Renderer* renderer);
-void render_selection(SDL_Renderer* renderer);
-bool run_script(SDL_Renderer* renderer, const char* file_name);
-bool run_selection(SDL_Renderer* renderer);
+bool init_core(SDL_Renderer* renderer);
+void destroy_core(void);
+bool handle_events(SDL_Renderer* renderer, SDL_Event* event);
+bool iterate_core(SDL_Renderer* renderer);
 
-bool handle_event(SDL_Renderer* renderer, SDL_Event* event);
-bool iterate_emulator(SDL_Renderer* renderer);
-
-#endif // EMULATOR_H
+#endif // CORE_H
