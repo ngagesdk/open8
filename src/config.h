@@ -10,14 +10,21 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define SCALE 1
-#define NGAGE_W 176
-#define NGAGE_H 208
+#include "SDL3/SDL.h"
 
 #define SCREEN_SIZE 128
+#define RAM_SIZE 0x8000
+
+#define WINDOW_W 176
+#define WINDOW_H 208
+
 #define SCREEN_OFFSET_X 24
 #define SCREEN_OFFSET_Y 25
 
-#define RAM_SIZE 0x8000
+#ifdef __SYMBIAN32__
+#define SCALE 1
+#else
+#define SCALE 3
+#endif
 
 #endif // CONFIG_H

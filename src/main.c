@@ -43,7 +43,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     window_flags = SDL_WINDOW_UTILITY | SDL_WINDOW_ALWAYS_ON_TOP;
 #endif
 
-    window = SDL_CreateWindow("Pico-8", NGAGE_W * SCALE, NGAGE_H * SCALE, window_flags);
+    window = SDL_CreateWindow("open8", WINDOW_W * SCALE, WINDOW_H * SCALE, window_flags);
     if (!window)
     {
         SDL_Log("Couldn't create window: %s", SDL_GetError());
