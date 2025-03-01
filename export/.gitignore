@@ -1,0 +1,5 @@
+!.gitignore
+*.exe
+*.ilk
+*.dll
+*.pdb
