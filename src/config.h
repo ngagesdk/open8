@@ -13,7 +13,6 @@
 #include "SDL3/SDL.h"
 
 #define SCREEN_SIZE 128
-#define RAM_SIZE 0x8000
 
 #define WINDOW_W 176
 #define WINDOW_H 208

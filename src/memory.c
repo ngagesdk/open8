@@ -8,3 +8,7 @@
  **/
 
 #include "memory.h"
+
+#include <stdint.h>
+
+uint8_t pico8_ram[RAM_SIZE];

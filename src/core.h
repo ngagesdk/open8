@@ -11,6 +11,7 @@
 #define CORE_H
 
 #include <SDL3/SDL.h>
+#include <stdint.h>
 
 #define CART_WIDTH 160
 #define CART_HEIGHT 205
@@ -21,12 +22,12 @@
 typedef struct cart
 {
     SDL_Texture* image;
-    Uint8* data;
-    Uint32 size;
+    uint8_t* data;
+    uint32_t size;
 
-    Uint8 cart_data[0x8020];
-    Uint8* code;
-    Uint32 code_size;
+    uint8_t cart_data[0x8020];
+    uint8_t* code;
+    uint32_t code_size;
 
     bool is_corrupt;
 
@@ -42,6 +43,6 @@ typedef enum state
 bool init_core(SDL_Renderer* renderer);
 void destroy_core(void);
 bool handle_events(SDL_Renderer* renderer, SDL_Event* event);
-bool iterate_core(SDL_Renderer* renderer);
+bool iterate_emulator(SDL_Renderer* renderer);
 
 #endif // CORE_H

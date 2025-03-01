@@ -14,19 +14,19 @@
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
 #include "config.h"
+#include "memory.h"
 
 static SDL_Renderer* r;
 static fix32_t seed_lo, seed_hi;
-static Uint8 fill_mask[0x4000]; // Fill pattern mask.
+static uint8_t fill_mask[0x4000]; // Fill pattern mask.
 
-Uint8 pico8_ram[RAM_SIZE];
 fix32_t seconds_since_start;
 
  /************************
   * Auxiliary functions. *
   ************************/
 
-static void color_lookup(int col, Uint8* r, Uint8* g, Uint8* b)
+static void color_lookup(int col, uint8_t* r, uint8_t* g, uint8_t* b)
 {
     switch (col)
     {
@@ -218,7 +218,7 @@ static void pset(int x, int y)
         return;
     }
 
-    Uint32* fill_mask_ptr = (Uint32*)fill_mask;
+    uint32_t* fill_mask_ptr = (uint32_t*)fill_mask;
 
     if (*fill_mask_ptr)
     {
@@ -242,8 +242,8 @@ static void draw_dot(int x, int y, int* color)
         return;
     }
 
-    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    Uint8 r_prev, g_prev, b_rev, a_prev;
+    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
+    uint8_t r_prev, g_prev, b_rev, a_prev;
 
     SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
     if (color)
@@ -267,8 +267,8 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
         return;
     }
 
-    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    Uint8 r_prev, g_prev, b_rev, a_prev;
+    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
+    uint8_t r_prev, g_prev, b_rev, a_prev;
 
     SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
 
@@ -334,8 +334,8 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
        return;
    }
 
-   Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
-   Uint8 r_prev, g_prev, b_rev, a_prev;
+   uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
+   uint8_t r_prev, g_prev, b_rev, a_prev;
    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
 
    if (color)
@@ -374,7 +374,7 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    }
 }
 
-static Uint8 peek(Uint16 addr)
+static uint8_t peek(uint16_t addr)
 {
     if (addr >= RAM_SIZE-1)
     {
@@ -384,7 +384,7 @@ static Uint8 peek(Uint16 addr)
     return (pico8_ram[addr]);
 }
 
-static void poke(Uint16 addr, Uint8 data)
+static void poke(uint16_t addr, uint8_t data)
 {
     if (addr >= RAM_SIZE-1)
     {
@@ -463,8 +463,8 @@ static int pico8_cls(lua_State* L)
 {
     int color = fix32_to_int32(luaL_optinteger(L, 1, 0));
 
-    Uint8 r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    Uint8 r_prev, g_prev, b_rev, a_prev;
+    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
+    uint8_t r_prev, g_prev, b_rev, a_prev;
 
     SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
     if (color)
@@ -501,7 +501,7 @@ static int pico8_fget(lua_State* L)
 
 static int pico8_fillp(lua_State* L)
 {
-    Uint16 pattern = fix32_to_uint16(luaL_optnumber(L, 1, 0));
+    uint16_t pattern = fix32_to_uint16(luaL_optnumber(L, 1, 0));
 
 #if 0
     // Predefined pattern values.
@@ -538,8 +538,8 @@ static int pico8_fillp(lua_State* L)
     }
 #endif
 
-    Uint8 high = (pattern & 0xFF00) >> 8;
-    Uint8 low = pattern & 0x00FF;
+    uint8_t high = (pattern & 0xFF00) >> 8;
+    uint8_t low = pattern & 0x00FF;
 
     poke(0x5f31, high);
     poke(0x5f32, low);
@@ -550,7 +550,7 @@ static int pico8_fillp(lua_State* L)
         int row = (i / 128) % 4;
         int col = (i % 128) % 4;
 
-        Uint8 nibble = 0;
+        uint8_t nibble = 0;
         switch (row)
         {
             case 0: nibble = (pattern & 0xF000) >> 12; break;
@@ -559,7 +559,7 @@ static int pico8_fillp(lua_State* L)
             case 3: nibble = (pattern & 0x000F);       break;
         }
 
-        Uint8 pixel = (nibble >> (3 - col)) & 0x1;
+        uint8_t pixel = (nibble >> (3 - col)) & 0x1;
         fill_mask[i] = pixel ? 0xFF : 0x00;
     }
 
@@ -783,7 +783,7 @@ static int pico8_srand(lua_State* L)
 
 static int pico8_peek(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     if (len > RAM_SIZE - 1)
@@ -793,7 +793,7 @@ static int pico8_peek(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        Uint8 data = peek(addr + i);
+        uint8_t data = peek(addr + i);
         lua_pushnumber(L, fix32_from_uint8(data));
     }
     return len;
@@ -801,7 +801,7 @@ static int pico8_peek(lua_State* L)
 
 static int pico8_peek2(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     if (len > RAM_SIZE - 1)
@@ -811,7 +811,7 @@ static int pico8_peek2(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        Uint16 data = (Uint16)peek(addr + i) << 8 | (Uint16)peek(addr + i + 1);
+        uint16_t data = (uint16_t)peek(addr + i) << 8 | (uint16_t)peek(addr + i + 1);
         lua_pushnumber(L, fix32_from_uint16(data));
     }
 
@@ -820,7 +820,7 @@ static int pico8_peek2(lua_State* L)
 
 static int pico8_peek4(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     if (len > RAM_SIZE - 1)
@@ -830,7 +830,7 @@ static int pico8_peek4(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        Uint32 data = (Uint32)peek(addr + i) << 24 | (Uint32)peek(addr + i + 1) << 16 | (Uint32)peek(addr + i + 2) << 8 | (Uint32)peek(addr + i + 3);
+        uint32_t data = (uint32_t)peek(addr + i) << 24 | (uint32_t)peek(addr + i + 1) << 16 | (uint32_t)peek(addr + i + 2) << 8 | (uint32_t)peek(addr + i + 3);
         lua_pushnumber(L, fix32_from_uint32(data));
     }
     return len;
@@ -838,7 +838,7 @@ static int pico8_peek4(lua_State* L)
 
 static int pico8_poke(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     for (unsigned int i = 0; i < len; i++)
@@ -847,7 +847,7 @@ static int pico8_poke(lua_State* L)
         {
             break;
         }
-        Uint8 data = fix32_to_uint8(luaL_checkinteger(L, 2 + i));
+        uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 2 + i));
         poke(addr + i, data);
     }
 
@@ -856,7 +856,7 @@ static int pico8_poke(lua_State* L)
 
 static int pico8_poke2(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     for (unsigned int i = 0; i < len; i++)
@@ -865,16 +865,16 @@ static int pico8_poke2(lua_State* L)
         {
             break;
         }
-        Uint16 data = fix32_to_uint16(luaL_checkinteger(L, 2 + i));
-        poke(addr + i, (Uint8)(data >> 8));
-        poke(addr + i + 1, (Uint8)(data & 0xFF));
+        uint16_t data = fix32_to_uint16(luaL_checkinteger(L, 2 + i));
+        poke(addr + i, (uint8_t)(data >> 8));
+        poke(addr + i + 1, (uint8_t)(data & 0xFF));
     }
     return 0;
 }
 
 static int pico8_poke4(lua_State* L)
 {
-    Uint16 addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
     for (unsigned int i = 0; i < len; i++)
@@ -883,11 +883,11 @@ static int pico8_poke4(lua_State* L)
         {
             break;
         }
-        Uint32 data = fix32_to_uint32(luaL_checkinteger(L, 2 + i));
-        poke(addr + i, (Uint8)(data >> 24));
-        poke(addr + i + 1, (Uint8)(data >> 16));
-        poke(addr + i + 2, (Uint8)(data >> 8));
-        poke(addr + i + 3, (Uint8)(data & 0xFF));
+        uint32_t data = fix32_to_uint32(luaL_checkinteger(L, 2 + i));
+        poke(addr + i, (uint8_t)(data >> 24));
+        poke(addr + i + 1, (uint8_t)(data >> 16));
+        poke(addr + i + 2, (uint8_t)(data >> 8));
+        poke(addr + i + 3, (uint8_t)(data & 0xFF));
     }
     return 0;
 }
