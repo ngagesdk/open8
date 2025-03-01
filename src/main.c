@@ -11,9 +11,6 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
 
-#ifdef __SYMBIAN32__
-#include <SDL3_mixer/SDL_mixer.h>
-#endif
 #include "app.h"
 #include "core.h"
 

@@ -8,6 +8,9 @@
  **/
 
 #include "SDL3/SDL.h"
+#ifdef __SYMBIAN32__
+#include <SDL3_mixer/SDL_mixer.h>
+#endif
 #include "app.h"
 #include "config.h"
 
