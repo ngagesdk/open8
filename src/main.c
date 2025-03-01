@@ -13,6 +13,7 @@
 
 #include "app.h"
 #include "core.h"
+#include "memory.h"
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
@@ -29,6 +30,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     {
         return SDL_APP_FAILURE;
     }
+    init_memory();
 
     return SDL_APP_CONTINUE;
 }

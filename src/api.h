@@ -16,8 +16,9 @@
 #include "z8lua/lua.h"
 #include  "config.h"
 
+extern fix32_t seconds_since_start;
+
 void register_api(lua_State* L, SDL_Renderer* renderer);
-void reset_draw_state(SDL_Renderer* renderer);
 void update_time(void);
 
 #endif // API_H
