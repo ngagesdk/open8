@@ -16,9 +16,13 @@
 #include "config.h"
 #include "emulator.h"
 #include "image_loader.h"
-#include "stb_image.h"
+#include "misc/stb_image.h"
 
+#ifdef _WIN32
+#include "misc/dirent.h"
+#else
 #include <dirent.h>
+#endif
 #include <string.h>
 
 static SDL_Texture* frame;
@@ -56,7 +60,7 @@ bool init_emulator(SDL_Renderer* renderer)
     {
         return false;
     }
-    if (width != NGAGE_W || height != NGAGE_H)
+    if (width != WINDOW_W || height != WINDOW_H)
     {
         SDL_Log("Invalid frame size: %dx%d", width, height);
         SDL_DestroyTexture(frame);
@@ -452,6 +456,11 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     }
     SDL_DestroySurface(surface);
     stbi_image_free(image_data);
+
+    if (!SDL_SetTextureScaleMode(cart->image, SDL_SCALEMODE_NEAREST))
+    {
+        SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
+    }
 
     return 1;
 }

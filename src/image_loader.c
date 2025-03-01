@@ -12,7 +12,7 @@
 
 #define STBI_NO_THREAD_LOCALS
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "misc/stb_image.h"
 
 SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* width, int* height, int* bpp)
 {
@@ -64,6 +64,11 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
     }
     SDL_DestroySurface(surface);
     stbi_image_free(image_data);
+
+    if (!SDL_SetTextureScaleMode(image, SDL_SCALEMODE_NEAREST))
+    {
+        SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
+    }
 
     return image;
 }
