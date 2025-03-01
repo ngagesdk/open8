@@ -8,6 +8,7 @@
  **/
 
 #include <SDL3/SDL.h>
+#include <stdint.h>
 #include "image_loader.h"
 
 #define STBI_NO_THREAD_LOCALS
@@ -27,7 +28,7 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
     long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    Uint8* data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
+    uint8_t* data = (uint8_t*)SDL_calloc(file_size, sizeof(uint8_t));
     if (!data)
     {
         SDL_Log("Couldn't allocate memory for image file data");
@@ -41,7 +42,7 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
     }
     fclose(file);
 
-    Uint32* image_data = (Uint32*)stbi_load_from_memory(data, file_size, width, height, bpp, 4);
+    uint32_t* image_data = (uint32_t*)stbi_load_from_memory(data, file_size, width, height, bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());

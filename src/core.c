@@ -9,6 +9,7 @@
 
 #include <SDL3/SDL.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "lexaloffle/p8_compress.h"
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
@@ -16,6 +17,7 @@
 #include "config.h"
 #include "core.h"
 #include "image_loader.h"
+#include "memory.h"
 #include "misc/stb_image.h"
 
 #ifdef _WIN32
@@ -81,7 +83,7 @@ static void destroy_vm(void)
     lua_close(vm);
 }
 
-static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data)
+static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
 {
     size_t data_index = 0;
     size_t pixel_count = CART_WIDTH * CART_HEIGHT;
@@ -99,13 +101,13 @@ static void extract_pico8_data(const Uint8* image_data, Uint8* cart_data)
         }
 
         // ABGR8888
-        Uint8 A = image_data[i * 4];     // A channel
-        Uint8 B = image_data[i * 4 + 1]; // B channel
-        Uint8 G = image_data[i * 4 + 2]; // G channel
-        Uint8 R = image_data[i * 4 + 3]; // R channel
+        uint8_t A = image_data[i * 4];     // A channel
+        uint8_t B = image_data[i * 4 + 1]; // B channel
+        uint8_t G = image_data[i * 4 + 2]; // G channel
+        uint8_t R = image_data[i * 4 + 3]; // R channel
 
         // Extract the 2 least significant bits from each channel.
-        Uint8 byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
+        uint8_t byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
 
         // Swap nibbles.
         byte = (byte >> 4) | (byte << 4);
@@ -135,7 +137,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    cart->data = (Uint8*)SDL_calloc(file_size, sizeof(Uint8));
+    cart->data = (uint8_t*)SDL_calloc(file_size, sizeof(uint8_t));
     if (!cart->data)
     {
         SDL_Log("Couldn't allocate memory for cart data");
@@ -146,7 +148,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     cart->size = file_size;
     fclose(file);
 
-    Uint32* image_data = (Uint32*)stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
+    uint32_t* image_data = (uint32_t*)stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
@@ -167,12 +169,12 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         return 0;
     }
 
-    extract_pico8_data((const Uint8*)image_data, cart->cart_data);
+    extract_pico8_data((const uint8_t*)image_data, cart->cart_data);
 
-    Uint32 header = *(Uint32*)&cart->cart_data[0x4300];
+    uint32_t header = *(uint32_t*)&cart->cart_data[0x4300];
     int status = 0;
 
-    cart->code = SDL_calloc(MAX_CODE_SIZE, sizeof(Uint8));
+    cart->code = SDL_calloc(MAX_CODE_SIZE, sizeof(uint8_t));
     if (!cart->code)
     {
         SDL_Log("Could not allocate code memory: %s", SDL_GetError());
