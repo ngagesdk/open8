@@ -13,7 +13,6 @@
 
 #include "app.h"
 #include "core.h"
-#include "memory.h"
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
@@ -27,10 +26,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     }
 
     if (!init_core(renderer))
-    {
-        return SDL_APP_FAILURE;
-    }
-    if (!init_memory(renderer))
     {
         return SDL_APP_FAILURE;
     }
@@ -59,7 +54,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 // This function runs once at shutdown.
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
-    destroy_memory();
     destroy_core();
     destroy_app();
 

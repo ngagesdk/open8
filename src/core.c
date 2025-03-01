@@ -440,11 +440,17 @@ bool init_core(SDL_Renderer* renderer)
         return false;
     }
 
-    return init_vm(renderer);
+    if (!init_vm(renderer))
+    {
+        return false;
+    }
+
+    return init_memory(renderer);
 }
 
 void destroy_core(void)
 {
+    destroy_memory();
     destroy_vm();
     destroy_cart(&cart);
     for (int i = 0; i < num_carts; i++)
@@ -546,6 +552,7 @@ bool iterate_core(SDL_Renderer* renderer)
         {
             call_pico8_function(vm, "_draw");
             update_time();
+            update_from_virtual_memory(renderer);
         }
     }
 
