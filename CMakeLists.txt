@@ -159,7 +159,12 @@ else()
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lvm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lzio.c)
 
-  add_executable(open8 ${project_sources} ${z8lua_sources})
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_executable(open8 ${project_sources} ${z8lua_sources})
+  else()
+    add_executable(open8 WIN32 ${project_sources} ${z8lua_sources})
+  endif()
+
   target_link_libraries(open8 PRIVATE SDL3)
 
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
