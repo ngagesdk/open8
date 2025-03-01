@@ -374,25 +374,6 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    }
 }
 
-static uint8_t peek(uint16_t addr)
-{
-    if (addr >= RAM_SIZE-1)
-    {
-        return 0;
-    }
-
-    return (pico8_ram[addr]);
-}
-
-static void poke(uint16_t addr, uint8_t data)
-{
-    if (addr >= RAM_SIZE-1)
-    {
-        return;
-    }
-    pico8_ram[addr] = data;
-}
-
  /***************************
   * Flow-control functions. *
   ***************************/
@@ -962,7 +943,6 @@ static int pico8_log(lua_State* L)
 void register_api(lua_State* L, SDL_Renderer* renderer)
 {
     r = renderer;
-    SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 
     // Flow-control.
     lua_pushcfunction(L, pico8_time);
@@ -1062,12 +1042,6 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     // Debug.
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
-}
-
-void reset_draw_state(SDL_Renderer* renderer)
-{
-    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
-    SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 }
 
 #ifndef __SYMBIAN32__
