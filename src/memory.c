@@ -79,9 +79,6 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     void* pixels;
     int pitch;
 
-    void* pixels;
-    int pitch;
-
     if (SDL_LockTexture(screen, NULL, &pixels, &pitch))
     {
         uint8_t* row = (uint8_t*)pixels;
