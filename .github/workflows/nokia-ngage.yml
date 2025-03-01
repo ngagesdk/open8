@@ -43,25 +43,25 @@ jobs:
       shell: pwsh
 
     - name: Fetch SDK
-      run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
+      run: cmake -G "Ninja" -S ${{ env.NGAGESDK }}/setup -B ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
       shell: pwsh
 
-    - name: Remove existing Pico-8 directory
-      run: Remove-Item -Recurse -Force ${{ env.NGAGESDK }}/projects/Pico-8
+    - name: Remove existing open8 directory
+      run: Remove-Item -Recurse -Force ${{ env.NGAGESDK }}/projects/open8
       shell: pwsh
 
-    - name: Clone Pico-8
-      run: git clone https://github.com/ngagesdk/Pico-8.git ${{ env.NGAGESDK }}/projects/Pico-8
+    - name: Clone open8
+      run: git clone https://github.com/ngagesdk/open8.git ${{ env.NGAGESDK }}/projects/open8
       shell: pwsh
 
-    - name: Build Pico-8
+    - name: Build open8
       run: |
-        cmake -DBUILD_FOR_NOKIA_NGAGE=ON -G "Ninja" -S ${{ env.NGAGESDK }}/projects/Pico-8 -B ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
-        cmake --build ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage
+        cmake -DBUILD_FOR_NOKIA_NGAGE=ON -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -B ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+        cmake --build ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
       shell: pwsh
 
-    - name: Archive Pico-8.sis
+    - name: Archive open8.sis
       uses: actions/upload-artifact@v4
       with:
-        name: Pico-8.sis
-        path: ${{ env.NGAGESDK }}/projects/Pico-8/out/build/N-Gage/Pico-8.sis
+        name: open8.sis
+        path: ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage/open8.sis

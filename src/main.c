@@ -1,6 +1,6 @@
 /** @file main.c
  *
- *  A Pico-8 emulator for the Nokia N-Gage.
+ *  A portable PICO-8 emulator written in C.
  *
  *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
  *  SPDX-License-Identifier: MIT
@@ -28,7 +28,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     SDL_SetHint("SDL_RENDER_DRIVER", "software");
 #endif
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
-    SDL_SetAppMetadata("Pico-8", "1.0", "com.pico-8.ngagesdk");
+    SDL_SetAppMetadata("Pico-8", "1.0", "com.open8.ngagesdk");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
