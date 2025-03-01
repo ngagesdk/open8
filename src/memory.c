@@ -76,11 +76,10 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
      * the least - significant(right - most) 4 - bit nybble is the left pixel.
      *
      */
-
     void* pixels;
     int pitch;
 
-    if (!SDL_LockTexture(screen, NULL, &pixels, &pitch))
+    if (SDL_LockTexture(screen, NULL, &pixels, &pitch))
     {
         for (int y = 0; y < SCREEN_SIZE; y++)
         {
@@ -94,6 +93,7 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         }
         SDL_UnlockTexture(screen);
     }
+    SDL_RenderTexture(renderer, screen, NULL, NULL);
 }
 
 /****************************
