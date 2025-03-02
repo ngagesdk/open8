@@ -521,6 +521,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_ESCAPE:
                         destroy_vm();
                         init_vm(renderer);
+                        reset_memory();
                         state = STATE_MENU;
                         return true;
                 }
@@ -555,8 +556,6 @@ bool iterate_core(SDL_Renderer* renderer)
             update_from_virtual_memory(renderer);
         }
     }
-
-    // Todo: this should be handled when the memory handler copied the screen data.
     SDL_RenderPresent(renderer);
     SDL_Delay(1);
 
