@@ -36,6 +36,7 @@ static cart_t cart;
 static state_t state;
 static lua_State* vm;
 
+static int prev_selection;
 static int selection;
 
 static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
@@ -348,6 +349,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
 static void select_next_cartridge(SDL_Renderer* renderer)
 {
     destroy_cart(&cart);
+    prev_selection = selection;
     selection++;
     if (selection >= num_carts)
     {
@@ -359,6 +361,7 @@ static void select_next_cartridge(SDL_Renderer* renderer)
 static void select_prev_cartridge(SDL_Renderer* renderer)
 {
     destroy_cart(&cart);
+    prev_selection = selection;
     selection--;
     if (selection < 0)
     {
@@ -396,6 +399,7 @@ bool init_core(SDL_Renderer* renderer)
 
     num_carts = 0;
     selection = 0;
+    prev_selection = !selection;
 
     SDL_snprintf(path, sizeof(path), "%sdata/frame.png", SDL_GetBasePath());
     frame = load_image(renderer, path, &width, &height, &bpp);
@@ -536,7 +540,11 @@ bool iterate_core(SDL_Renderer* renderer)
 {
     if (state == STATE_MENU)
     {
-        render_cartridge(renderer);
+        if (selection != prev_selection)
+        {
+            render_cartridge(renderer);
+            SDL_RenderPresent(renderer);
+        }
     }
     else if (state == STATE_EMULATOR)
     {
@@ -555,8 +563,9 @@ bool iterate_core(SDL_Renderer* renderer)
             update_time();
             update_from_virtual_memory(renderer);
         }
+
+        SDL_RenderPresent(renderer);
     }
-    SDL_RenderPresent(renderer);
     SDL_Delay(1);
 
     return true;
