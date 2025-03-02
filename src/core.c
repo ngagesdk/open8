@@ -496,8 +496,16 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_KP_5:
                     case SDLK_SELECT:
                     case SDLK_SPACE:
+                    {
+                        SDL_Rect clip;
+                        clip.x = SCREEN_OFFSET_X;
+                        clip.y = SCREEN_OFFSET_Y;
+                        clip.w = SCREEN_SIZE;
+                        clip.h = SCREEN_SIZE;
+                        SDL_SetRenderClipRect(renderer, &clip);
                         run_cartridge(renderer);
                         return true;
+                    }
                     case SDLK_7:
                     case SDLK_LALT:
                         SDL_Log("Running test script");
@@ -523,6 +531,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                 {
                     case SDLK_SOFTLEFT:
                     case SDLK_ESCAPE:
+                        SDL_SetRenderClipRect(renderer, NULL);
                         destroy_vm();
                         init_vm(renderer);
                         reset_memory();
