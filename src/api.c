@@ -48,6 +48,7 @@ static void pset(int x, int y)
     x += SCREEN_OFFSET_X;
     y += SCREEN_OFFSET_Y;
 
+    //poke(0x6000 + (y << 6) + (x >> 1), 0xF0);
     SDL_RenderPoint(r, (float)x, (float)y);
 }
 
@@ -636,15 +637,15 @@ static int pico8_peek4(lua_State* L)
 static int pico8_poke(lua_State* L)
 {
     uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
-    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
+    unsigned int num_args = lua_gettop(L);
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 1; i < num_args; i++)
     {
         if (addr + i >= RAM_SIZE)
         {
             break;
         }
-        uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 2 + i));
+        uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 1 + i));
         poke(addr + i, data);
     }
 
@@ -654,38 +655,42 @@ static int pico8_poke(lua_State* L)
 static int pico8_poke2(lua_State* L)
 {
     uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
-    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
+    unsigned int num_args = lua_gettop(L);
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 2; i <= num_args; i++)
     {
-        if (addr + i >= RAM_SIZE - 1)
+        if (addr >= RAM_SIZE - 1)
         {
             break;
         }
-        uint16_t data = fix32_to_uint16(luaL_checkinteger(L, 2 + i));
-        poke(addr + i, (uint8_t)(data >> 8));
-        poke(addr + i + 1, (uint8_t)(data & 0xFF));
+        uint16_t data = fix32_to_uint16(luaL_checkinteger(L, i));
+        poke(addr, (data >> 8) & 0xFF);
+        poke(addr + 1, data & 0xFF);
+        addr += 2;
     }
+
     return 0;
 }
 
 static int pico8_poke4(lua_State* L)
 {
     uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
-    unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
+    unsigned int num_args = lua_gettop(L);
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 2; i <= num_args; i++)
     {
-        if (addr + i >= RAM_SIZE - 3)
+        if (addr >= RAM_SIZE - 3)
         {
             break;
         }
-        uint32_t data = fix32_to_uint32(luaL_checkinteger(L, 2 + i));
-        poke(addr + i, (uint8_t)(data >> 24));
-        poke(addr + i + 1, (uint8_t)(data >> 16));
-        poke(addr + i + 2, (uint8_t)(data >> 8));
-        poke(addr + i + 3, (uint8_t)(data & 0xFF));
+        uint32_t data = fix32_to_uint32(luaL_checkinteger(L, i));
+        poke(addr, (data >> 24) & 0xFF);
+        poke(addr + 1, (data >> 16) & 0xFF);
+        poke(addr + 2, (data >> 8) & 0xFF);
+        poke(addr + 3, data & 0xFF);
+        addr += 4;
     }
+
     return 0;
 }
 
