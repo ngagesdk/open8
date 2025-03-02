@@ -19,6 +19,7 @@
 
 static SDL_Renderer* r;
 static fix32_t seed_lo, seed_hi;
+
 static uint8_t fill_mask[0x4000]; // Fill pattern mask.
 
 fix32_t seconds_since_start;
@@ -27,7 +28,7 @@ fix32_t seconds_since_start;
   * Auxiliary functions. *
   ************************/
 
-static void pset(int x, int y)
+static void pset(int x, int y, int* color)
 {
     if ((unsigned)x >= 128 || (unsigned)y >= 128)
     {
@@ -36,6 +37,7 @@ static void pset(int x, int y)
 
     uint32_t* fill_mask_ptr = (uint32_t*)fill_mask;
 
+    // This needs to be optimized.
     if (*fill_mask_ptr)
     {
         int index = y * 128 + x;
@@ -45,36 +47,32 @@ static void pset(int x, int y)
         }
     }
 
-    x += SCREEN_OFFSET_X;
-    y += SCREEN_OFFSET_Y;
+    uint8_t col;
 
-    //poke(0x6000 + (y << 6) + (x >> 1), 0xF0);
-    SDL_RenderPoint(r, (float)x, (float)y);
-}
-
-static void draw_dot(int x, int y, int* color)
-{
-    if (!r)
+    if (!color)
     {
-        return;
+        col = peek(0x5f25);
+    }
+    else
+    {
+        col = *color & 0x0F;
     }
 
-    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    uint8_t r_prev, g_prev, b_rev, a_prev;
+    uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
+    uint8_t current_byte = peek(addr);
 
-    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
-    if (color)
+    if (x & 1)
     {
-        color_lookup(*color, &r_set, &g_set, &b_set);
-        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
+        // Right pixel (most-significant nybble).
+        current_byte = (current_byte & 0x0F) | (col << 4);
+    }
+    else
+    {
+        // Left pixel (least-significant nybble).
+        current_byte = (current_byte & 0xF0) | col;
     }
 
-    pset(x, y);
-
-    if (color)
-    {
-        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
-    }
+    poke(addr, current_byte);
 }
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
@@ -82,17 +80,6 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
     if (!r)
     {
         return;
-    }
-
-    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    uint8_t r_prev, g_prev, b_rev, a_prev;
-
-    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
-
-    if (color)
-    {
-        color_lookup(*color, &r_set, &g_set, &b_set);
-        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
     }
 
     int x = 0;
@@ -105,25 +92,25 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
         {
             for (int i = (cx - x); i <= (cx + x); i++)
             {
-                pset(i, cy + y);
-                pset(i, cy - y);
+                pset(i, cy + y, color);
+                pset(i, cy - y, color);
             }
             for (int i = (cx - y); i <= (cx + y); i++)
             {
-                pset(i, cy + x);
-                pset(i, cy - x);
+                pset(i, cy + x, color);
+                pset(i, cy - x, color);
             }
         }
         else
         {
-            pset(cx + x, cy + y);
-            pset(cx - x, cy + y);
-            pset(cx + x, cy - y);
-            pset(cx - x, cy - y);
-            pset(cx + y, cy + x);
-            pset(cx - y, cy + x);
-            pset(cx + y, cy - x);
-            pset(cx - y, cy - x);
+            pset(cx + x, cy + y, color);
+            pset(cx - x, cy + y, color);
+            pset(cx + x, cy - y, color);
+            pset(cx - x, cy - y, color);
+            pset(cx + y, cy + x, color);
+            pset(cx - y, cy + x, color);
+            pset(cx + y, cy - x, color);
+            pset(cx - y, cy - x, color);
         }
 
         if (d < 0)
@@ -137,11 +124,6 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
         }
         x++;
     }
-
-    if (color)
-    {
-        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
-    }
 }
 
 static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
@@ -151,23 +133,13 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
        return;
    }
 
-   uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
-   uint8_t r_prev, g_prev, b_rev, a_prev;
-   SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
-
-   if (color)
-   {
-       color_lookup(*color, &r_set, &g_set, &b_set);
-       SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
-   }
-
    if (fill)
    {
        for (int y = y0; y <= y1; y++)
        {
            for (int x = x0; x <= x1; x++)
            {
-               pset(x, y);
+               pset(x, y, color);
            }
        }
    }
@@ -175,19 +147,14 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    {
        for (int x = x0; x <= x1; x++)
        {
-           pset(x, y0);
-           pset(x, y1);
+           pset(x, y0, color);
+           pset(x, y1, color);
        }
        for (int y = y0; y <= y1; y++)
        {
-           pset(x0, y);
-           pset(x1, y);
+           pset(x0, y, color);
+           pset(x1, y, color);
        }
-   }
-
-   if (color)
-   {
-       SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
    }
 }
 
@@ -260,23 +227,9 @@ static int pico8_clip(lua_State* L)
 static int pico8_cls(lua_State* L)
 {
     int color = fix32_to_int32(luaL_optinteger(L, 1, 0));
+    uint8_t color_pair = (color & 0x0F) << 4 | (color & 0x0F);
 
-    uint8_t r_set = 0x00, g_set = 0x00, b_set = 0x00;
-    uint8_t r_prev, g_prev, b_rev, a_prev;
-
-    SDL_GetRenderDrawColor(r, &r_prev, &g_prev, &b_rev, &a_prev);
-    if (color)
-    {
-        color_lookup(color, &r_set, &g_set, &b_set);
-        SDL_SetRenderDrawColor(r, r_set, g_set, b_set, 255);
-    }
-
-    SDL_RenderClear(r);
-
-    if (color)
-    {
-        SDL_SetRenderDrawColor(r, r_prev, g_prev, b_rev, a_prev);
-    }
+    p8_memset(0x6000, color_pair, 0x2000);
 
     return 0;
 }
@@ -416,12 +369,12 @@ static int pico8_pset(lua_State* L)
 
     if (lua_gettop(L) == 3)
     {
-        int color = luaL_checkinteger(L, 3);
-        draw_dot(x, y, &color);
+        int color = (int)fix32_to_int32(luaL_checkinteger(L, 3));
+        pset(x, y, &color);
     }
     else
     {
-        draw_dot(x, y, NULL);
+        pset(x, y, NULL);
     }
 
     return 0;
