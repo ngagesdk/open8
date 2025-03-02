@@ -18,6 +18,47 @@ uint8_t pico8_ram[RAM_SIZE];
 static SDL_Texture* screen;
 static SDL_Texture* sprite_sheet;
 
+static void set_fill_mask_bit(int x, int y)
+{
+    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
+    int row = (y % 4);
+    int col = (x % 4);
+
+    uint8_t nibble = 0;
+    switch (row)
+    {
+        case 0: nibble = (pattern & 0xF000) >> 12; break;
+        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
+        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
+        case 3: nibble = (pattern & 0x000F);       break;
+    }
+
+    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
+    if (pixel)
+    {
+        pico8_ram[0x6000 + y * 128 + x] = 0xFF;
+    }
+}
+
+static bool is_fill_mask_bit_set(int x, int y)
+{
+    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
+    int row = (y % 4);
+    int col = (x % 4);
+
+    uint8_t nibble = 0;
+    switch (row)
+    {
+        case 0: nibble = (pattern & 0xF000) >> 12; break;
+        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
+        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
+        case 3: nibble = (pattern & 0x000F);       break;
+    }
+
+    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
+    return pixel != 0;
+}
+
 bool init_memory(SDL_Renderer* renderer)
 {
     if (!renderer)
