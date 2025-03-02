@@ -20,8 +20,6 @@
 static SDL_Renderer* r;
 static fix32_t seed_lo, seed_hi;
 
-static uint8_t fill_mask[0x4000]; // Fill pattern mask.
-
 fix32_t seconds_since_start;
 
  /************************
@@ -35,44 +33,52 @@ static void pset(int x, int y, int* color)
         return;
     }
 
-    uint32_t* fill_mask_ptr = (uint32_t*)fill_mask;
+    // Get the fill pattern from the virtual RAM.
+    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
+    int row = (y % 4);
+    int col = (x % 4);
 
-    // This needs to be optimized.
-    if (*fill_mask_ptr)
+    uint8_t nibble = 0;
+    switch (row)
     {
-        int index = y * 128 + x;
-        if (fill_mask[index])
-        {
-            return;
-        }
+        case 0: nibble = (pattern & 0xF000) >> 12; break;
+        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
+        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
+        case 3: nibble = (pattern & 0x000F);       break;
     }
 
-    uint8_t col;
+    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
+    if (pixel)
+    {
+        return;
+    }
+
+    uint8_t p8_color;
 
     if (!color)
     {
-        col = peek(0x5f25);
+        p8_color = pico8_ram[0x5f25];
     }
     else
     {
-        col = *color & 0x0F;
+        p8_color = *color & 0x0F;
     }
 
     uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
-    uint8_t current_byte = peek(addr);
+    uint8_t current_byte = pico8_ram[addr];
 
     if (x & 1)
     {
         // Right pixel (most-significant nybble).
-        current_byte = (current_byte & 0x0F) | (col << 4);
+        current_byte = (current_byte & 0x0F) | (p8_color << 4);
     }
     else
     {
         // Left pixel (least-significant nybble).
-        current_byte = (current_byte & 0xF0) | col;
+        current_byte = (current_byte & 0xF0) | p8_color;
     }
 
-    poke(addr, current_byte);
+    pico8_ram[addr] = current_byte;
 }
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
@@ -292,27 +298,8 @@ static int pico8_fillp(lua_State* L)
     uint8_t high = (pattern & 0xFF00) >> 8;
     uint8_t low = pattern & 0x00FF;
 
-    poke(0x5f31, high);
-    poke(0x5f32, low);
-
-    // Set fill pattern mask.
-    for (int i = 0; i < 0x4000; i++)
-    {
-        int row = (i / 128) % 4;
-        int col = (i % 128) % 4;
-
-        uint8_t nibble = 0;
-        switch (row)
-        {
-            case 0: nibble = (pattern & 0xF000) >> 12; break;
-            case 1: nibble = (pattern & 0x0F00) >> 8;  break;
-            case 2: nibble = (pattern & 0x00F0) >> 4;  break;
-            case 3: nibble = (pattern & 0x000F);       break;
-        }
-
-        uint8_t pixel = (nibble >> (3 - col)) & 0x1;
-        fill_mask[i] = pixel ? 0xFF : 0x00;
-    }
+    pico8_ram[0x5f31] = high;
+    pico8_ram[0x5f32] = low;
 
     return 0;
 }
