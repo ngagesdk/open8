@@ -33,37 +33,19 @@ static void pset(int x, int y, int* color)
         return;
     }
 
-    // Get the fill pattern from the virtual RAM.
     uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
-    int row = (y % 4);
-    int col = (x % 4);
+    int row = (y & 3); // Equivalent to y % 4.
+    int col = (x & 3); // Equivalent to x % 4.
 
-    uint8_t nibble = 0;
-    switch (row)
-    {
-        case 0: nibble = (pattern & 0xF000) >> 12; break;
-        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
-        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
-        case 3: nibble = (pattern & 0x000F);       break;
-    }
+    // Precompute the nibble for the current row.
+    uint8_t nibble = (pattern >> (12 - (row * 4))) & 0x0F;
 
-    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
-    if (pixel)
+    if (((nibble >> (3 - col)) & 0x1))
     {
         return;
     }
 
-    uint8_t p8_color;
-
-    if (!color)
-    {
-        p8_color = pico8_ram[0x5f25];
-    }
-    else
-    {
-        p8_color = *color & 0x0F;
-    }
-
+    uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
     uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
     uint8_t current_byte = pico8_ram[addr];
 
