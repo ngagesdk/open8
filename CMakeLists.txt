@@ -158,9 +158,6 @@ else()
 
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
-  configure_file("${sdl3_SOURCE_DIR}/lib/x86/SDL3.dll" ${CMAKE_CURRENT_SOURCE_DIR}/export COPYONLY)
-  configure_file("${sdl3_SOURCE_DIR}/lib/x86/SDL3.pdb" ${CMAKE_CURRENT_SOURCE_DIR}/export COPYONLY)
-
   include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${sdl3_SOURCE_DIR}/include")
