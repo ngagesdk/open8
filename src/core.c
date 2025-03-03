@@ -65,7 +65,7 @@ static bool init_vm(SDL_Renderer* renderer)
     }
     lua_setpico8memory(vm, pico8_ram);
     luaL_openlibs(vm);
-    init_api(vm, renderer);
+    init_api(vm);
 
     if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {
@@ -413,12 +413,6 @@ bool init_core(SDL_Renderer* renderer)
     {
         return false;
     }
-    //if (width != WINDOW_W || height != WINDOW_H)
-    //{
-    //    SDL_Log("Invalid frame size: %dx%d", width, height);
-    //    SDL_DestroyTexture(frame);
-    //    return false;
-    //}
 
     SDL_snprintf(path, sizeof(path), "%scarts", SDL_GetBasePath());
 
@@ -460,7 +454,6 @@ bool init_core(SDL_Renderer* renderer)
 
 void destroy_core(void)
 {
-    destroy_api();
     destroy_memory();
     destroy_vm();
     destroy_cart(&cart);
