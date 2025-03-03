@@ -19,7 +19,6 @@
 #include "memory.h"
 
 static fix32_t seed_lo, seed_hi;
-static SDL_Texture* font;
 
 fix32_t seconds_since_start;
 
@@ -683,19 +682,6 @@ void init_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "t");
 
     // Graphics.
-
-    if (renderer)
-    {
-        int width, height, bpp;
-        char path[256];
-        SDL_snprintf(path, sizeof(path), "%s/data/font.png", SDL_GetBasePath());
-        font = load_image(renderer, path, &width, &height, &bpp);
-        if (!font)
-        {
-            // Nothing to do here.
-        }
-    }
-
     lua_pushcfunction(L, pico8_camera);
     lua_setglobal(L, "camera");
     lua_pushcfunction(L, pico8_circ);
@@ -787,14 +773,6 @@ void init_api(lua_State* L, SDL_Renderer* renderer)
     // Debug.
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
-}
-
-void destroy_api(void)
-{
-    if (font)
-    {
-        SDL_DestroyTexture(font);
-    }
 }
 
 #ifndef __SYMBIAN32__
