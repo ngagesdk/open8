@@ -51,7 +51,7 @@ set(base_sources
 set(tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/tests.c)
 
 add_executable(tests ${base_sources} ${tests_sources})
-target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
+target_link_libraries(tests PRIVATE ${SDL3_LIBRARIES})
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
