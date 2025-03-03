@@ -5,7 +5,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 option(BUILD_FOR_NOKIA_NGAGE "Build for Nokia N-Gage" OFF)
-option(BUILD_FOR_NINTENDO_3DS "Build for Nintendo 3DS" OFF)
 option (BUILD_CI_WORKFLOW "Build CI workflow" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -113,22 +112,11 @@ else()
 
   project(open8 C)
 
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/export")
+  set(EXPORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/export)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXPORT_DIR})
 
-  include(FetchContent)
-
-  FetchContent_Declare(
-  sdl3
-    URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.4/SDL3-devel-3.2.4-VC.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
-
-  FetchContent_MakeAvailable(sdl3)
-  message(STATUS "Extracted files are located in: ${sdl3_SOURCE_DIR}")
-
-  add_library(SDL3 STATIC IMPORTED)
-
-  set_target_properties(SDL3 PROPERTIES
-    IMPORTED_LOCATION "${sdl3_SOURCE_DIR}/lib/x86/SDL3.lib")
+  include(get_SDL3)
+  get_SDL3("3.2.6")
 
   set(z8lua_sources
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lapi.c
@@ -166,7 +154,7 @@ else()
     add_executable(open8 WIN32 ${project_sources} ${z8lua_sources})
   endif()
 
-  target_link_libraries(open8 PRIVATE SDL3)
+  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
 
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
@@ -177,7 +165,7 @@ else()
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${sdl3_SOURCE_DIR}/include")
 
-  if(BUILD_FOR_NINTENDO_3DS)
+  if (NINTENDO_3DS)
     set(ROMFS_DIR "${CMAKE_CURRENT_BINARY_DIR}/romfs")
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/data DESTINATION ${ROMFS_DIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/carts DESTINATION ${ROMFS_DIR})
