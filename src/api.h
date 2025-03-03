@@ -10,7 +10,6 @@
 #ifndef API_H
 #define API_H
 
-#include <SDL3/SDL.h>
 #include "z8lua/fix32.h"
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
@@ -18,7 +17,8 @@
 
 extern fix32_t seconds_since_start;
 
-void register_api(lua_State* L, SDL_Renderer* renderer);
+void init_api(lua_State* L, SDL_Renderer* renderer);
+void destroy_api(void);
 void update_time(void);
 
 #endif // API_H
