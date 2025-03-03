@@ -16,7 +16,7 @@ int main()
     }
     lua_setpico8memory(vm, ram);
     luaL_openlibs(vm);
-    register_api(vm, NULL);
+    init_api(vm, NULL);
 
     if (luaL_loadfile(vm, "tests.p8") || lua_pcall(vm, 0, 1, 0))
     {
