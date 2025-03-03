@@ -145,7 +145,7 @@ static int getnum()
 
 // ---------------------
 
-#define PXA_READ_VAL(x) getval(8)
+#define PXA_READ_VAL(x) getval(x)
 
 static void init_literals_state(int* literal, int* literal_pos)
 {
@@ -179,7 +179,7 @@ int pxa_decompress(uint8* in_p, uint8* out_p, int max_len)
 
     int header[8];
     for (i = 0; i < 8; i++)
-        header[i] = PXA_READ_VAL();
+        header[i] = PXA_READ_VAL(8);
 
     int raw_len = header[4] * 256 + header[5];
     int comp_len = header[6] * 256 + header[7];
