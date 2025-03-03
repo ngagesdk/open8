@@ -1,19 +1,16 @@
 cmake_minimum_required(VERSION 3.14)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+
 project(tests C)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set(EXPORT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXPORT_DIR}")
 
 set(CMAKE_C_STANDARD 99)
 
-include(FetchContent)
-
-FetchContent_Declare(
-    sdl3
-    URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.4/SDL3-devel-3.2.4-VC.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
-
-FetchContent_MakeAvailable(sdl3)
-message(STATUS "Extracted files are located in: ${sdl3_SOURCE_DIR}")
+include(get_SDL3)
+get_SDL3("3.2.6")
 
 set(PICO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
@@ -53,17 +50,10 @@ set(base_sources
 
 set(tests_sources ${CMAKE_CURRENT_SOURCE_DIR}/tests.c)
 
-add_library(SDL3 STATIC IMPORTED)
-
-set_target_properties(SDL3 PROPERTIES
-  IMPORTED_LOCATION "${sdl3_SOURCE_DIR}/lib/x86/SDL3.lib")
-
 add_executable(tests ${base_sources} ${tests_sources})
-target_link_libraries(tests PRIVATE SDL3)
+target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-
-configure_file("${sdl3_SOURCE_DIR}/lib/x86/SDL3.dll" ${CMAKE_CURRENT_SOURCE_DIR} COPYONLY)
 
 include_directories(
   "${CMAKE_CURRENT_SOURCE_DIR}/../src"
