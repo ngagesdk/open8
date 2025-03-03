@@ -375,6 +375,7 @@ static void render_cartridge(SDL_Renderer* renderer)
 
     SDL_FRect source;
     SDL_FRect dest;
+    SDL_FRect frame_dest;
 
     source.x = 16.f;
     source.y = 24.f;
@@ -386,8 +387,14 @@ static void render_cartridge(SDL_Renderer* renderer)
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
+    frame_dest.x = FRAME_OFFSET_X;
+    frame_dest.y = FRAME_OFFSET_Y;
+    frame_dest.w = 176.f;
+    frame_dest.h = 208.f;
+
+    SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
     SDL_RenderClear(renderer);
-    SDL_RenderTexture(renderer, frame, NULL, NULL);
+    SDL_RenderTexture(renderer, frame, NULL, &frame_dest);
     SDL_RenderTexture(renderer, cart.image, &source, &dest);
 }
 
@@ -406,12 +413,12 @@ bool init_core(SDL_Renderer* renderer)
     {
         return false;
     }
-    if (width != WINDOW_W || height != WINDOW_H)
-    {
-        SDL_Log("Invalid frame size: %dx%d", width, height);
-        SDL_DestroyTexture(frame);
-        return false;
-    }
+    //if (width != WINDOW_W || height != WINDOW_H)
+    //{
+    //    SDL_Log("Invalid frame size: %dx%d", width, height);
+    //    SDL_DestroyTexture(frame);
+    //    return false;
+    //}
 
     SDL_snprintf(path, sizeof(path), "%scarts", SDL_GetBasePath());
 
