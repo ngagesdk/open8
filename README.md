@@ -2,7 +2,7 @@
 
 ![open8 logo](media/logo.png)
 
-[![Continuous Integration](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml)
+[![Nokia N-Gage](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml)
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 
