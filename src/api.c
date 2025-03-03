@@ -673,7 +673,7 @@ static int pico8_log(lua_State* L)
  * API Registration. *
  *********************/
 
-void init_api(lua_State* L, SDL_Renderer* renderer)
+void init_api(lua_State* L)
 {
     // Flow-control.
     lua_pushcfunction(L, pico8_time);
