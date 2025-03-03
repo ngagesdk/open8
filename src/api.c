@@ -198,22 +198,33 @@ static int pico8_cls(lua_State* L)
         pico8_ram[0x6000 + i] = color_pair;
     }
 
+    // Clear clip rectangle.
 
+    // tbd.
+
+    // Reset cursor position.
+    pico8_ram[0x5f26] = 0x00;
+    pico8_ram[0x5f27] = 0x00;
 
     return 0;
 }
 
 static int pico8_color(lua_State* L)
 {
-    uint8_t color = fix32_to_uint8(luaL_optinteger(L, 1, 6));
-
-    pico8_ram[0x5f25] = color;
-
+    pico8_ram[0x5f25] = fix32_to_uint8(luaL_optinteger(L, 1, 6));
     return 0;
 }
 
 static int pico8_cursor(lua_State* L)
 {
+    pico8_ram[0x5f26] = fix32_to_uint8(luaL_checkunsigned(L, 1, 0)); // X.
+    pico8_ram[0x5f27] = fix32_to_uint8(luaL_checkunsigned(L, 2, 0)); // Y.
+
+    if (lua_gettop(L) == 3)
+    {
+        pico8_ram[0x5f25] = fix32_to_uint8(luaL_optinteger(L, 3, 0));
+    }
+
     return 0;
 }
 
@@ -261,12 +272,8 @@ static int pico8_fillp(lua_State* L)
     }
 #endif
 
-    uint8_t high = (pattern & 0xFF00) >> 8;
-    uint8_t low = pattern & 0x00FF;
-
-    pico8_ram[0x5f31] = high;
-    pico8_ram[0x5f32] = low;
-
+    pico8_ram[0x5f31] = (pattern & 0xFF00) >> 8;
+    pico8_ram[0x5f32] = pattern & 0x00FF;
     return 0;
 }
 
