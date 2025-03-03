@@ -1,0 +1,45 @@
+name: Nintendo 3DS
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  n3ds:
+    name: Build (Nintendo 3DS)
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout SDL3
+        uses: actions/checkout@v4
+        with:
+          repository: libsdl-org/SDL
+          path: .github/SDL
+          ref: release-3.2.6
+      - name: Install SDL3
+        run: |
+          cmake -S .github/SDL -B .github/SDL-build -DCMAKE_TOOLCHAIN_FILE=$DEVKITPRO/cmake/3DS.cmake \
+                -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build .github/SDL-build --config ${{ env.BUILD_TYPE }}
+          cmake --install .github/SDL-build --config ${{ env.BUILD_TYPE }}
+
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -B build \
+                -DCMAKE_TOOLCHAIN_FILE=$DEVKITPRO/cmake/3DS.cmake \
+                -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build project
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DS_build
+          path: build/open8.3dsx
+          if-no-files-found: error
