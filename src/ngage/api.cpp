@@ -1,4 +1,4 @@
-/** @file api_ngage.cpp
+/** @file api.cpp
  *
  *  A portable PICO-8 emulator written in C.
  *
