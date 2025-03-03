@@ -37,9 +37,9 @@ jobs:
       - name: Build project
         run: cmake --build build --config ${{ env.BUILD_TYPE }}
 
-      - name: Upload application
+      - name: Archive open8
         uses: actions/upload-artifact@v4
         with:
-          name: 3DS_build
+          name: open8-N3DS.zip
           path: build/open8.3dsx
           if-no-files-found: error
