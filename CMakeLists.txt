@@ -5,6 +5,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 option(BUILD_FOR_NOKIA_NGAGE "Build for Nokia N-Gage" OFF)
+option(BUILD_FOR_NINTENDO_3DS "Build for Nintendo 3DS" OFF)
 option (BUILD_CI_WORKFLOW "Build CI workflow" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -175,5 +176,21 @@ else()
   include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${sdl3_SOURCE_DIR}/include")
+
+  if(BUILD_FOR_NINTENDO_3DS)
+    set(ROMFS_DIR "${CMAKE_CURRENT_BINARY_DIR}/romfs")
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/data DESTINATION ${ROMFS_DIR})
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/carts DESTINATION ${ROMFS_DIR})
+    set(SMDH_FILE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.smdh")
+    ctr_generate_smdh("${SMDH_FILE}"
+      NAME "open8"
+      DESCRIPTION "A portable PICO-8 emulator"
+      AUTHOR "Michael Fitzmayer"
+      ICON "${CMAKE_CURRENT_SOURCE_DIR}/icon.png")
+    ctr_create_3dsx(
+      ${APP_NAME}
+      ROMFS "${ROMFS_DIR}"
+      SMDH "${SMDH_FILE}")
+  endif()
 
 endif()
