@@ -15,7 +15,6 @@
 #include "z8lua/fix32.h"
 #include "auxiliary.h"
 #include "config.h"
-#include "image_loader.h"
 #include "memory.h"
 
 static fix32_t seed_lo, seed_hi;
@@ -33,7 +32,7 @@ static void pset(int x, int y, int* color)
         return;
     }
 
-    uint16_t pattern = *(uint16_t*)&pico8_ram[0x5f31];
+    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
     int row_shift = 12 - ((y & 3) << 2); // Precompute shift amount.
     uint8_t nibble = (pattern >> row_shift) & 0x0F;
 
@@ -192,10 +191,7 @@ static int pico8_cls(lua_State* L)
     int color = fix32_to_int32(luaL_optinteger(L, 1, 0));
     uint8_t color_pair = (color & 0x0F) << 4 | (color & 0x0F);
 
-    for (uint16_t i = 0; i < 0x2000; i++)
-    {
-        pico8_ram[0x6000 + i] = color_pair;
-    }
+    SDL_memset(&pico8_ram[0x6000], color_pair, 0x2000);
 
     // Clear clip rectangle.
 
@@ -273,6 +269,7 @@ static int pico8_fillp(lua_State* L)
 
     pico8_ram[0x5f31] = (pattern & 0xFF00) >> 8;
     pico8_ram[0x5f32] = pattern & 0x00FF;
+
     return 0;
 }
 
