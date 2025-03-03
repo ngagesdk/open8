@@ -217,8 +217,8 @@ static int pico8_color(lua_State* L)
 
 static int pico8_cursor(lua_State* L)
 {
-    pico8_ram[0x5f26] = fix32_to_uint8(luaL_checkunsigned(L, 1, 0)); // X.
-    pico8_ram[0x5f27] = fix32_to_uint8(luaL_checkunsigned(L, 2, 0)); // Y.
+    pico8_ram[0x5f26] = fix32_to_uint8(luaL_checkunsigned(L, 1)); // X.
+    pico8_ram[0x5f27] = fix32_to_uint8(luaL_checkunsigned(L, 2)); // Y.
 
     if (lua_gettop(L) == 3)
     {
@@ -683,13 +683,17 @@ void init_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "t");
 
     // Graphics.
-    int width, height, bpp;
-    char path[256];
-    SDL_snprintf(path, sizeof(path), "%s/data/font.png", SDL_GetBasePath());
-    font = load_image(renderer, path, &width, &height, &bpp);
-    if (!font)
+
+    if (renderer)
     {
-        // Nothing to do here.
+        int width, height, bpp;
+        char path[256];
+        SDL_snprintf(path, sizeof(path), "%s/data/font.png", SDL_GetBasePath());
+        font = load_image(renderer, path, &width, &height, &bpp);
+        if (!font)
+        {
+            // Nothing to do here.
+        }
     }
 
     lua_pushcfunction(L, pico8_camera);
