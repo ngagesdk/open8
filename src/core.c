@@ -65,9 +65,8 @@ static bool init_vm(SDL_Renderer* renderer)
     }
     lua_setpico8memory(vm, pico8_ram);
     luaL_openlibs(vm);
-    register_api(vm, renderer);
+    init_api(vm, renderer);
 
-    puts("\r");
     if (luaL_dostring(vm, "log('Lua VM initialized successfully')"))
     {
         SDL_Log("Lua VM could not be initialised: %s", lua_tostring(vm, -1));
@@ -454,6 +453,7 @@ bool init_core(SDL_Renderer* renderer)
 
 void destroy_core(void)
 {
+    destroy_api();
     destroy_memory();
     destroy_vm();
     destroy_cart(&cart);

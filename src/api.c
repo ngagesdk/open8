@@ -15,10 +15,11 @@
 #include "z8lua/fix32.h"
 #include "auxiliary.h"
 #include "config.h"
+#include "image_loader.h"
 #include "memory.h"
 
-static SDL_Renderer* r;
 static fix32_t seed_lo, seed_hi;
+static SDL_Texture* font;
 
 fix32_t seconds_since_start;
 
@@ -28,48 +29,30 @@ fix32_t seconds_since_start;
 
 static void pset(int x, int y, int* color)
 {
-    if ((unsigned)x >= 128 || (unsigned)y >= 128)
+    if (((unsigned)x | (unsigned)y) >= 128)
     {
         return;
     }
 
-    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
-    int row = (y & 3); // Equivalent to y % 4.
-    int col = (x & 3); // Equivalent to x % 4.
+    uint16_t pattern = *(uint16_t*)&pico8_ram[0x5f31];
+    int row_shift = 12 - ((y & 3) << 2); // Precompute shift amount.
+    uint8_t nibble = (pattern >> row_shift) & 0x0F;
 
-    // Precompute the nibble for the current row.
-    uint8_t nibble = (pattern >> (12 - (row * 4))) & 0x0F;
-
-    if (((nibble >> (3 - col)) & 0x1))
+    if (nibble & (1 << (3 - (x & 3))))
     {
         return;
     }
 
     uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
     uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
-    uint8_t current_byte = pico8_ram[addr];
+    uint8_t mask = (x & 1) ? 0x0F : 0xF0;
+    uint8_t shift = (x & 1) ? 4 : 0;
 
-    if (x & 1)
-    {
-        // Right pixel (most-significant nybble).
-        current_byte = (current_byte & 0x0F) | (p8_color << 4);
-    }
-    else
-    {
-        // Left pixel (least-significant nybble).
-        current_byte = (current_byte & 0xF0) | p8_color;
-    }
-
-    pico8_ram[addr] = current_byte;
+    pico8_ram[addr] = (pico8_ram[addr] & mask) | (p8_color << shift);
 }
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
 {
-    if (!r)
-    {
-        return;
-    }
-
     int x = 0;
     int y = radius;
     int d = 3 - 2 * radius;
@@ -116,11 +99,6 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
 
 static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
 {
-   if (!r)
-   {
-       return;
-   }
-
    if (fill)
    {
        for (int y = y0; y <= y1; y++)
@@ -207,29 +185,35 @@ static int pico8_circfill(lua_State* L)
 
 static int pico8_clip(lua_State* L)
 {
-    // Reset region when calling cls().
     return 0;
 }
 
-// Todo: Reset clip region, reset cursor position to 0,0.
 static int pico8_cls(lua_State* L)
 {
     int color = fix32_to_int32(luaL_optinteger(L, 1, 0));
     uint8_t color_pair = (color & 0x0F) << 4 | (color & 0x0F);
 
-    p8_memset(0x6000, color_pair, 0x2000);
+    for (uint16_t i = 0; i < 0x2000; i++)
+    {
+        pico8_ram[0x6000 + i] = color_pair;
+    }
+
+
 
     return 0;
 }
 
 static int pico8_color(lua_State* L)
 {
+    uint8_t color = fix32_to_uint8(luaL_optinteger(L, 1, 6));
+
+    pico8_ram[0x5f25] = color;
+
     return 0;
 }
 
 static int pico8_cursor(lua_State* L)
 {
-    // Reset position when calling cls().
     return 0;
 }
 
@@ -513,7 +497,7 @@ static int pico8_peek(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        uint8_t data = peek(addr + i);
+        uint8_t data = pico8_ram[addr + i];
         lua_pushnumber(L, fix32_from_uint8(data));
     }
     return len;
@@ -531,7 +515,7 @@ static int pico8_peek2(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        uint16_t data = (uint16_t)peek(addr + i) << 8 | (uint16_t)peek(addr + i + 1);
+        uint16_t data = (uint16_t)pico8_ram[addr + i] << 8 | (uint16_t)pico8_ram[addr + i + 1];
         lua_pushnumber(L, fix32_from_uint16(data));
     }
 
@@ -550,7 +534,7 @@ static int pico8_peek4(lua_State* L)
 
     for (unsigned int i = 0; i < len; i++)
     {
-        uint32_t data = (uint32_t)peek(addr + i) << 24 | (uint32_t)peek(addr + i + 1) << 16 | (uint32_t)peek(addr + i + 2) << 8 | (uint32_t)peek(addr + i + 3);
+        uint32_t data = (uint32_t)pico8_ram[addr + i] << 24 | (uint32_t)pico8_ram[addr + i + 1] << 16 | (uint32_t)pico8_ram[addr + i + 2] << 8 | (uint32_t)pico8_ram[addr + i + 3];
         lua_pushnumber(L, fix32_from_uint32(data));
     }
     return len;
@@ -568,7 +552,7 @@ static int pico8_poke(lua_State* L)
             break;
         }
         uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 1 + i));
-        poke(addr + i, data);
+        pico8_ram[addr + i] = data;
     }
 
     return 0;
@@ -586,8 +570,8 @@ static int pico8_poke2(lua_State* L)
             break;
         }
         uint16_t data = fix32_to_uint16(luaL_checkinteger(L, i));
-        poke(addr, (data >> 8) & 0xFF);
-        poke(addr + 1, data & 0xFF);
+        pico8_ram[addr] = (data >> 8) & 0xFF;
+        pico8_ram[addr + 1] = data & 0xFF;
         addr += 2;
     }
 
@@ -606,10 +590,10 @@ static int pico8_poke4(lua_State* L)
             break;
         }
         uint32_t data = fix32_to_uint32(luaL_checkinteger(L, i));
-        poke(addr, (data >> 24) & 0xFF);
-        poke(addr + 1, (data >> 16) & 0xFF);
-        poke(addr + 2, (data >> 8) & 0xFF);
-        poke(addr + 3, data & 0xFF);
+        pico8_ram[addr] = (data >> 24) & 0xFF;
+        pico8_ram[addr + 1] = (data >> 16) & 0xFF;
+        pico8_ram[addr + 2] = (data >> 8) & 0xFF;
+        pico8_ram[addr + 3] = data & 0xFF;
         addr += 4;
     }
 
@@ -673,7 +657,7 @@ static int pico8_log(lua_State* L)
         {
             return luaL_error(L, "'tostring' must return a string to 'print'");
         }
-        SDL_Log("%s", s);
+        SDL_Log("\r%s", s);
         lua_pop(L, 1);
     }
     return 0;
@@ -683,10 +667,8 @@ static int pico8_log(lua_State* L)
  * API Registration. *
  *********************/
 
-void register_api(lua_State* L, SDL_Renderer* renderer)
+void init_api(lua_State* L, SDL_Renderer* renderer)
 {
-    r = renderer;
-
     // Flow-control.
     lua_pushcfunction(L, pico8_time);
     lua_setglobal(L, "time");
@@ -694,6 +676,15 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     lua_setglobal(L, "t");
 
     // Graphics.
+    int width, height, bpp;
+    char path[256];
+    SDL_snprintf(path, sizeof(path), "%s/data/font.png", SDL_GetBasePath());
+    font = load_image(renderer, path, &width, &height, &bpp);
+    if (!font)
+    {
+        // Nothing to do here.
+    }
+
     lua_pushcfunction(L, pico8_camera);
     lua_setglobal(L, "camera");
     lua_pushcfunction(L, pico8_circ);
@@ -785,6 +776,14 @@ void register_api(lua_State* L, SDL_Renderer* renderer)
     // Debug.
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
+}
+
+void destroy_api(void)
+{
+    if (font)
+    {
+        SDL_DestroyTexture(font);
+    }
 }
 
 #ifndef __SYMBIAN32__

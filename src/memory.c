@@ -74,12 +74,79 @@ void destroy_memory(void)
 
 void update_from_virtual_memory(SDL_Renderer* renderer)
 {
-    if (!renderer)
-    {
-        return;
-    }
+    /* Sprite sheet.
+     * 0x0000  - 0x0fff
+     *
+     */
 
-    /* Update screen.
+
+    /* Sprite sheet / Map, row 32 - 63 (shared)
+     * 0x1000  - 0x1fff
+     *
+     */
+
+
+    /* Map, row 0 - 31.
+     * 0x2000  - 0x2fff
+     *
+     */
+
+
+    /* Sprite flags.
+     * 0x3000  - 0x30ff
+     *
+     */
+
+
+    /* Music.
+     * 0x3100  - 0x31ff
+     *
+     */
+
+
+    /* Sound effects.
+     * 0x3200  - 0x42ff
+     *
+     */
+
+
+    /* General use or work RAM.
+     * 0x4300  - 0x55ff
+     *
+     */
+
+
+    /* General use / custom font.
+     * 0x5600  - 0x5dff
+     *
+     */
+
+
+    /* Persistent cart data.
+     * 0x5e00  - 0x5eff
+     *
+     */
+
+
+    /* Draw state.
+     * 0x5f00  - 0x5f3f
+     *
+     */
+
+
+    /* Hardware state.
+     * 0x5f40  - 0x5f7f
+     *
+     */
+
+
+    /* GPIO pins.
+     * 0x5f80  - 0x5FFF
+     *
+     */
+
+
+    /* Screen data.
      * 0x6000 - 0x7FFF
      * All 128 rows of the screen, top to bottom. Each row contains 128 pixels in 64 bytes.
      * Each byte contains two adjacent pixels, with the low 4 bits being the left/even pixel
@@ -102,7 +169,7 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             uint32_t* pixel = (uint32_t*)row;
             for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
             {
-                uint8_t byte = peek(0x6000 + (y << 6) + (x >> 1));
+                uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
                 uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
                 *pixel = lookup_color(color);
             }
@@ -117,80 +184,4 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     dest.h = SCREEN_SIZE;
 
     SDL_RenderTexture(renderer, screen, NULL, &dest);
-}
-
-/****************************
- * Memory access functions. *
- ****************************/
-
-uint8_t peek(uint16_t addr)
-{
-    if (addr >= RAM_SIZE-1)
-    {
-        return 0;
-    }
-
-    return (pico8_ram[addr]);
-}
-
-void poke(uint16_t addr, uint8_t data)
-{
-    if (addr >= RAM_SIZE-1)
-    {
-        return;
-    }
-    pico8_ram[addr] = data;
-}
-
-void p8_memset(uint16_t addr, uint8_t data, uint16_t len)
-{
-    if (addr + len >= RAM_SIZE)
-    {
-        len = RAM_SIZE - addr;
-    }
-    for (uint16_t i = 0; i < len; i++)
-    {
-        pico8_ram[addr + i] = data;
-    }
-}
-
-bool is_fill_mask_bit_set(int x, int y)
-{
-    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
-    int row = (y % 4);
-    int col = (x % 4);
-
-    uint8_t nibble = 0;
-    switch (row)
-    {
-        case 0: nibble = (pattern & 0xF000) >> 12; break;
-        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
-        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
-        case 3: nibble = (pattern & 0x000F);       break;
-    }
-
-    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
-    return pixel != 0;
-}
-
-void set_fill_mask_bit(int x, int y)
-{
-    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
-    int row = (y % 4);
-    int col = (x % 4);
-
-    uint8_t nibble = 0;
-    switch (row)
-    {
-        case 0: nibble = (pattern & 0xF000) >> 12; break;
-        case 1: nibble = (pattern & 0x0F00) >> 8;  break;
-        case 2: nibble = (pattern & 0x00F0) >> 4;  break;
-        case 3: nibble = (pattern & 0x000F);       break;
-    }
-
-    uint8_t pixel = (nibble >> (3 - col)) & 0x1;
-    if (pixel)
-    {
-        pico8_ram[0x6000 + y * 128 + x] = 0xFF;
-    }
 }
