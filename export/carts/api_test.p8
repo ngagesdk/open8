@@ -1,18 +1,27 @@
--- waves demo
--- by zep
+local t = 0
 
-r=64
+function _init()
+    fillp(0b1010010110100101)
+end
+
+function _update()
+    t += 0.01
+end
 
 function _draw()
-	local color = 1
-	cls()
-		for y=-r,r,3 do
-			for x=-r,r,2 do
-				local dist=sqrt(x*x+y*y)
-				z=cos(dist/40-t())*6
-				pset(r+x,r+y-z,color)
-			color+=1
-			if color>15 then color=1 end
-		end
-	end
+    cls()
+
+    for i = 0, 15 do
+        local x = 64 + cos(t + i * 0.2) * 40
+        local y = 64 + sin(t + i * 0.2) * 40
+        local size = 10 + sin(t + i * 0.5) * 5
+        rectfill(x - size, y - size, x + size, y + size, i + 1)
+    end
+
+    for i = 0, 15 do
+        local x = 64 + cos(t + i * 0.3) * 30
+        local y = 64 + sin(t + i * 0.3) * 30
+        local radius = 5 + sin(t + i * 0.7) * 3
+        circfill(x, y, radius, i + 1)
+    end
 end
