@@ -121,7 +121,7 @@
 #define LUAI_UACNUMBER		fix32_t
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"
-#define lua_number2str(s, n)	sprintf((s), LUA_NUMBER_FMT, (n))
+extern int lua_number2str(char* s, fix32_t n);
 #define LUAI_MAXNUMBER2STR	32
 #define LUA_INTFRMLEN		"l"
 #define LUA_INTFRM_T		long

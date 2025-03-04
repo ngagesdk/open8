@@ -988,7 +988,9 @@ LJ_ASMF int32_t lj_vm_tointg(double x);
 
 static LJ_AINLINE int32_t lj_num2bit(lua_Number n)
 {
-#if LJ_SOFTFP
+#if LJ_FIX32
+    return (int32_t)n;
+#elif LJ_SOFTFP
   return lj_vm_tobit(n);
 #else
   TValue o;
