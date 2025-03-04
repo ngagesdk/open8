@@ -23,10 +23,23 @@ StrScanFmt lj_strscan_scan(const uint8_t *p, MSize len, TValue *o, uint32_t opt)
 
     // Check for hexadecimal format.
     if (len > 2 && p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
-        unsigned long hex_value = strtoul((const char*)p, &endptr, 16);
+        unsigned long int_part = strtoul((const char*)p, &endptr, 16);
+        uint64_t frac_part = 0;
+        int frac_len = 0;
+
+        if (*endptr == '.') {
+            char* frac_str = endptr + 1;
+            frac_part = strtoul(frac_str, &endptr, 16);
+            frac_len = endptr - frac_str;
+        }
+
         if (endptr == (const char*)p + len) {
-            o->u64 = hex_value;
-            o->n = (double)hex_value;
+            o->u64 = int_part;
+            if (frac_len > 0) {
+                o->n = fix32_from_double(int_part + (frac_part / (double)(1ULL << (4 * frac_len))));
+            } else {
+                o->n = fix32_from_double(int_part);
+            }
             return STRSCAN_NUM;
         }
         return STRSCAN_ERROR;
