@@ -10,6 +10,7 @@
 #define WINVER 0x0501
 #endif
 #include <stddef.h>
+#include "fix32.h"
 
 /* Default path for loading Lua and C modules with require(). */
 #if defined(_WIN32)
@@ -116,10 +117,10 @@
 ** from the standard Lua distribution. They must not be changed for LuaJIT.
 */
 #define LUA_NUMBER_DOUBLE
-#define LUA_NUMBER		double
-#define LUAI_UACNUMBER		double
-#define LUA_NUMBER_SCAN		"%lf"
-#define LUA_NUMBER_FMT		"%.14g"
+#define LUA_NUMBER		fix32_t
+#define LUAI_UACNUMBER		fix32_t
+#define LUA_NUMBER_SCAN		"%d"
+#define LUA_NUMBER_FMT		"%d"
 #define lua_number2str(s, n)	sprintf((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32
 #define LUA_INTFRMLEN		"l"

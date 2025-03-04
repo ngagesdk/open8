@@ -66,11 +66,11 @@ LJ_FUNC int32_t lj_lib_checkintrange(lua_State *L, int narg,
 #endif
 
 #if LJ_TARGET_WINDOWS
-#define lj_lib_checkfpu(L) \
-  do { setnumV(L->top++, (lua_Number)1437217655); \
-    if (lua_tointeger(L, -1) != 1437217655) lj_err_caller(L, LJ_ERR_BADFPU); \
-    L->top--; } while (0)
-#else
+//#define lj_lib_checkfpu(L) \
+//  do { setnumV(L->top++, (lua_Number)1437217655); \
+//    if (lua_tointeger(L, -1) != 1437217655) lj_err_caller(L, LJ_ERR_BADFPU); \
+//    L->top--; } while (0)
+//#else
 #define lj_lib_checkfpu(L)	UNUSED(L)
 #endif
 

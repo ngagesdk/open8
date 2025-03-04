@@ -13,6 +13,7 @@
 #ifndef FIX32_H
 #define FIX32_H
 
+#include <stdlib.h> // strtod()
 #include <stdint.h> // int32_t, int64_t, …
 #include <math.h> // pow()
 

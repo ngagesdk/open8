@@ -979,22 +979,24 @@ static LJ_AINLINE void copyTV(lua_State *L, TValue *o1, const TValue *o2)
 
 /* -- Number to integer conversion ---------------------------------------- */
 
-#if LJ_SOFTFP
-LJ_ASMF int32_t lj_vm_tobit(double x);
-#if LJ_TARGET_MIPS64
-LJ_ASMF int32_t lj_vm_tointg(double x);
-#endif
-#endif
+#include "fix32.h"
+#define lj_vm_tobit(x)	((int32_t)(x))
+//#if LJ_SOFTFP
+//LJ_ASMF int32_t lj_vm_tobit(fix32_t x);
+//#if LJ_TARGET_MIPS64
+//LJ_ASMF int32_t lj_vm_tointg(double x);
+//#endif
+//#endif
 
 static LJ_AINLINE int32_t lj_num2bit(lua_Number n)
 {
-#if LJ_SOFTFP
+//#if LJ_SOFTFP
   return lj_vm_tobit(n);
-#else
-  TValue o;
-  o.n = n + 6755399441055744.0;  /* 2^52 + 2^51 */
-  return (int32_t)o.u32.lo;
-#endif
+//#else
+//  TValue o;
+//  o.n = n + 6755399441055744.0;  /* 2^52 + 2^51 */
+//  return (int32_t)o.u32.lo;
+//#endif
 }
 
 #define lj_num2int(n)   ((int32_t)(n))

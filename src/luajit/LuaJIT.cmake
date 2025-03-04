@@ -94,9 +94,9 @@ test_big_endian(LJ_BIG_ENDIAN)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectArchitecture.cmake)
 detect_architecture(LJ_DETECTED_ARCH)
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectFPUApi.cmake)
-detect_fpu_mode(LJ_DETECTED_FPU_MODE)
-detect_fpu_abi(LJ_DETECTED_FPU_ABI)
+#include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectFPUApi.cmake)
+#detect_fpu_mode(LJ_DETECTED_FPU_MODE)
+#detect_fpu_abi(LJ_DETECTED_FPU_ABI)
 
 if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   find_library(LIBM_LIBRARIES NAMES m)
@@ -150,23 +150,23 @@ else()
   message(FATAL_ERROR "Unsupported target architecture: '${LJ_DETECTED_ARCH}'")
 endif()
 
-if("${LJ_DETECTED_FPU_MODE}" STREQUAL "Hard")
-  set(LJ_HAS_FPU 1)
-  set(DASM_FLAGS ${DASM_FLAGS} -D FPU)
-  set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ARCH_HASFPU=1)
-else()
+#if("${LJ_DETECTED_FPU_MODE}" STREQUAL "Hard")
+#  set(LJ_HAS_FPU 1)
+#  set(DASM_FLAGS ${DASM_FLAGS} -D FPU)
+#  set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ARCH_HASFPU=1)
+#else()
   set(LJ_HAS_FPU 0)
   set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ARCH_HASFPU=0)
-endif()
+#endif()
 
-if("${LJ_DETECTED_FPU_ABI}" STREQUAL "Hard")
-  set(LJ_ABI_SOFTFP 0)
-  set(DASM_FLAGS ${DASM_FLAGS} -D HFABI)
-  set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ABI_SOFTFP=0)
-else()
+#if("${LJ_DETECTED_FPU_ABI}" STREQUAL "Hard")
+#  set(LJ_ABI_SOFTFP 0)
+#  set(DASM_FLAGS ${DASM_FLAGS} -D HFABI)
+#  set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ABI_SOFTFP=0)
+#else()
   set(LJ_ABI_SOFTFP 1)
   set(TARGET_ARCH ${TARGET_ARCH} -DLJ_ABI_SOFTFP=1)
-endif()
+#endif()
 
 set(TARGET_ARCH ${TARGET_ARCH} -DLUAJIT_TARGET=LUAJIT_ARCH_${LJ_TARGET_ARCH})
 
@@ -550,6 +550,15 @@ add_custom_target(lj_gen_folddef ALL
 
 file(GLOB_RECURSE SRC_LJCORE    "${LJ_DIR}/lj_*.c")
 file(GLOB_RECURSE SRC_LIBCORE   "${LJ_DIR}/lib_*.c")
+
+set(EXCLUDE_FILES
+  "${LJ_DIR}/lib_debug.c"
+  "${LJ_DIR}/lib_io.c"
+  "${LJ_DIR}/lib_math.c"
+  "${LJ_DIR}/lib_os.c")
+
+list(REMOVE_ITEM SRC_LJCORE ${EXCLUDE_FILES})
+list(REMOVE_ITEM SRC_LIBCORE ${EXCLUDE_FILES})
 
 if(LUAJIT_BUILD_ALAMG)
   set(luajit_sources ${LJ_DIR}/ljamalg.c ${LJ_VM_NAME})

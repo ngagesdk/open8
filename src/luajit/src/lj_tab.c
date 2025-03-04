@@ -376,7 +376,7 @@ void lj_tab_reasize(lua_State *L, GCtab *t, uint32_t nasize)
 
 cTValue * LJ_FASTCALL lj_tab_getinth(GCtab *t, int32_t key)
 {
-  TValue k;
+  TValue k = { 0 };
   Node *n;
   k.n = (lua_Number)key;
   n = hashnum(t, &k);
@@ -509,7 +509,7 @@ TValue *lj_tab_newkey(lua_State *L, GCtab *t, cTValue *key)
 
 TValue *lj_tab_setinth(lua_State *L, GCtab *t, int32_t key)
 {
-  TValue k;
+  TValue k = { 0 };
   Node *n;
   k.n = (lua_Number)key;
   n = hashnum(t, &k);
