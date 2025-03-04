@@ -30,11 +30,11 @@
 
 #include "lua.h"
 
-#define LUAJIT_VERSION		"LuaJIT 2.1.ROLLING"
+#define LUAJIT_VERSION		"LuaJIT 2.1 (open8)"
 #define LUAJIT_VERSION_NUM	20199  /* Deprecated. */
 #define LUAJIT_VERSION_SYM	luaJIT_version_2_1_ROLLING
 #define LUAJIT_COPYRIGHT	"Copyright (C) 2005-2025 Mike Pall"
-#define LUAJIT_URL		"https://luajit.org/"
+#define LUAJIT_URL		"https://github.com/ngagesdk/open8"
 
 /* Modes for luaJIT_setmode. */
 #define LUAJIT_MODE_MASK	0x00ff
