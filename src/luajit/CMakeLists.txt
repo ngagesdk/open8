@@ -6,6 +6,7 @@ option(LUAJIT_DIR "Path of LuaJIT 2.1 source dir" OFF)
 set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+add_compile_definitions(LJ_FIX32)
 
 if(CMAKE_COMPILER_IS_GNUCC)
   set(LUA_TARGET_SHARED ON)

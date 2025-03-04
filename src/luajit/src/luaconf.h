@@ -104,7 +104,7 @@
 #endif
 
 /* Note: changing the following defines breaks the Lua 5.1 ABI. */
-#define LUA_INTEGER	ptrdiff_t
+#define LUA_INTEGER	fix32_t
 #define LUA_IDSIZE	60	/* Size of lua_Debug.short_src. */
 /*
 ** Size of lauxlib and io.* on-stack buffers. Weird workaround to avoid using
@@ -116,11 +116,11 @@
 /* The following defines are here only for compatibility with luaconf.h
 ** from the standard Lua distribution. They must not be changed for LuaJIT.
 */
-#define LUA_NUMBER_DOUBLE
+#define LUA_NUMBER_DOUBLE fix32_t
 #define LUA_NUMBER		fix32_t
 #define LUAI_UACNUMBER		fix32_t
-#define LUA_NUMBER_SCAN		"%d"
-#define LUA_NUMBER_FMT		"%d"
+#define LUA_NUMBER_SCAN		"%lf"
+#define LUA_NUMBER_FMT		"%.14g"
 #define lua_number2str(s, n)	sprintf((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32
 #define LUA_INTFRMLEN		"l"

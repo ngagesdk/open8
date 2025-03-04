@@ -269,7 +269,7 @@ static int nd_similar(uint32_t* nd, uint32_t ndhi, uint32_t* ref, MSize hilen,
 static char *lj_strfmt_wfnum(SBuf *sb, SFormat sf, lua_Number n, char *p)
 {
   MSize width = STRFMT_WIDTH(sf), prec = STRFMT_PREC(sf), len;
-  TValue t;
+  TValue t = { 0 };
   t.n = n;
   if (LJ_UNLIKELY((t.u32.hi << 1) >= 0xffe00000)) {
     /* Handle non-finite values uniformly for %a, %e, %f, %g. */

@@ -328,44 +328,67 @@ LJ_DATA const CCallInfo lj_ir_callinfo[IRCALL__MAX+1];
 #define softfp_ui2f __floatunsisf
 #define softfp_f2i __fixsfsi
 #define softfp_f2ui __fixunssfsi
-#else
+#elif LJ_FIX32
 #include "fix32.h"
 #define softfp_add fix32_add
 #define softfp_sub fix32_sub
 #define softfp_mul fix32_mul
 #define softfp_div fix32_div
-#define softfp_cmp fix32_eq
-#define softfp_i2d fix32_from_int
-#define softfp_d2i fix32_to_int
-#define softfp_ui2d fix32_from_uint32
-#define softfp_f2d fix32_from_double
-#define softfp_d2ui fix32_to_uint32
-#define softfp_d2f fix32_to_double
-#define softfp_i2f fix32_from_int
-#define softfp_ui2f fix32_from_uint32
-#define softfp_f2i fix32_to_int
-#define softfp_f2ui fix32_to_uint32
+#define softfp_cmp fix32_cmp
+#define softfp_i2d fix32_to_double
+#define softfp_d2i fix32_from_double
+#define softfp_ui2d fix32_to_double
+#define softfp_f2d fix32_to_double
+#define softfp_d2ui fix32_from_double
+#define softfp_d2f fix32_to_float
+#define softfp_i2f fix32_to_float
+#define softfp_ui2f fix32_to_float
+#define softfp_f2i fix32_from_float
+#define softfp_f2ui fix32_from_float
+#else
+#error "Missing soft-float definitions for target architecture"
 #endif
+
+#if LJ_FIX32
 extern fix32_t softfp_add(fix32_t a, fix32_t b);
 extern fix32_t softfp_sub(fix32_t a, fix32_t b);
 extern fix32_t softfp_mul(fix32_t a, fix32_t b);
 extern fix32_t softfp_div(fix32_t a, fix32_t b);
-extern int softfp_cmp(fix32_t a, fix32_t b);
-extern fix32_t softfp_i2d(int32_t a);
-extern int32_t softfp_d2i(fix32_t a);
+extern void softfp_cmp(fix32_t a, fix32_t b);
+extern double softfp_i2d(int32_t a);
+extern int32_t softfp_d2i(double a);
 #if LJ_HASFFI
-extern fix32_t softfp_ui2d(uint32_t a);
-extern fix32_t softfp_f2d(double a);
-extern uint32_t softfp_d2ui(fix32_t a);
-extern double softfp_d2f(fix32_t a);
-extern fix32_t softfp_i2f(int32_t a);
-extern fix32_t softfp_ui2f(uint32_t a);
-extern int32_t softfp_f2i(fix32_t a);
-extern uint32_t softfp_f2ui(fix32_t a);
+extern double softfp_ui2d(fix32_t a);
+extern double softfp_f2d(fix32_t a);
+extern fix32_t softfp_d2ui(double a);
+extern float softfp_d2f(fix32_t a);
+extern float softfp_i2f(fix32_t a);
+extern float softfp_ui2f(fix32_t a);
+extern fix32_t softfp_f2i(float a);
+extern fix32_t softfp_f2ui(float a);
+#endif
+#else
+extern double softfp_add(double a, double b);
+extern double softfp_sub(double a, double b);
+extern double softfp_mul(double a, double b);
+extern double softfp_div(double a, double b);
+extern void softfp_cmp(double a, double b);
+extern double softfp_i2d(int32_t a);
+extern int32_t softfp_d2i(double a);
+#if LJ_HASFFI
+extern double softfp_ui2d(uint32_t a);
+extern double softfp_f2d(float a);
+extern uint32_t softfp_d2ui(double a);
+extern float softfp_d2f(double a);
+extern float softfp_i2f(int32_t a);
+extern float softfp_ui2f(uint32_t a);
+extern int32_t softfp_f2i(float a);
+extern uint32_t softfp_f2ui(float a);
 #endif
 #if LJ_TARGET_MIPS
 extern double lj_vm_sfmin(double a, double b);
 extern double lj_vm_sfmax(double a, double b);
+#endif
 #endif
 #endif
 
