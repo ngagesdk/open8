@@ -17,6 +17,8 @@
 #include "config.h"
 #include "memory.h"
 
+#define TO_BE_DONE SDL_Log("%s is not implemented yet.", __func__); return 0
+
 static fix32_t seed_lo, seed_hi;
 
 fix32_t seconds_since_start;
@@ -47,6 +49,17 @@ static void pset(int x, int y, int* color)
     uint8_t shift = (x & 1) ? 4 : 0;
 
     pico8_ram[addr] = (pico8_ram[addr] & mask) | (p8_color << shift);
+}
+
+static uint8_t pget(int x, int y)
+{
+    if (((unsigned)x | (unsigned)y) >= 128)
+    {
+        return 0;
+    }
+    uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
+    uint8_t shift = (x & 1) ? 4 : 0;
+    return (pico8_ram[addr] >> shift) & 0x0F;
 }
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
@@ -95,6 +108,110 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
     }
 }
 
+static void draw_line(int x0, int y0, int x1, int y1, int* color)
+{
+   int dx = abs(x1 - x0);
+   int dy = abs(y1 - y0);
+   int sx = (x0 < x1) ? 1 : -1;
+   int sy = (y0 < y1) ? 1 : -1;
+   int err = dx - dy;
+
+   while (true)
+   {
+       pset(x0, y0, color);
+
+       if (x0 == x1 && y0 == y1)
+       {
+           break;
+       }
+
+       int e2 = 2 * err;
+       if (e2 > -dy)
+       {
+           err -= dy;
+           x0 += sx;
+       }
+       if (e2 < dx)
+       {
+           err += dx;
+           y0 += sy;
+       }
+   }
+}
+
+static void draw_oval(int x0, int y0, int x1, int y1, int* color, bool fill)
+{
+    int a = abs(x1 - x0) / 2;
+    int b = abs(y1 - y0) / 2;
+    int xc = (x0 + x1) / 2;
+    int yc = (y0 + y1) / 2;
+
+    int a2 = a * a;
+    int b2 = b * b;
+    int fa2 = 4 * a2, fb2 = 4 * b2;
+    int x = 0, y = b;
+    int sigma = 2 * b2 + a2 * (1 - 2 * b);
+
+    // First half.
+    while (b2 * x <= a2 * y)
+    {
+        if (fill)
+        {
+            for (int i = xc - x; i <= xc + x; i++)
+            {
+                pset(i, yc + y, color);
+                pset(i, yc - y, color);
+            }
+        }
+        else
+        {
+            pset(xc + x, yc + y, color);
+            pset(xc - x, yc + y, color);
+            pset(xc + x, yc - y, color);
+            pset(xc - x, yc - y, color);
+        }
+
+        if (sigma >= 0)
+        {
+            sigma += fa2 * (1 - y);
+            y--;
+        }
+        sigma += b2 * (4 * x + 6);
+        x++;
+    }
+
+    // Second half.
+    x = a;
+    y = 0;
+    sigma = 2 * a2 + b2 * (1 - 2 * a);
+    while (a2 * y <= b2 * x)
+    {
+        if (fill)
+        {
+            for (int i = xc - x; i <= xc + x; i++)
+            {
+                pset(i, yc + y, color);
+                pset(i, yc - y, color);
+            }
+        }
+        else
+        {
+            pset(xc + x, yc + y, color);
+            pset(xc - x, yc + y, color);
+            pset(xc + x, yc - y, color);
+            pset(xc - x, yc - y, color);
+        }
+
+        if (sigma >= 0)
+        {
+            sigma += fb2 * (1 - x);
+            x--;
+        }
+        sigma += a2 * (4 * y + 6);
+        y++;
+    }
+}
+
 static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
 {
    if (fill)
@@ -138,7 +255,7 @@ static int pico8_time(lua_State* L)
 
 static int pico8_camera(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_circ(lua_State* L)
@@ -183,7 +300,7 @@ static int pico8_circfill(lua_State* L)
 
 static int pico8_clip(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_cls(lua_State* L)
@@ -225,7 +342,7 @@ static int pico8_cursor(lua_State* L)
 
 static int pico8_fget(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_fillp(lua_State* L)
@@ -275,47 +392,94 @@ static int pico8_fillp(lua_State* L)
 
 static int pico8_flip(lua_State* L)
 {
+    // We might not need this function.
     return 0;
 }
 
 static int pico8_fset(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_line(lua_State* L)
 {
+    int x0 = fix32_to_int(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int(luaL_checknumber(L, 4));
+    int color;
+    if (lua_gettop(L) == 5)
+    {
+        color = fix32_to_int(luaL_checkinteger(L, 5));
+        draw_line(x0, y0, x1, y1, &color);
+    }
+    else
+    {
+        draw_line(x0, y0, x1, y1, NULL);
+    }
     return 0;
 }
 
 static int pico8_oval(lua_State* L)
 {
+    int x0 = fix32_to_int(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int(luaL_checknumber(L, 4));
+    int color;
+    if (lua_gettop(L) == 5)
+    {
+        color = fix32_to_int(luaL_checkinteger(L, 5));
+        draw_oval(x0, y0, x1, y1, &color, false);
+    }
+    else
+    {
+        draw_oval(x0, y0, x1, y1, NULL, false);
+    }
     return 0;
 }
 
 static int pico8_ovalfill(lua_State* L)
 {
+    int x0 = fix32_to_int(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int(luaL_checknumber(L, 4));
+    int color;
+    if (lua_gettop(L) == 5)
+    {
+        color = fix32_to_int(luaL_checkinteger(L, 5));
+        draw_oval(x0, y0, x1, y1, &color, true);
+    }
+    else
+    {
+        draw_oval(x0, y0, x1, y1, NULL, true);
+    }
     return 0;
 }
 
 static int pico8_pal(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_palt(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_pget(lua_State* L)
 {
-    return 0;
+    int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
+    int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
+
+    lua_pushinteger(L, pget(x, y));
+    return 1;
 }
 
 static int pico8_print(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_pset(lua_State* L)
@@ -378,27 +542,27 @@ static int pico8_rectfill(lua_State* L)
 
 static int pico8_sget(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_spr(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_sset(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_sspr(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 static int pico8_tline(lua_State* L)
 {
-    return 0;
+    TO_BE_DONE;
 }
 
 /*******************
