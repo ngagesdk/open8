@@ -28,6 +28,10 @@
 #include "lj_vm.h"
 #include "lj_vmevent.h"
 
+#if LJ_FIX32
+#include "fix32.h"
+#endif
+
 /* -- Parser structures and definitions ----------------------------------- */
 
 /* Expression kinds. */
@@ -2491,13 +2495,21 @@ static void parse_for_num(LexState *ls, GCstr *varname, BCLine line)
   /* Visible copy of index variable. */
   var_new(ls, FORL_EXT, varname);
   lex_check(ls, '=');
-  expr_next(ls);
+  expr_next(ls);  /* Initial value. */
   lex_check(ls, ',');
-  expr_next(ls);
+  expr_next(ls);  /* Stop value. */
   if (lex_opt(ls, ',')) {
-    expr_next(ls);
+    expr_next(ls);  /* Step value. */
   } else {
+#if LJ_FIX32
+    /* Default step is 1.0 in fixed-point. */
+    ExpDesc step;
+    expr_init(&step, VKNUM, 0);
+    setnumV(&step.u.nval, fix32_value(1, 0));
+    expr_tonextreg(fs, &step);
+#else
     bcemit_AD(fs, BC_KSHORT, fs->freereg, 1);  /* Default step is 1. */
+#endif
     bcreg_reserve(fs, 1);
   }
   var_add(ls, 3);  /* Hidden control variables. */
