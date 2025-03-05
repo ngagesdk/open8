@@ -30,9 +30,9 @@ int lua_number2str(char* s, fix32_t n) {
 /* Add formatted floating-point number to buffer. */
 SBuf *lj_strfmt_putfnum(SBuf *sb, SFormat sf, lua_Number n)
 {
-  static char buf[STRFMT_MAXBUF_NUM];
-  sb->w = buf;
-  lua_number2str(sb->w, n);
+  char* w = lj_buf_more(sb, STRFMT_MAXBUF_NUM);
+  lua_number2str(w, n);
+  sb->w = w + strlen(w);
   return sb;
 }
 
@@ -48,4 +48,3 @@ GCstr * LJ_FASTCALL lj_strfmt_num(lua_State *L, cTValue *o)
 
   return lj_str_new(L, buf, len);
 }
-

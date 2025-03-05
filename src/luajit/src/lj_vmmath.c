@@ -13,6 +13,10 @@
 #include "lj_ir.h"
 #include "lj_vm.h"
 
+#if LJ_FIX32
+#include "fix32.h"
+#endif
+
 /* -- Wrapper functions --------------------------------------------------- */
 
 #if LJ_TARGET_X86 && __ELF__ && __PIC__
@@ -47,6 +51,27 @@ LJ_NOINLINE static double lj_vm_floormul(double x, double y)
   return lj_vm_floor(x / y) * y;
 }
 
+#if LJ_FIX32
+fix32_t lj_vm_foldarith(fix32_t x, fix32_t y, int op)
+{
+    switch (op) {
+    case IR_ADD - IR_ADD: return fix32_add(x, y); break;
+    case IR_SUB - IR_ADD: return fix32_sub(x, y); break;
+    case IR_MUL - IR_ADD: return fix32_mul(x, y); break;
+    case IR_DIV - IR_ADD: return fix32_div(x, y); break;
+    case IR_MOD - IR_ADD: return fix32_mod(x, y); break;
+    case IR_POW - IR_ADD: return fix32_pow(x, y); break;
+    case IR_NEG - IR_ADD: return fix32_neg(x); break;
+    case IR_ABS - IR_ADD: return fix32_abs(x); break;
+#if LJ_HASJIT
+    case IR_LDEXP - IR_ADD: return fix32_ldexp(x, fix32_to_int32(y)); break;
+    case IR_MIN - IR_ADD: return fix32_min(x, y); break;
+    case IR_MAX - IR_ADD: return fix32_max(x, y); break;
+#endif
+    default: return x;
+    }
+}
+#else
 double lj_vm_foldarith(double x, double y, int op)
 {
   switch (op) {
@@ -66,6 +91,7 @@ double lj_vm_foldarith(double x, double y, int op)
   default: return x;
   }
 }
+#endif
 
 /* -- Helper functions for generated machine code ------------------------- */
 

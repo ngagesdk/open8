@@ -391,4 +391,13 @@ static inline fix32_t fix32_rotr(fix32_t x, int y) {
     return ((uint32_t)x >> y) | (x << (32 - y));
 }
 
+static inline fix32_t fix32_ldexp(fix32_t x, int exp) {
+    if (exp > 0) {
+        return exp >= 32 ? 0 : x << exp;
+    }
+    else {
+        return exp <= -32 ? 0 : x >> -exp;
+    }
+}
+
 #endif // FIX32_H
