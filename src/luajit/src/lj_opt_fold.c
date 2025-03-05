@@ -30,6 +30,10 @@
 #include "lj_strscan.h"
 #include "lj_strfmt.h"
 
+#ifdef LJ_FIX32
+#include "fix32.h"
+#endif
+
 /* Here's a short description how the FOLD engine processes instructions:
 **
 ** The FOLD engine receives a single instruction stored in fins (J->fold.ins).
@@ -178,9 +182,9 @@ LJFOLD(MIN KNUM KNUM)
 LJFOLD(MAX KNUM KNUM)
 LJFOLDF(kfold_numarith)
 {
-  lua_Number a = knumleft;
-  lua_Number b = knumright;
-  lua_Number y = lj_vm_foldarith(a, b, fins->o - IR_ADD);
+  fix32_t a = knumleft;
+  fix32_t b = knumright;
+  fix32_t y = fix32_add(a, b);
   return lj_ir_knum(J, y);
 }
 
@@ -188,27 +192,22 @@ LJFOLD(NEG KNUM FLOAD)
 LJFOLD(ABS KNUM FLOAD)
 LJFOLDF(kfold_numabsneg)
 {
-  lua_Number a = knumleft;
-  lua_Number y = lj_vm_foldarith(a, a, fins->o - IR_ADD);
+  fix32_t a = knumleft;
+  fix32_t y = fix32_neg(a);
   return lj_ir_knum(J, y);
 }
 
 LJFOLD(LDEXP KNUM KINT)
 LJFOLDF(kfold_ldexp)
 {
-#if LJ_TARGET_X86ORX64
-  UNUSED(J);
-  return NEXTFOLD;
-#else
-  return lj_ir_knum(J, ldexp(knumleft, fright->i));
-#endif
+  return lj_ir_knum(J, fix32_ldexp(knumleft, fright->i));
 }
 
 LJFOLD(FPMATH KNUM any)
 LJFOLDF(kfold_fpmath)
 {
-  lua_Number a = knumleft;
-  lua_Number y = lj_vm_foldfpm(a, fins->op2);
+  fix32_t a = knumleft;
+  fix32_t y = fix32_pow(a, a);
   return lj_ir_knum(J, y);
 }
 
@@ -217,7 +216,7 @@ LJFOLDF(kfold_fpcall1)
 {
   const CCallInfo *ci = &lj_ir_callinfo[fins->op2];
   if (CCI_TYPE(ci) == IRT_NUM) {
-    double y = ((double (*)(double))ci->func)(knumleft);
+    fix32_t y = ((fix32_t (*)(fix32_t))ci->func)(knumleft);
     return lj_ir_knum(J, y);
   }
   return NEXTFOLD;
@@ -228,9 +227,9 @@ LJFOLDF(kfold_fpcall2)
 {
   if (irref_isk(fleft->op1) && irref_isk(fleft->op2)) {
     const CCallInfo *ci = &lj_ir_callinfo[fins->op2];
-    double a = ir_knum(IR(fleft->op1))->n;
-    double b = ir_knum(IR(fleft->op2))->n;
-    double y = ((double (*)(double, double))ci->func)(a, b);
+    fix32_t a = ir_knum(IR(fleft->op1))->n;
+    fix32_t b = ir_knum(IR(fleft->op2))->n;
+    fix32_t y = ((fix32_t (*)(fix32_t, fix32_t))ci->func)(a, b);
     return lj_ir_knum(J, y);
   }
   return NEXTFOLD;
@@ -239,7 +238,7 @@ LJFOLDF(kfold_fpcall2)
 LJFOLD(POW KNUM KNUM)
 LJFOLDF(kfold_numpow)
 {
-  return lj_ir_knum(J, lj_vm_foldarith(knumleft, knumright, IR_POW - IR_ADD));
+  return lj_ir_knum(J, fix32_pow(knumleft, knumright));
 }
 
 /* Must not use kfold_kref for numbers (could be NaN). */
@@ -255,7 +254,7 @@ LJFOLD(ULE KNUM KNUM)
 LJFOLD(UGT KNUM KNUM)
 LJFOLDF(kfold_numcomp)
 {
-  return CONDFOLD(lj_ir_numcmp(knumleft, knumright, (IROp)fins->o));
+  return CONDFOLD(fix32_eq(knumleft, knumright));
 }
 
 /* -- Constant folding for 32 bit integers -------------------------------- */
@@ -882,15 +881,9 @@ LJFOLDF(kfold_conv_kint64_int_i64)
 LJFOLD(CONV KNUM IRCONV_INT_NUM)
 LJFOLDF(kfold_conv_knum_int_num)
 {
-  lua_Number n = knumleft;
-  int32_t k = lj_num2int(n);
-  if (irt_isguard(fins->t) && n != (lua_Number)k) {
-    /* We're about to create a guard which always fails, like CONV +1.5.
-    ** Some pathological loops cause this during LICM, e.g.:
-    **   local x,k,t = 0,1.5,{1,[1.5]=2}
-    **   for i=1,200 do x = x+ t[k]; k = k == 1 and 1.5 or 1 end
-    **   assert(x == 300)
-    */
+  fix32_t n = knumleft;
+  int32_t k = fix32_to_int(n);
+  if (irt_isguard(fins->t) && n != fix32_from_int(k)) {
     return FAILFOLD;
   }
   return INTFOLD(k);
@@ -899,26 +892,19 @@ LJFOLDF(kfold_conv_knum_int_num)
 LJFOLD(CONV KNUM IRCONV_U32_NUM)
 LJFOLDF(kfold_conv_knum_u32_num)
 {
-#ifdef _MSC_VER
-  {  /* Workaround for MSVC bug. */
-    volatile uint32_t u = (uint32_t)knumleft;
-    return INTFOLD((int32_t)u);
-  }
-#else
-  return INTFOLD((int32_t)(uint32_t)knumleft);
-#endif
+  return INTFOLD((int32_t)fix32_to_uint32(knumleft));
 }
 
 LJFOLD(CONV KNUM IRCONV_I64_NUM)
 LJFOLDF(kfold_conv_knum_i64_num)
 {
-  return INT64FOLD((uint64_t)(int64_t)knumleft);
+  return INT64FOLD(fix32_to_int64(knumleft));
 }
 
 LJFOLD(CONV KNUM IRCONV_U64_NUM)
 LJFOLDF(kfold_conv_knum_u64_num)
 {
-  return INT64FOLD(lj_num2u64(knumleft));
+  return INT64FOLD(fix32_to_uint64(knumleft));
 }
 
 LJFOLD(TOSTR KNUM any)
@@ -940,7 +926,7 @@ LJFOLDF(kfold_strto)
 {
   TValue n;
   if (lj_strscan_num(ir_kstr(fleft), &n))
-    return lj_ir_knum(J, numV(&n));
+    return lj_ir_knum(J, fix32_from_double(numV(&n)));
   return FAILFOLD;
 }
 
@@ -1045,7 +1031,7 @@ LJFOLDF(simplify_numsub_negk)
 {
   PHIBARRIER(fleft);
   fins->op2 = fleft->op1;  /* (-x) - k ==> (-k) - x */
-  fins->op1 = (IRRef1)lj_ir_knum(J, -knumright);
+  fins->op1 = (IRRef1)lj_ir_knum(J, fix32_neg(knumright));
   return RETRYFOLD;
 }
 
@@ -1062,16 +1048,16 @@ LJFOLD(MUL any KNUM)
 LJFOLD(DIV any KNUM)
 LJFOLDF(simplify_nummuldiv_k)
 {
-  lua_Number n = knumright;
-  if (n == 1.0) {  /* x o 1 ==> x */
+  fix32_t n = knumright;
+  if (n == fix32_from_int(1)) {  /* x o 1 ==> x */
     return LEFTFOLD;
-  } else if (n == -1.0) {  /* x o -1 ==> -x */
+  } else if (n == fix32_from_int(-1)) {  /* x o -1 ==> -x */
     IRRef op1 = fins->op1;
     fins->op2 = (IRRef1)lj_ir_ksimd(J, LJ_KSIMD_NEG);  /* Modifies fins. */
     fins->op1 = op1;
     fins->o = IR_NEG;
     return RETRYFOLD;
-  } else if (fins->o == IR_MUL && n == 2.0) {  /* x * 2 ==> x + x */
+  } else if (fins->o == IR_MUL && n == fix32_from_int(2)) {  /* x * 2 ==> x + x */
     fins->o = IR_ADD;
     fins->op2 = fins->op1;
     return RETRYFOLD;
@@ -1094,7 +1080,7 @@ LJFOLDF(simplify_nummuldiv_negk)
 {
   PHIBARRIER(fleft);
   fins->op1 = fleft->op1;  /* (-a) o k ==> a o (-k) */
-  fins->op2 = (IRRef1)lj_ir_knum(J, -knumright);
+  fins->op2 = (IRRef1)lj_ir_knum(J, fix32_neg(knumright));
   return RETRYFOLD;
 }
 
@@ -1112,11 +1098,11 @@ LJFOLDF(simplify_nummuldiv_negneg)
 LJFOLD(POW any KNUM)
 LJFOLDF(simplify_numpow_k)
 {
-  if (knumright == 0.0)  /* x ^ 0 ==> 1 */
+  if (knumright == fix32_from_int(0))  /* x ^ 0 ==> 1 */
     return lj_ir_knum_one(J);  /* Result must be a number, not an int. */
-  else if (knumright == 1.0)  /* x ^ 1 ==> x */
+  else if (knumright == fix32_from_int(1))  /* x ^ 1 ==> x */
     return LEFTFOLD;
-  else if (knumright == 2.0)  /* x ^ 2 ==> x * x */
+  else if (knumright == fix32_from_int(2))  /* x ^ 2 ==> x * x */
     return emitir(IRTN(IR_MUL), fins->op1, fins->op1);
   else
     return NEXTFOLD;
