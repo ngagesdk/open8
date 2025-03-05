@@ -17,7 +17,15 @@
 #include "config.h"
 #include "memory.h"
 
-#define TO_BE_DONE SDL_Log("%s is not implemented yet.", __func__); return 0
+#include <stdbool.h>
+
+#define TO_BE_DONE \
+    static bool warning_printed = false; \
+    if (!warning_printed) { \
+        SDL_LogWarn(0, "%s not yet implemented.", __func__); \
+        warning_printed = true; \
+    } \
+    return 0
 
 static fix32_t seed_lo, seed_hi;
 
@@ -565,6 +573,20 @@ static int pico8_tline(lua_State* L)
     TO_BE_DONE;
 }
 
+/********************
+ * Input functions. *
+ ********************/
+
+static int pico8_btn(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_btnp(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
 /*******************
  * Math functions. *
  *******************/
@@ -651,6 +673,40 @@ static int pico8_srand(lua_State* L)
 /*********************
  * Memory functions. *
  *********************/
+
+// Not sure yet if this works as intended.
+static int pico8_memcpy(lua_State* L)
+{
+    uint16_t source_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t dest_addr = fix32_to_uint16(luaL_checkunsigned(L, 2));
+    uint32_t len = fix32_to_uint32(luaL_checkunsigned(L, 3));
+
+    // Clamp length so that both source and destination stay within RAM_SIZE.
+    if (source_addr >= RAM_SIZE)
+    {
+        len = 0; // Nothing to copy if source is out of bounds
+    }
+    else if (source_addr + len > RAM_SIZE)
+    {
+        len = RAM_SIZE - source_addr;
+    }
+
+    if (dest_addr >= RAM_SIZE)
+    {
+        len = 0; // Nothing to copy if destination is out of bounds.
+    }
+    else if (dest_addr + len > RAM_SIZE)
+    {
+        len = RAM_SIZE - dest_addr;
+    }
+
+    if (len > 0)
+    {
+        SDL_memcpy(&pico8_ram[dest_addr], &pico8_ram[source_addr], len);
+    }
+
+    return 0;
+}
 
 static int pico8_peek(lua_State* L)
 {
@@ -896,6 +952,12 @@ void init_api(lua_State* L)
     lua_pushcfunction(L, pico8_tline);
     lua_setglobal(L, "tline");
 
+    // Input.
+    lua_pushcfunction(L, pico8_btn);
+    lua_setglobal(L, "btn");
+    lua_pushcfunction(L, pico8_btnp);
+    lua_setglobal(L, "btnp");
+
     // Math.
     static bool seed_initialized = false;
     if (!seed_initialized)
@@ -912,6 +974,8 @@ void init_api(lua_State* L)
     lua_setglobal(L, "srand");
 
     // Memory.
+    lua_pushcfunction(L, pico8_memcpy);
+    lua_setglobal(L, "memcpy");
     lua_pushcfunction(L, pico8_peek);
     lua_setglobal(L, "peek");
     lua_pushcfunction(L, pico8_peek2);
