@@ -676,8 +676,8 @@ static int pico8_srand(lua_State* L)
 
 static int pico8_memcpy(lua_State* L)
 {
-    uint16_t source_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
-    uint16_t dest_addr = fix32_to_uint16(luaL_checkunsigned(L, 2));
+    uint16_t dest_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t source_addr = fix32_to_uint16(luaL_checkunsigned(L, 2));
     uint32_t len = fix32_to_uint32(luaL_checkunsigned(L, 3));
 
     // Clamp length so that both source and destination stay within RAM_SIZE.
