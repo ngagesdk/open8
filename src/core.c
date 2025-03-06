@@ -481,12 +481,12 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
         }
         case SDL_EVENT_KEY_DOWN:
         {
-            if (event->key.repeat) // No key repeat.
-            {
-                break;
-            }
             if (state == STATE_MENU)
             {
+                if (event->key.repeat) // No key repeat.
+                {
+                    break;
+                }
                 switch (event->key.key)
                 {
                     case SDLK_SOFTLEFT:
@@ -560,10 +560,10 @@ bool iterate_core(SDL_Renderer* renderer)
         if (is_function_present(vm, "_draw"))
         {
             call_pico8_function(vm, "_draw");
-            update_time();
-            update_from_virtual_memory(renderer);
         }
 
+        update_time();
+        update_from_virtual_memory(renderer);
         SDL_RenderPresent(renderer);
     }
     SDL_Delay(1);

@@ -170,6 +170,22 @@ function run_tests()
     fillp(0b0011001111001100) -- 0x33CC
     assert_equal(peek2(0x5F31), 0x33CC, "peek2(0x5F31)")
 
+    pset(10, 10, 8)
+    assert_equal(pget(10, 10), 8, "pget(10, 10)")
+    pset(10, 10, 0)
+    assert_equal(pget(10, 10), 0, "pget(10, 10)")
+
+    memset(0x6000, 0xab, 8)
+    assert_equal(peek2(0x6000), 0xabab, "memset(0x6000, 0xab, 8)")
+    memset(0x6002, 0xba, 8)
+    assert_equal(peek2(0x6002), 0xbaba, "memset(0x6002, 0xba, 8)")
+
+    memcpy(0x6000, 0x7000, 2)
+    assert_equal(peek2(0x6000), peek2(0x7000), "memcpy(0x6000, 0x7000, 2)")
+    assert_equal(peek2(0x7000), 0xabab,        "memcpy(0x6000, 0x7000, 2)")
+    memcpy(0x6002, 0x7002, 2)
+    assert_equal(peek2(0x6002), peek2(0x7002), "memcpy(0x6002, 0x7002, 2)")
+    assert_equal(peek2(0x7002), 0xbaba,        "memcpy(0x6002, 0x7002, 2)")
 end
 
 run_tests()
