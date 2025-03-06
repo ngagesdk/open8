@@ -55,7 +55,6 @@ static void pset(int x, int y, int* color)
     uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
     uint8_t mask = (x & 1) ? 0x0F : 0xF0;
     uint8_t shift = (x & 1) ? 4 : 0;
-
     pico8_ram[addr] = (pico8_ram[addr] & mask) | (p8_color << shift);
 }
 
@@ -67,7 +66,8 @@ static uint8_t pget(int x, int y)
     }
     uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
     uint8_t shift = (x & 1) ? 4 : 0;
-    return (pico8_ram[addr] >> shift) & 0x0F;
+    uint8_t p8_color = (pico8_ram[addr] >> shift) & 0x0F;
+    return p8_color;
 }
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
@@ -481,7 +481,7 @@ static int pico8_pget(lua_State* L)
     int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
     int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
 
-    lua_pushinteger(L, pget(x, y));
+    lua_pushinteger(L, fix32_from_int32(pget(x, y)));
     return 1;
 }
 
@@ -674,7 +674,6 @@ static int pico8_srand(lua_State* L)
  * Memory functions. *
  *********************/
 
-// Not sure yet if this works as intended.
 static int pico8_memcpy(lua_State* L)
 {
     uint16_t source_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
@@ -684,13 +683,12 @@ static int pico8_memcpy(lua_State* L)
     // Clamp length so that both source and destination stay within RAM_SIZE.
     if (source_addr >= RAM_SIZE)
     {
-        len = 0; // Nothing to copy if source is out of bounds
+        len = 0; // Nothing to copy if source is out of bounds.
     }
     else if (source_addr + len > RAM_SIZE)
     {
         len = RAM_SIZE - source_addr;
     }
-
     if (dest_addr >= RAM_SIZE)
     {
         len = 0; // Nothing to copy if destination is out of bounds.
@@ -699,10 +697,32 @@ static int pico8_memcpy(lua_State* L)
     {
         len = RAM_SIZE - dest_addr;
     }
-
     if (len > 0)
     {
         SDL_memcpy(&pico8_ram[dest_addr], &pico8_ram[source_addr], len);
+    }
+
+    return 0;
+}
+
+static int pico8_memset(lua_State* L)
+{
+    uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint8_t value = fix32_to_uint8(luaL_checkinteger(L, 2));
+    uint32_t len = fix32_to_uint32(luaL_checkunsigned(L, 3));
+
+    // Clamp length so that source stays within RAM_SIZE.
+    if (addr >= RAM_SIZE)
+    {
+        len = 0; // Nothing to set if source is out of bounds.
+    }
+    else if (addr + len > RAM_SIZE)
+    {
+        len = RAM_SIZE - addr;
+    }
+    if (len > 0)
+    {
+        SDL_memset(&pico8_ram[addr], value, len);
     }
 
     return 0;
@@ -976,6 +996,8 @@ void init_api(lua_State* L)
     // Memory.
     lua_pushcfunction(L, pico8_memcpy);
     lua_setglobal(L, "memcpy");
+    lua_pushcfunction(L, pico8_memset);
+    lua_setglobal(L, "memset");
     lua_pushcfunction(L, pico8_peek);
     lua_setglobal(L, "peek");
     lua_pushcfunction(L, pico8_peek2);
