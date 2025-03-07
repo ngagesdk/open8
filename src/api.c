@@ -16,6 +16,7 @@
 #include "auxiliary.h"
 #include "config.h"
 #include "memory.h"
+#include "p8scii.h"
 
 #include <stdbool.h>
 
@@ -489,15 +490,70 @@ static int pico8_print(lua_State* L)
 {
     const char* text = luaL_checkstring(L, 1);
     int len = SDL_strlen(text);
-    uint8_t cursor_x = fix32_to_uint8(luaL_optunsigned(L, 2, pico8_ram[0x5f26])); // X.
-    uint8_t cursor_y = fix32_to_uint8(luaL_optunsigned(L, 3, pico8_ram[0x5f27])); // Y.
+    int argc = lua_gettop(L);
+    uint8_t cursor_x = pico8_ram[0x5f26];
+    uint8_t cursor_y = pico8_ram[0x5f27];
+    uint8_t color = pico8_ram[0x5f25];
 
+    if (argc == 4)
+    {
+        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
+        cursor_y = fix32_to_uint8(luaL_checkunsigned(L, 3));
+        color = fix32_to_uint8(luaL_checkunsigned(L, 4));
+    }
+    else if (argc == 3)
+    {
+        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
+        cursor_y = fix32_to_uint8(luaL_checkunsigned(L, 3));
+    }
+    else if (argc == 2)
+    {
+        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
+    }
+
+    // Convert cursor position to pixel coordinates.
     int x = cursor_x << 2;
     int y = cursor_y * 6;
 
-    // tbd.
+    for (int i = 0; i < len; i++)
+    {
+        char c = text[i];
 
-    return 0;
+        if (c == '\0')
+        {
+            break;
+        }
+        else if (c == '\n')
+        {
+            cursor_x = 0;
+            cursor_y++;
+            x = 0;
+            y = cursor_y * 6;
+            continue;
+        }
+        else if (c == '\r')
+        {
+            x = 0;
+            continue;
+        }
+
+        if (c < 32 || c > 127)
+        {
+            continue;
+        }
+        int char_index = c - 32;
+        blit_char_to_screen(char_index, x, y, color);
+        x += 4;
+        cursor_x++;
+    }
+    cursor_y++;
+    cursor_x = 0;
+
+    pico8_ram[0x5f26] = cursor_x;
+    pico8_ram[0x5f27] = cursor_y;
+    lua_pushnumber(L, fix32_from_uint8(cursor_x));
+
+    return 1;
 }
 
 static int pico8_pset(lua_State* L)
