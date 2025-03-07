@@ -511,10 +511,6 @@ static int pico8_print(lua_State* L)
         cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
     }
 
-    // Convert cursor position to pixel coordinates.
-    int x = cursor_x << 2;
-    int y = cursor_y * 6;
-
     for (int i = 0; i < len; i++)
     {
         char c = text[i];
@@ -526,14 +522,12 @@ static int pico8_print(lua_State* L)
         else if (c == '\n')
         {
             cursor_x = 0;
-            cursor_y++;
-            x = 0;
-            y = cursor_y * 6;
+            cursor_y += 6;
             continue;
         }
         else if (c == '\r')
         {
-            x = 0;
+            cursor_x = 0;
             continue;
         }
 
@@ -542,11 +536,10 @@ static int pico8_print(lua_State* L)
             continue;
         }
         int char_index = c - 32;
-        blit_char_to_screen(char_index, x, y, color);
-        x += 4;
-        cursor_x++;
+        blit_char_to_screen(char_index, cursor_x, cursor_y, color);
+        cursor_x += 4;
     }
-    cursor_y++;
+    cursor_y += 6;
     cursor_x = 0;
 
     pico8_ram[0x5f26] = cursor_x;
