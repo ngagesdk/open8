@@ -12,6 +12,6 @@
 
 #include <stdint.h>
 
-void blit_char_to_screen(uint8_t char_index, int x, int y, uint8_t color);
+void blit_char_to_screen(uint8_t char_index, int x, int y, uint8_t color, uint8_t* w, uint8_t* h);
 
 #endif // P8SCII_H

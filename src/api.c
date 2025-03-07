@@ -248,6 +248,48 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    }
 }
 
+static int utf8_decode(const char *s, int *index)
+{
+    unsigned char c = s[*index];
+    int codepoint = 0;
+    int num_bytes = 0;
+
+    if ((c & 0x80) == 0)
+    {
+        // 1-byte (ASCII).
+        codepoint = c;
+        num_bytes = 1;
+    }
+    else if ((c & 0xE0) == 0xC0)
+    {
+        // 2-byte.
+        codepoint = (s[*index] & 0x1F) << 6 | (s[*index + 1] & 0x3F);
+        num_bytes = 2;
+    }
+    else if ((c & 0xF0) == 0xE0)
+    {
+        // 3-byte.
+        codepoint = (s[*index] & 0x0F) << 12 | (s[*index + 1] & 0x3F) << 6 | (s[*index + 2] & 0x3F);
+        num_bytes = 3;
+    }
+    else if ((c & 0xF8) == 0xF0)
+    {
+        // 4-byte.
+        codepoint = (s[*index] & 0x07) << 18 | (s[*index + 1] & 0x3F) << 12 |
+                    (s[*index + 2] & 0x3F) << 6 | (s[*index + 3] & 0x3F);
+        num_bytes = 4;
+    }
+    else
+    {
+        // Invalid UTF-8.
+        codepoint = '?'; // Replace with '?'
+        num_bytes = 1;
+    }
+
+    *index += num_bytes - 1; // Move index forward by extra bytes processed.
+    return codepoint;
+}
+
  /***************************
   * Flow-control functions. *
   ***************************/
@@ -511,34 +553,39 @@ static int pico8_print(lua_State* L)
         cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
     }
 
-    for (int i = 0; i < len; i++)
+    for (int i = 0; text[i] != '\0'; i++)
     {
-        char c = text[i];
+        int unicode = utf8_decode(text, &i);
 
-        if (c == '\0')
-        {
-            break;
-        }
-        else if (c == '\n')
+        if (unicode == '\n')
         {
             cursor_x = 0;
             cursor_y += 6;
             continue;
         }
-        else if (c == '\r')
+        else if (unicode == '\r')
         {
             cursor_x = 0;
             continue;
         }
 
-        if (c < 32 || c > 127)
+        int char_index;
+        if (unicode < 128)
         {
-            continue;
+            // ASCII.
+            char_index = unicode;
         }
-        int char_index = c - 32;
-        blit_char_to_screen(char_index, cursor_x, cursor_y, color);
-        cursor_x += 4;
+        else
+        {
+            // Unicode.
+            char_index = 0;//map_unicode_to_pico8(unicode);2
+        }
+
+        uint8_t w, h;
+        blit_char_to_screen(char_index, cursor_x, cursor_y, color, &w, &h);
+        cursor_x += (unicode < 128) ? w + 1 : h + 1;
     }
+
     cursor_y += 6;
     cursor_x = 0;
 
