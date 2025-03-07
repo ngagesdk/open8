@@ -487,7 +487,17 @@ static int pico8_pget(lua_State* L)
 
 static int pico8_print(lua_State* L)
 {
-    TO_BE_DONE;
+    const char* text = luaL_checkstring(L, 1);
+    int len = SDL_strlen(text);
+    uint8_t cursor_x = fix32_to_uint8(luaL_optunsigned(L, 2, pico8_ram[0x5f26])); // X.
+    uint8_t cursor_y = fix32_to_uint8(luaL_optunsigned(L, 3, pico8_ram[0x5f27])); // Y.
+
+    int x = cursor_x << 2;
+    int y = cursor_y * 6;
+
+    // tbd.
+
+    return 0;
 }
 
 static int pico8_pset(lua_State* L)
