@@ -280,7 +280,7 @@ static int pico8_chr(lua_State *l) {
     size_t numargs = lua_gettop(l);
     if (numargs > sizeof(s)) numargs = sizeof(s);
     for (i = 0; i < numargs; i++) {
-        s[i] = (char)(uint8_t)lua_tonumber(l, i + 1);
+        s[i] = fix32_to_uint8(lua_tonumber(l, i + 1));
     }
     lua_pushlstring(l, s, numargs);
     return 1;

@@ -248,6 +248,7 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    }
 }
 
+#if 0
 static int utf8_decode(const char *s, int *index)
 {
     unsigned char c = s[*index];
@@ -289,6 +290,7 @@ static int utf8_decode(const char *s, int *index)
     *index += num_bytes - 1; // Move index forward by extra bytes processed.
     return codepoint;
 }
+#endif
 
  /***************************
   * Flow-control functions. *
@@ -555,35 +557,21 @@ static int pico8_print(lua_State* L)
 
     for (int i = 0; text[i] != '\0'; i++)
     {
-        int unicode = utf8_decode(text, &i);
-
-        if (unicode == '\n')
+        if (text[i] == '\n')
         {
             cursor_x = 0;
             cursor_y += 6;
             continue;
         }
-        else if (unicode == '\r')
+        else if (text[i] == '\r')
         {
             cursor_x = 0;
             continue;
         }
 
-        int char_index;
-        if (unicode < 128)
-        {
-            // ASCII.
-            char_index = unicode;
-        }
-        else
-        {
-            // Unicode.
-            char_index = 0;//map_unicode_to_pico8(unicode);2
-        }
-
         uint8_t w, h;
-        blit_char_to_screen(char_index, cursor_x, cursor_y, color, &w, &h);
-        cursor_x += (unicode < 128) ? w + 1 : h + 1;
+        blit_char_to_screen(text[i], cursor_x, cursor_y, color, &w, &h);
+        cursor_x += (w == 3) ? w + 1 : w - 1;
     }
 
     cursor_y += 6;
