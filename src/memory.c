@@ -57,6 +57,7 @@ bool init_memory(SDL_Renderer* renderer)
 void reset_memory(void)
 {
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
+    pico8_ram[0x5f25] = 0x06; // Default color, light gray.
 }
 
 void destroy_memory(void)

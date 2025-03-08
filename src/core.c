@@ -316,7 +316,7 @@ static bool run_script(SDL_Renderer* renderer, const char* file_name)
 
 static bool run_cartridge(SDL_Renderer* renderer)
 {
-    SDL_memset(pico8_ram, 0x00, RAM_SIZE);
+    reset_memory();
 
     if (!cart.is_corrupt)
     {
@@ -497,11 +497,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_SELECT:
                     case SDLK_SPACE:
                         run_cartridge(renderer);
-                        return true;
-                    case SDLK_7:
-                    case SDLK_LALT:
-                        SDL_Log("Running test script");
-                        run_script(renderer, "api_test.p8");
                         return true;
                     case SDLK_LEFT:
                     case SDLK_A:
