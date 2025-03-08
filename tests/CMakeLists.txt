@@ -19,6 +19,7 @@ set(base_sources
   ${PICO_DIR}/auxiliary.c
   ${PICO_DIR}/image_loader.c
   ${PICO_DIR}/memory.c
+  ${PICO_DIR}/p8scii.c
   ${PICO_DIR}/z8lua/lapi.c
   ${PICO_DIR}/z8lua/lauxlib.c
   ${PICO_DIR}/z8lua/lbaselib.c
