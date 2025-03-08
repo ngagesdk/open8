@@ -19,7 +19,7 @@ jobs:
         with:
           repository: libsdl-org/SDL
           path: .github/SDL
-          ref: release-3.2.6
+          ref: 0306b5a865b7e7e8ff52f107c00c002cdddaae02
       - name: Install SDL3
         run: |
           cmake -S .github/SDL -B .github/SDL-build -DCMAKE_TOOLCHAIN_FILE=$DEVKITPRO/cmake/3DS.cmake \
