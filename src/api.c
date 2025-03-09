@@ -557,13 +557,23 @@ static int pico8_print(lua_State* L)
 
     for (int i = 0; text[i] != '\0'; i++)
     {
-        if (text[i] == '\n')
+        if (text[i] == '\t') // 9, tab.
+        {
+            cursor_x += 16;
+            continue;
+        }
+        else if (text[i] == '\n') // 10, newline.
         {
             cursor_x = 0;
             cursor_y += 6;
             continue;
         }
-        else if (text[i] == '\r')
+        else if (text[1] == '\b') // 8, backspace.
+        {
+            cursor_x -= 4;
+            continue;
+        }
+        else if (text[i] == '\r') // 13, carriage return.
         {
             cursor_x = 0;
             continue;
