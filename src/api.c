@@ -677,6 +677,30 @@ static int pico8_tline(lua_State* L)
     TO_BE_DONE;
 }
 
+/******************
+ * Map functions. *
+ ******************/
+
+static int pico8_map(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_mget(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_mset(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_mapdraw(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
 /********************
  * Input functions. *
  ********************/
@@ -970,6 +994,11 @@ static int pico8_add(lua_State* L)
     return 1;
 }
 
+static int pico8_del(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
 static int pico8_foreach(lua_State* L)
 {
     luaL_checktype(L, 1, LUA_TTABLE);
@@ -1082,6 +1111,16 @@ void init_api(lua_State* L)
     lua_pushcfunction(L, pico8_btnp);
     lua_setglobal(L, "btnp");
 
+    // Map.
+    lua_pushcfunction(L, pico8_map);
+    lua_setglobal(L, "map");
+    lua_pushcfunction(L, pico8_mget);
+    lua_setglobal(L, "mget");
+    lua_pushcfunction(L, pico8_mset);
+    lua_setglobal(L, "mset");
+    lua_pushcfunction(L, pico8_mapdraw);
+    lua_setglobal(L, "mapdraw");
+
     // Math.
     static bool seed_initialized = false;
     if (!seed_initialized)
@@ -1118,6 +1157,8 @@ void init_api(lua_State* L)
     // Tables.
     lua_pushcfunction(L, pico8_add);
     lua_setglobal(L, "add");
+    lua_pushcfunction(L, pico8_del);
+    lua_setglobal(L, "del");
     lua_pushcfunction(L, pico8_foreach);
     lua_setglobal(L, "foreach");
 
