@@ -10,6 +10,15 @@ function assert_equal(actual, expected, test_name)
     end
 end
 
+function assert_true(expression, test_name)
+    if expression == true then
+        log(test_name .. " passed")
+    else
+        log(test_name .. " failed")
+        failed_tests += 1
+    end
+end
+
 function run_tests()
     assert_equal(abs(5.000),  5.00,  "abs(5.000)")
     assert_equal(abs(-5.00),  5.00,  "abs(-5.00)")
@@ -146,7 +155,6 @@ function run_tests()
     assert_equal(rnd(20.0000), 0x0006.234b, "rnd(20.0000)")
     assert_equal(rnd(345.678), 0x004f.6f4b, "rnd(345.678)")
 
-    --[[
     log("num_list = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}")
     local num_list = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
     log("srand(4)")
@@ -159,13 +167,20 @@ function run_tests()
     assert_equal(rnd(num_list), 8, "rnd(num_list)")
     log("srand(5)")
     srand(5)
-    assert_equal(rnd(num_list), 5, "rnd(num_list)")
-    assert_equal(rnd(num_list), 9, "rnd(num_list)")
-    assert_equal(rnd(num_list), 2, "rnd(num_list)")
+    assert_equal(rnd(num_list), 5,  "rnd(num_list)")
+    assert_equal(rnd(num_list), 9,  "rnd(num_list)")
+    assert_equal(rnd(num_list), 2,  "rnd(num_list)")
     assert_equal(rnd(num_list), 10, "rnd(num_list)")
-    assert_equal(rnd(num_list), 2, "rnd(num_list)")
-    assert_equal(rnd(num_list), 8, "rnd(num_list)")
-    --]]
+    assert_equal(rnd(num_list), 2,  "rnd(num_list)")
+    assert_equal(rnd(num_list), 8,  "rnd(num_list)")
+    log("srand(6)")
+    srand(6)
+    assert_equal(rnd(num_list), 9, "rnd(num_list)")
+    assert_equal(rnd(num_list), 9, "rnd(num_list)")
+    assert_equal(rnd(num_list), 5, "rnd(num_list)")
+    assert_equal(rnd(num_list), 4, "rnd(num_list)")
+    assert_equal(rnd(num_list), 7, "rnd(num_list)")
+    assert_equal(rnd(num_list), 3, "rnd(num_list)")
 
     fillp(0b0011001111001100) -- 0x33CC
     assert_equal(peek2(0x5F31), 0x33CC, "peek2(0x5F31)")
