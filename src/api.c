@@ -32,10 +32,7 @@ static fix32_t seed_lo, seed_hi;
 
 fix32_t seconds_since_start;
 
-/*
- * Auxiliary functions.
- * --------------------
- */
+// Auxiliary functions.
 
 static void pset(int x, int y, int* color)
 {
@@ -293,10 +290,19 @@ static int utf8_decode(const char *s, int *index)
 }
 #endif
 
-/*
- * Cart data functions.
- * --------------------
- */
+// Audio functions.
+
+static int pico8_music(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_sfx(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+// Cart data functions.
 
 static int pico8_cartdata(lua_State* L)
 {
@@ -313,10 +319,7 @@ static int pico8_dset(lua_State* L)
     TO_BE_DONE;
 }
 
-/*
- * Flow-control functions.
- * -----------------------
- */
+// Flow-control functions.
 
 static int pico8_time(lua_State* L)
 {
@@ -324,10 +327,7 @@ static int pico8_time(lua_State* L)
     return 1;
 }
 
-/*
- * Graphics functions.
- *
- */
+// Graphics functions.
 
 static int pico8_camera(lua_State* L)
 {
@@ -717,10 +717,7 @@ static int pico8_tline(lua_State* L)
     TO_BE_DONE;
 }
 
-/*
- * Map functions.
- *
- */
+// Map functions.
 
 static int pico8_map(lua_State* L)
 {
@@ -742,10 +739,7 @@ static int pico8_mapdraw(lua_State* L)
     TO_BE_DONE;
 }
 
-/*
- * Input functions.
- * ----------------
- */
+// Input functions.
 
 static int pico8_btn(lua_State* L)
 {
@@ -757,10 +751,7 @@ static int pico8_btnp(lua_State* L)
     TO_BE_DONE;
 }
 
-/*
- * Math functions.
- *
- */
+// Math functions.
 
 // Special thanks to pancelor for documenting rnd() and srand()!
 // https://www.lexaloffle.com/bbs/?pid=81103#p
@@ -848,10 +839,7 @@ static int pico8_srand(lua_State* L)
     return 0;
 }
 
-/*
- * Memory functions.
- * -----------------
- */
+// Memory functions.
 
 static int pico8_memcpy(lua_State* L)
 {
@@ -1022,10 +1010,7 @@ static int pico8_poke4(lua_State* L)
     return 0;
 }
 
-/*
- * Table functions.
- * ----------------
- */
+// Table functions.
 
 static int pico8_add(lua_State* L)
 {
@@ -1102,10 +1087,7 @@ static int pico8_setmetatable(lua_State* L)
     TO_BE_DONE;
 }
 
-/*
- * Debug functions.
- * ----------------
- */
+// Debug functions.
 
 static int pico8_log(lua_State* L)
 {
@@ -1127,13 +1109,16 @@ static int pico8_log(lua_State* L)
     return 0;
 }
 
-/*
- * API Registration.
- * -----------------
- */
+// API Registration.
 
 void init_api(lua_State* L)
 {
+    // Audio.
+    lua_pushcfunction(L, pico8_music);
+    lua_setglobal(L, "music");
+    lua_pushcfunction(L, pico8_sfx);
+    lua_setglobal(L, "sfx");
+
     // Cart data.
     lua_pushcfunction(L, pico8_cartdata);
     lua_setglobal(L, "cartdata");
