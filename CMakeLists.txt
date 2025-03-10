@@ -116,7 +116,7 @@ else()
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXPORT_DIR})
 
   include(get_SDL3)
-  get_SDL3("3.2.6")
+  get_SDL3("3.2.8")
 
   set(z8lua_sources
     ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lapi.c
