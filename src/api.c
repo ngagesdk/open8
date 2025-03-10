@@ -782,9 +782,16 @@ static int pico8_rnd(lua_State* L)
 {
     if (lua_istable(L, 1))
     {
-        const fix32_t value = pico8_random(lua_rawlen(L, 1) << 8);
-        lua_pushnumber(L, ((value >> 8) + 1) * fix32_value(1, 0));
-        lua_gettable(L, -2);
+        lua_Integer len = lua_rawlen(L, 1);
+        if (len == 0)
+        {
+            return 0;
+        }
+
+        fix32_t rnd_value = pico8_random(len << 8);
+        lua_Integer index = (rnd_value >> 8) + 1;
+
+        lua_rawgeti(L, 1, index);
     }
     else
     {
