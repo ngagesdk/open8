@@ -32,9 +32,10 @@ static fix32_t seed_lo, seed_hi;
 
 fix32_t seconds_since_start;
 
- /************************
-  * Auxiliary functions. *
-  ************************/
+/*
+ * Auxiliary functions.
+ * --------------------
+ */
 
 static void pset(int x, int y, int* color)
 {
@@ -292,9 +293,10 @@ static int utf8_decode(const char *s, int *index)
 }
 #endif
 
- /***************************
-  * Flow-control functions. *
-  ***************************/
+ /*
+  * Flow-control functions.
+  * -----------------------
+  */
 
 static int pico8_time(lua_State* L)
 {
@@ -302,9 +304,10 @@ static int pico8_time(lua_State* L)
     return 1;
 }
 
- /***********************
-  * Graphics functions. *
-  ***********************/
+/*
+ * Graphics functions.
+ *
+ */
 
 static int pico8_camera(lua_State* L)
 {
@@ -659,6 +662,23 @@ static int pico8_sget(lua_State* L)
 
 static int pico8_spr(lua_State* L)
 {
+    uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
+    int32_t x = fix32_to_int32(luaL_optnumber(L, 2, 0));
+    int32_t y = fix32_to_int32(luaL_optnumber(L, 3, 0));
+    fix32_t w = luaL_optnumber(L, 4, fix32_value(4, 0));
+    fix32_t h = luaL_optnumber(L, 5, fix32_value(5, 0));
+    bool flip_x = false;
+    bool flip_y = false;
+
+    if (lua_isboolean(L, 6))
+    {
+        flip_x = lua_toboolean(L, 6);
+    }
+    if (lua_isboolean(L, 7))
+    {
+        flip_y = lua_toboolean(L, 7);
+    }
+
     TO_BE_DONE;
 }
 
@@ -677,9 +697,10 @@ static int pico8_tline(lua_State* L)
     TO_BE_DONE;
 }
 
-/******************
- * Map functions. *
- ******************/
+/*
+ * Map functions.
+ *
+ */
 
 static int pico8_map(lua_State* L)
 {
@@ -701,9 +722,10 @@ static int pico8_mapdraw(lua_State* L)
     TO_BE_DONE;
 }
 
-/********************
- * Input functions. *
- ********************/
+/*
+ * Input functions.
+ * ----------------
+ */
 
 static int pico8_btn(lua_State* L)
 {
@@ -715,9 +737,10 @@ static int pico8_btnp(lua_State* L)
     TO_BE_DONE;
 }
 
-/*******************
- * Math functions. *
- *******************/
+/*
+ * Math functions.
+ *
+ */
 
 // Special thanks to pancelor for documenting rnd() and srand()!
 // https://www.lexaloffle.com/bbs/?pid=81103#p
@@ -798,9 +821,10 @@ static int pico8_srand(lua_State* L)
     return 0;
 }
 
-/*********************
- * Memory functions. *
- *********************/
+/*
+ * Memory functions.
+ * -----------------
+ */
 
 static int pico8_memcpy(lua_State* L)
 {
@@ -971,9 +995,10 @@ static int pico8_poke4(lua_State* L)
     return 0;
 }
 
-/********************
- * Table functions. *
- ********************/
+/*
+ * Table functions.
+ * ----------------
+ */
 
 static int pico8_add(lua_State* L)
 {
@@ -992,6 +1017,16 @@ static int pico8_add(lua_State* L)
     lua_rawseti(L, 1, index);
     lua_settop(L, 2);
     return 1;
+}
+
+static int pico8_all(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_count(lua_State* L)
+{
+    TO_BE_DONE;
 }
 
 static int pico8_del(lua_State* L)
@@ -1015,9 +1050,35 @@ static int pico8_foreach(lua_State* L)
     return 0;
 }
 
-/********************
- * Debug functions. *
- ********************/
+static int pico8_ipairs(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_pairs(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_pack(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_unpack(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_setmetatable(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+/*
+ * Debug functions.
+ * ----------------
+ */
 
 static int pico8_log(lua_State* L)
 {
@@ -1039,9 +1100,10 @@ static int pico8_log(lua_State* L)
     return 0;
 }
 
-/*********************
- * API Registration. *
- *********************/
+/*
+ * API Registration.
+ * -----------------
+ */
 
 void init_api(lua_State* L)
 {
@@ -1157,10 +1219,24 @@ void init_api(lua_State* L)
     // Tables.
     lua_pushcfunction(L, pico8_add);
     lua_setglobal(L, "add");
+    lua_pushcfunction(L, pico8_all);
+    lua_setglobal(L, "all");
+    lua_pushcfunction(L, pico8_count);
+    lua_setglobal(L, "count");
     lua_pushcfunction(L, pico8_del);
     lua_setglobal(L, "del");
     lua_pushcfunction(L, pico8_foreach);
     lua_setglobal(L, "foreach");
+    lua_pushcfunction(L, pico8_ipairs);
+    lua_setglobal(L, "ipairs");
+    lua_pushcfunction(L, pico8_pairs);
+    lua_setglobal(L, "pairs");
+    lua_pushcfunction(L, pico8_pack);
+    lua_setglobal(L, "pack");
+    lua_pushcfunction(L, pico8_unpack);
+    lua_setglobal(L, "unpack");
+    lua_pushcfunction(L, pico8_setmetatable);
+    lua_setglobal(L, "setmetatable");
 
     // Debug.
     lua_pushcfunction(L, pico8_log);
