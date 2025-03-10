@@ -293,10 +293,30 @@ static int utf8_decode(const char *s, int *index)
 }
 #endif
 
- /*
-  * Flow-control functions.
-  * -----------------------
-  */
+/*
+ * Cart data functions.
+ * --------------------
+ */
+
+static int pico8_cartdata(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_dget(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_dset(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+/*
+ * Flow-control functions.
+ * -----------------------
+ */
 
 static int pico8_time(lua_State* L)
 {
@@ -1114,6 +1134,14 @@ static int pico8_log(lua_State* L)
 
 void init_api(lua_State* L)
 {
+    // Cart data.
+    lua_pushcfunction(L, pico8_cartdata);
+    lua_setglobal(L, "cartdata");
+    lua_pushcfunction(L, pico8_dget);
+    lua_setglobal(L, "dget");
+    lua_pushcfunction(L, pico8_dset);
+    lua_setglobal(L, "dset");
+
     // Flow-control.
     lua_pushcfunction(L, pico8_time);
     lua_setglobal(L, "time");
