@@ -17,11 +17,6 @@
 bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 {
     SDL_SetHint("SDL_RENDER_VSYNC", "1");
-
-#ifndef __SYMBIAN32__
-    SDL_SetHint("SDL_RENDER_DRIVER", "software");
-#endif
-
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
     SDL_SetAppMetadata("Pico-8", "1.0", "com.open8.ngagesdk");
 
