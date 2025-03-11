@@ -104,7 +104,9 @@ end
 function test_tables()
     local tbl = {0, 1, 1, 2, 3, 5, 8, 13}
     log("tbl = {0, 1, 1, 2, 3, 5, 8, 13}")
-    --assert_equal(tbl[1], 0 "tbl[1]")
+    assert_equal(tbl[5], 3, "tbl[5]")
+    assert_equal(tbl[6], 5, "tbl[6]")
+    assert_equal(tbl[7], 8, "tbl[7]")
 end
 
 -- PICO-8 API.
@@ -299,8 +301,8 @@ function run_tests()
     test_relational_operations()
     test_logical_operations()
     test_control_flow()
-    test_tables()
     test_pico8_api()
+    test_tables()
 end
 
 run_tests()

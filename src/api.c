@@ -549,7 +549,7 @@ static int pico8_pget(lua_State* L)
     int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
     int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
 
-    lua_pushinteger(L, fix32_from_int32(pget(x, y)));
+    lua_pushinteger(L, pget(x, y));
     return 1;
 }
 
@@ -612,7 +612,7 @@ static int pico8_print(lua_State* L)
 
     pico8_ram[0x5f26] = cursor_x;
     pico8_ram[0x5f27] = cursor_y;
-    lua_pushnumber(L, fix32_from_uint8(cursor_x));
+    lua_pushnumber(L, cursor_x);
 
     return 1;
 }
@@ -793,16 +793,10 @@ static int pico8_rnd(lua_State* L)
 {
     if (lua_istable(L, 1))
     {
-        lua_Integer len = lua_rawlen(L, 1);
-        if (len == 0)
-        {
-            return 0;
-        }
 
-        fix32_t rnd_value = pico8_random(len << 8);
-        lua_Integer index = (rnd_value >> 8) + 1;
-
-        lua_rawgeti(L, 1, index);
+        const fix32_t value = pico8_random(lua_rawlen(L, 1) << 8);
+        lua_pushnumber(L, ((value >> 8) + 1) * fix32_value(1, 0));
+        lua_gettable(L, -2);
     }
     else
     {
