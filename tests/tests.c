@@ -1,4 +1,13 @@
-﻿#include <SDL3/SDL.h>
+﻿/** @file tests.c
+ *
+ *  A portable PICO-8 emulator written in C.
+ *
+ *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  SPDX-License-Identifier: MIT
+ *
+ **/
+
+#include <SDL3/SDL.h>
 #include <stdlib.h>
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"

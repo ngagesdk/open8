@@ -1,6 +1,15 @@
-﻿-- Unit tests.
+﻿--[[ @file tests.lua
+
+A portable PICO-8 emulator written in C.
+
+Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+SPDX-License-Identifier: MIT
+
+--]]
+
 local failed_tests = 0
 
+-- Test framework.
 function assert_equal(actual, expected, test_name)
     if actual == expected then
         log(test_name .. " passed")
@@ -19,7 +28,87 @@ function assert_true(expression, test_name)
     end
 end
 
-function run_tests()
+-- Arithmetic operations.
+function test_arithmetic_operations()
+    assert_equal(1 + 2, 3, "1 + 2")
+    assert_equal(5 - 3, 2, "5 - 3")
+    assert_equal(4 * 2, 8, "4 * 2")
+    assert_equal(9 / 3, 3, "9 / 3")
+    assert_equal(10 % 3, 1, "10 % 3")
+    assert_equal(2 ^ 3, 8, "2 ^ 3")
+
+    local n = 10
+    log("n = 10")
+
+    n += 15
+    assert_equal(n, 25, "n += 15")
+
+    n -= 7
+    assert_equal(n, 18, "n -= 7")
+
+    n *= 2
+    assert_equal(n, 36, "n *= 2")
+
+    n /= 3
+    assert_equal(n, 12, "n /= 3")
+
+    n %= 5
+    assert_equal(n, 2, "n %= 5")
+end
+
+-- Relational operations.
+function test_relational_operations()
+    assert_true(3 == 3, "3 == 3")
+    assert_true(3 ~= 4, "3 ~= 4")
+    assert_true(3 < 4, "3 < 4")
+    assert_true(4 > 3, "4 > 3")
+    assert_true(3 <= 3, "3 <= 3")
+    assert_true(4 >= 3, "4 >= 3")
+end
+
+-- Logical operations.
+function test_logical_operations()
+    assert_true(true and true, "true and true")
+    assert_true(false or true, "false or true")
+    assert_true(not false, "not false")
+end
+
+-- Control flow.
+function test_control_flow()
+    local x = 5
+    if x == 5 then
+        assert_true(true, "if-then")
+    else
+        assert_true(false, "if-then failed")
+    end
+
+    local count = 0
+    while count < 3 do
+        count = count + 1
+    end
+    assert_equal(count, 3, "while loop")
+
+    count = 0
+    repeat
+        count = count + 1
+    until count == 3
+    assert_equal(count, 3, "repeat-until loop")
+
+    local sum = 0
+    for i = 1, 3 do
+        sum = sum + i
+    end
+    assert_equal(sum, 6, "for loop")
+end
+
+function test_tables()
+    local tbl = {0, 1, 1, 2, 3, 5, 8, 13}
+    log("tbl = {0, 1, 1, 2, 3, 5, 8, 13}")
+    --assert_equal(tbl[1], 0 "tbl[1]")
+end
+
+-- PICO-8 API.
+function test_pico8_api()
     assert_equal(abs(5.000),  5.00,  "abs(5.000)")
     assert_equal(abs(-5.00),  5.00,  "abs(-5.00)")
     assert_equal(abs(0.000),  0.00,  "abs(0.000)")
@@ -203,6 +292,15 @@ function run_tests()
     assert_equal(peek2(0x6000), 0xf9f9, "memcpy(0x6000, 0x6040, 0x1fc0)")
 
     assert_equal(#"Hello world.", 12, "#\"Hello world.\"")
+end
+
+function run_tests()
+    test_arithmetic_operations()
+    test_relational_operations()
+    test_logical_operations()
+    test_control_flow()
+    test_tables()
+    test_pico8_api()
 end
 
 run_tests()
