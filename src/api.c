@@ -559,6 +559,7 @@ static int pico8_print(lua_State* L)
     int len = SDL_strlen(text);
     int argc = lua_gettop(L);
     uint8_t cursor_x = pico8_ram[0x5f26];
+    uint8_t x_cursor = cursor_x;
     uint8_t cursor_y = pico8_ram[0x5f27];
     uint8_t color = pico8_ram[0x5f25];
 
@@ -608,9 +609,8 @@ static int pico8_print(lua_State* L)
     }
 
     cursor_y += 6;
-    cursor_x = 0;
 
-    pico8_ram[0x5f26] = cursor_x;
+    pico8_ram[0x5f26] = x_cursor;
     pico8_ram[0x5f27] = cursor_y;
     lua_pushnumber(L, cursor_x);
 
@@ -1008,21 +1008,7 @@ static int pico8_poke4(lua_State* L)
 
 static int pico8_add(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TTABLE);
-    int n = luaL_len(L, 1);
-    int index = luaL_optinteger(L, 3, n + 1);
-    luaL_argcheck(L, 1 <= index && index <= n + 1, 3, "index out of range");
-
-    for (int i = n; i >= index; i--)
-    {
-        lua_rawgeti(L, 1, i);
-        lua_rawseti(L, 1, i + 1);
-    }
-
-    lua_pushvalue(L, 2);
-    lua_rawseti(L, 1, index);
-    lua_settop(L, 2);
-    return 1;
+    TO_BE_DONE;
 }
 
 static int pico8_all(lua_State* L)
@@ -1044,15 +1030,16 @@ static int pico8_foreach(lua_State* L)
 {
     luaL_checktype(L, 1, LUA_TTABLE);
     luaL_checktype(L, 2, LUA_TFUNCTION);
-    int n = luaL_len(L, 1);
-    for (int i = 1; i <= n; i++)
+
+    lua_pushnil(L);
+    while (lua_next(L, 1) != 0)
     {
-        lua_rawgeti(L, 1, i);
         lua_pushvalue(L, 2);
-        lua_pushvalue(L, -3);
-        lua_pushinteger(L, i);
-        lua_call(L, 2, 0);
+        lua_pushvalue(L, -2);
+        lua_call(L, 1, 0);
+        lua_pop(L, 1);
     }
+
     return 0;
 }
 
