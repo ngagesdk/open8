@@ -296,12 +296,34 @@ end
 
 -- Tables.
 function test_tables()
-    local tbl = {0, 1, 1, 2, 3, 5, 8, 13}
-    log("tbl = {0, 1, 1, 2, 3, 5, 8, 13}")
-    assert_equal(tbl[5], 3, "tbl[5]")
-    assert_equal(tbl[6], 5, "tbl[6]")
-    assert_equal(tbl[7], 8, "tbl[7]")
-    assert_equal(#"Hello world.", 12, "#\"Hello world.\"")
+    assert_equal(#"Hello world.", 12, "#\"Hello world.\" == 12")
+
+    local tbl_a = {0, 1, 1, 2, 3, 5, 8, 13}
+    log("tbl_a = {0, 1, 1, 2, 3, 5, 8, 13}")
+    assert_equal(tbl_a[5], 3, "tbl[5] == 3")
+    assert_equal(tbl_a[6], 5, "tbl[6] == 5")
+    assert_equal(tbl_a[7], 8, "tbl[7] == 8")
+
+    local tbl_b = {}
+    add(tbl_b, 0x11)
+    add(tbl_b, 0x22)
+    add(tbl_b, 0x33)
+    log("add(tbl, 0x11)")
+    log("add(tbl, 0x22)")
+    log("add(tbl, 0x33)")
+    assert_equal(tbl_b[1], 0x11, "tbl[1] == 0x11")
+    assert_equal(tbl_b[2], 0x22, "tbl[2] == 0x22")
+    assert_equal(tbl_b[3], 0x33, "tbl[3] == 0x33")
+    add(tbl_b, 0x44, 3)
+    log("add(tbl, 0x44, 3)")
+    assert_equal(tbl_b[1], 0x11, "tbl[1] == 0x11")
+    assert_equal(tbl_b[2], 0x22, "tbl[2] == 0x22")
+    assert_equal(tbl_b[3], 0x44, "tbl[3] == 0x44")
+    del(tbl_b, 0x22)
+    log("del(tbl_b, 0x22)")
+    assert_equal(tbl_b[1], 0x11, "tbl[1] == 0x11")
+    assert_equal(tbl_b[2], 0x44, "tbl[2] == 0x33")
+    assert_equal(tbl_b[3], 0x44, "tbl[3] == 0x44")
 end
 
 function run_tests()
