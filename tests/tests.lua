@@ -322,8 +322,7 @@ function test_tables()
     del(tbl_b, 0x22)
     log("del(tbl_b, 0x22)")
     assert_equal(tbl_b[1], 0x11, "tbl[1] == 0x11")
-    assert_equal(tbl_b[2], 0x44, "tbl[2] == 0x33")
-    assert_equal(tbl_b[3], 0x44, "tbl[3] == 0x44")
+    assert_equal(tbl_b[2], 0x44, "tbl[2] == 0x44")
 end
 
 function run_tests()
