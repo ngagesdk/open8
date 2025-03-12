@@ -101,16 +101,10 @@ function test_control_flow()
     assert_equal(sum, 6, "for loop")
 end
 
-function test_tables()
-    local tbl = {0, 1, 1, 2, 3, 5, 8, 13}
-    log("tbl = {0, 1, 1, 2, 3, 5, 8, 13}")
-    assert_equal(tbl[5], 3, "tbl[5]")
-    assert_equal(tbl[6], 5, "tbl[6]")
-    assert_equal(tbl[7], 8, "tbl[7]")
-end
+-- Math.
+function test_math()
+    log("Math")
 
--- PICO-8 API.
-function test_pico8_api()
     assert_equal(abs(5.000),  5.00,  "abs(5.000)")
     assert_equal(abs(-5.00),  5.00,  "abs(-5.00)")
     assert_equal(abs(0.000),  0.00,  "abs(0.000)")
@@ -128,31 +122,6 @@ function test_pico8_api()
     assert_equal(atan2(1.00, -1.0), 0.125, "atan2(1.0,  -1.0)")
     assert_equal(atan2(0.00,  0.0), 0.250, "atan2(0.0,   0.0)")
     assert_equal(atan2(99.0, 99.0), 0.875, "atan2(99.0, 99.0)")
-
-    assert_equal(band(0x1010, 0x1100), 0x1000, "band(0x1010, 0x1100)")
-    assert_equal(band(0x0101, 0x1010), 0x0000, "band(0x0101, 0x1010)")
-    assert_equal(band(0x1010, 0x1010), 0x1010, "band(0x1010, 0x1010)")
-    assert_equal(band(0x1100, 0x1100), 0x1100, "band(0x1100, 0x1100)")
-
-    assert_equal(bor(0x1010, 0x1100), 0x1110, "bor(0x1010, 0x1100)")
-    assert_equal(bor(0x0101, 0x1010), 0x1111, "bor(0x0101, 0x1010)")
-    assert_equal(bor(0x1010, 0x1010), 0x1010, "bor(0x1010, 0x1010)")
-    assert_equal(bor(0x1100, 0x1100), 0x1100, "bor(0x1100, 0x1100)")
-
-    assert_equal(bxor(0x1010, 0x1100), 0x0110, "bxor(0x1010, 0x1100)")
-    assert_equal(bxor(0x0101, 0x1010), 0x1111, "bxor(0x0101, 0x1010)")
-    assert_equal(bxor(0x1010, 0x1010), 0x0000, "bxor(0x1010, 0x1010)")
-    assert_equal(bxor(0x1100, 0x1100), 0x0000, "bxor(0x1100, 0x1100)")
-
-    assert_equal(bnot(0xff00), 0x00ff.ffff, "bnot(0xff00)")
-    assert_equal(bnot(0x00ff), 0xff00.ffff, "bnot(0x00ff)")
-    assert_equal(bnot(0x0000), 0xffff.ffff, "bnot(0x0000)")
-    assert_equal(bnot(0xffff), 0x0000.ffff, "bnot(0xffff)")
-
-    assert_equal(bnot(0x0000.ff00), 0xffff.00ff, "bnot(0x0000.ff00)")
-    assert_equal(bnot(0x0000.00ff), 0xffff.ff00, "bnot(0x0000.00ff)")
-    assert_equal(bnot(0xf0f0.f0f0), 0x0f0f.0f0f, "bnot(0xf0f0.f0f0)")
-    assert_equal(bnot(0x0000.ffff), 0xffff.0000, "bnot(0x0000.ffff)")
 
     assert_equal(ceil(1.1),   2, "ceil(1.1)")
     assert_equal(ceil(-1.9), -1, "ceil(-1.9)")
@@ -182,31 +151,6 @@ function test_pico8_api()
 
     assert_equal(min(1, 2), 1, "min(1, 2)")
     assert_equal(min(2, 1), 1, "min(2, 1)")
-
-    assert_equal(rotl(8.000, 3.00), 64.0000, "rotl(8.000, 3.00)")
-    assert_equal(rotl(0.125, 3.00),  1.0000, "rotl(0.125, 3.00)")
-    assert_equal(rotl(-4096, 12.0),  0.0586, "rotl(-4096, 12.0)")
-    assert_equal(rotl(1.000, 3.00),  8.0000, "rotl(1.000, 3.00)")
-
-    assert_equal(rotr(64.00,  3.0),  8.000, "rotr(64.00,  3.0)")
-    assert_equal(rotr(1.000,  3.0),  0.125, "rotr(1.000,  3.0)")
-    assert_equal(rotr(-4096, 12.0), 15.000, "rotr(-4096, 12.0)")
-    assert_equal(rotr(0x8000, 1.0), 0x4000, "rotr(0x8000, 1.0)")
-
-    assert_equal(lshr(0b1010, 1), 0x0005.0000, "lshr(0b1010, 1)")
-    assert_equal(lshr(0b1010, 2), 0x0002.8000, "lshr(0b1010, 2)")
-    assert_equal(lshr(0b1010, 3), 0x0001.4000, "lshr(0b1010, 3)")
-    assert_equal(lshr(0b1010, 4), 0x0000.a000, "lshr(0b1010, 4)")
-
-    assert_equal(shl(0b1010, 1), 0b10100, "shl(0b1010, 1)")
-    assert_equal(shl(0b1010, 2), 0b101000, "shl(0b1010, 2)")
-    assert_equal(shl(0b1010, 3), 0b1010000, "shl(0b1010, 3)")
-    assert_equal(shl(0b1010, 4), 0b10100000, "shl(0b1010, 4)")
-
-    assert_equal(shr(0b1010, 1), 0x0005.0000, "shr(0b1010, 1)")
-    assert_equal(shr(0b1010, 2), 0x0002.8000, "shr(0b1010, 2)")
-    assert_equal(shr(0b1010, 3), 0x0001.4000, "shr(0b1010, 3)")
-    assert_equal(shr(0b1010, 4), 0x0000.a000, "shr(0b1010, 4)")
 
     assert_equal(sin(0.000), 0x0000.0000, "sin(0.000)")
     assert_equal(sin(0.125), 0xffff.4afb, "sin(0.125)")
@@ -272,7 +216,10 @@ function test_pico8_api()
     assert_equal(rnd(num_list), 4, "rnd(num_list)")
     assert_equal(rnd(num_list), 7, "rnd(num_list)")
     assert_equal(rnd(num_list), 3, "rnd(num_list)")
+end
 
+-- Memory.
+function test_memory()
     fillp(0b0011001111001100) -- 0x33CC
     assert_equal(peek2(0x5F31), 0x33CC, "peek2(0x5F31)")
 
@@ -292,7 +239,68 @@ function test_pico8_api()
     assert_equal(peek2(0x6040), 0xf9f9, "memset(0x6040, 0xf9, 0x1fc0)")
     memcpy(0x6000,0x6040,0x1fc0)
     assert_equal(peek2(0x6000), 0xf9f9, "memcpy(0x6000, 0x6040, 0x1fc0)")
+end
 
+-- Operators.
+function test_operators()
+    assert_equal(band(0x1010, 0x1100), 0x1000, "band(0x1010, 0x1100)")
+    assert_equal(band(0x0101, 0x1010), 0x0000, "band(0x0101, 0x1010)")
+    assert_equal(band(0x1010, 0x1010), 0x1010, "band(0x1010, 0x1010)")
+    assert_equal(band(0x1100, 0x1100), 0x1100, "band(0x1100, 0x1100)")
+
+    assert_equal(bor(0x1010, 0x1100), 0x1110, "bor(0x1010, 0x1100)")
+    assert_equal(bor(0x0101, 0x1010), 0x1111, "bor(0x0101, 0x1010)")
+    assert_equal(bor(0x1010, 0x1010), 0x1010, "bor(0x1010, 0x1010)")
+    assert_equal(bor(0x1100, 0x1100), 0x1100, "bor(0x1100, 0x1100)")
+
+    assert_equal(bxor(0x1010, 0x1100), 0x0110, "bxor(0x1010, 0x1100)")
+    assert_equal(bxor(0x0101, 0x1010), 0x1111, "bxor(0x0101, 0x1010)")
+    assert_equal(bxor(0x1010, 0x1010), 0x0000, "bxor(0x1010, 0x1010)")
+    assert_equal(bxor(0x1100, 0x1100), 0x0000, "bxor(0x1100, 0x1100)")
+
+    assert_equal(bnot(0xff00), 0x00ff.ffff, "bnot(0xff00)")
+    assert_equal(bnot(0x00ff), 0xff00.ffff, "bnot(0x00ff)")
+    assert_equal(bnot(0x0000), 0xffff.ffff, "bnot(0x0000)")
+    assert_equal(bnot(0xffff), 0x0000.ffff, "bnot(0xffff)")
+
+    assert_equal(bnot(0x0000.ff00), 0xffff.00ff, "bnot(0x0000.ff00)")
+    assert_equal(bnot(0x0000.00ff), 0xffff.ff00, "bnot(0x0000.00ff)")
+    assert_equal(bnot(0xf0f0.f0f0), 0x0f0f.0f0f, "bnot(0xf0f0.f0f0)")
+    assert_equal(bnot(0x0000.ffff), 0xffff.0000, "bnot(0x0000.ffff)")
+
+    assert_equal(rotl(8.000, 3.00), 64.0000, "rotl(8.000, 3.00)")
+    assert_equal(rotl(0.125, 3.00),  1.0000, "rotl(0.125, 3.00)")
+    assert_equal(rotl(-4096, 12.0),  0.0586, "rotl(-4096, 12.0)")
+    assert_equal(rotl(1.000, 3.00),  8.0000, "rotl(1.000, 3.00)")
+
+    assert_equal(rotr(64.00,  3.0),  8.000, "rotr(64.00,  3.0)")
+    assert_equal(rotr(1.000,  3.0),  0.125, "rotr(1.000,  3.0)")
+    assert_equal(rotr(-4096, 12.0), 15.000, "rotr(-4096, 12.0)")
+    assert_equal(rotr(0x8000, 1.0), 0x4000, "rotr(0x8000, 1.0)")
+
+    assert_equal(lshr(0b1010, 1), 0x0005.0000, "lshr(0b1010, 1)")
+    assert_equal(lshr(0b1010, 2), 0x0002.8000, "lshr(0b1010, 2)")
+    assert_equal(lshr(0b1010, 3), 0x0001.4000, "lshr(0b1010, 3)")
+    assert_equal(lshr(0b1010, 4), 0x0000.a000, "lshr(0b1010, 4)")
+
+    assert_equal(shl(0b1010, 1), 0b10100, "shl(0b1010, 1)")
+    assert_equal(shl(0b1010, 2), 0b101000, "shl(0b1010, 2)")
+    assert_equal(shl(0b1010, 3), 0b1010000, "shl(0b1010, 3)")
+    assert_equal(shl(0b1010, 4), 0b10100000, "shl(0b1010, 4)")
+
+    assert_equal(shr(0b1010, 1), 0x0005.0000, "shr(0b1010, 1)")
+    assert_equal(shr(0b1010, 2), 0x0002.8000, "shr(0b1010, 2)")
+    assert_equal(shr(0b1010, 3), 0x0001.4000, "shr(0b1010, 3)")
+    assert_equal(shr(0b1010, 4), 0x0000.a000, "shr(0b1010, 4)")
+end
+
+-- Tables.
+function test_tables()
+    local tbl = {0, 1, 1, 2, 3, 5, 8, 13}
+    log("tbl = {0, 1, 1, 2, 3, 5, 8, 13}")
+    assert_equal(tbl[5], 3, "tbl[5]")
+    assert_equal(tbl[6], 5, "tbl[6]")
+    assert_equal(tbl[7], 8, "tbl[7]")
     assert_equal(#"Hello world.", 12, "#\"Hello world.\"")
 end
 
@@ -301,7 +309,9 @@ function run_tests()
     test_relational_operations()
     test_logical_operations()
     test_control_flow()
-    test_pico8_api()
+    test_math()
+    test_memory()
+    test_operators()
     test_tables()
 end
 
