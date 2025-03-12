@@ -1008,7 +1008,23 @@ static int pico8_poke4(lua_State* L)
 
 static int pico8_add(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    lua_settop(L, 3);
+
+    if (lua_isnoneornil(L, 3))
+    {
+        lua_pushinteger(L, fix32_to_int32(luaL_len(L, 1)) + 1);
+    }
+    else
+    {
+        luaL_checktype(L, 3, LUA_TNUMBER);
+    }
+
+    lua_pushvalue(L, 2);
+    lua_settable(L, 1);
+
+    lua_pushvalue(L, 2);
+    return 1;
 }
 
 static int pico8_all(lua_State* L)
@@ -1023,8 +1039,42 @@ static int pico8_count(lua_State* L)
 
 static int pico8_del(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    luaL_checkany(L, 2);
+
+    lua_pushnil(L);
+    while (lua_next(L, 1) != 0)
+    {
+        if (lua_compare(L, -1, 2, LUA_OPEQ))
+        {
+            int index = fix32_to_int32(lua_tointeger(L, -2));
+            fix32_t removed_object = lua_tonumber(L, -1);
+
+            // Shift elements down.
+            while (true)
+            {
+                lua_rawgeti(L, 1, index + 1);
+                if (lua_isnil(L, -1))
+                {
+                    lua_pop(L, 1);
+                    break;
+                }
+                lua_rawseti(L, 1, index);
+                index++;
+            }
+            lua_pushnil(L);
+            lua_rawseti(L, 1, index);
+
+            lua_pushnumber(L, removed_object);
+            return 1;
+        }
+        lua_pop(L, 1);
+    }
+
+    lua_pushnil(L);
+    return 1;
 }
+
 
 static int pico8_foreach(lua_State* L)
 {
