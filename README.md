@@ -7,7 +7,7 @@
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 
-open8 is a PICO-8 emulator written in C, currently under active development.
+open8 is a PICO-8 emulator written in C99, currently under active development.
 Designed for portability, it aims to run on a wide range of platforms, including
 the Nokia N-Gage. Any system supported by SDL3 should be capable of running open8.
 
