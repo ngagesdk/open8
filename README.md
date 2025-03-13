@@ -26,8 +26,7 @@ All the projects mentioned here are written in relatively modern C++.  That's fi
 all of these projects have their raison d'être, but this poses problems for older platforms.
 
 The main focus of open8 is on portability, especially with regard to the retro
-homebrew scene.  Keeping the entire project in C helps to maintain portability
-across different platforms.
+homebrew scene.  Keeping the project source code in C helps to maintain portability.
 
 ## Screenshots
 
