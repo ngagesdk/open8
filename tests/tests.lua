@@ -334,6 +334,25 @@ function test_tables()
     assert_equal(tmp, 0, "foreach(tbl, foreach_test)")
 
     tbl = {}
+    tbl = { 1, 2, 3, 4, nil, 5, 6, 7, 8, 9, 10 }
+    local result = {}
+
+    for v in all(tbl) do
+        add(result, v)
+    end
+
+    -- Expected table should skip the nil value.
+    local expected = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+    -- Check that result has the same length.
+    assert_equal(#result, #expected, "test_all_length")
+
+    -- Check that all elements are the same.
+    for i = 1, #expected do
+        assert_equal(result[i], expected[i], "test_all_value_" .. i)
+    end
+
+    tbl = {}
 end
 
 function run_tests()
