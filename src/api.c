@@ -605,7 +605,7 @@ static int pico8_print(lua_State* L)
 
         uint8_t w, h;
         blit_char_to_screen(text[i], cursor_x, cursor_y, color, &w, &h);
-        cursor_x += (w == 3) ? w + 1 : w - 1;
+        cursor_x += (w + 1);
     }
 
     cursor_y += 6;
@@ -1027,10 +1027,45 @@ static int pico8_add(lua_State* L)
     return 1;
 }
 
+static int pico8_all_iter(lua_State* L)
+{
+    luaL_checktype(L, lua_upvalueindex(1), LUA_TTABLE);
+
+    lua_settop(L, 0);
+    lua_pushvalue(L, lua_upvalueindex(1));
+    unsigned int index = fix32_to_uint32(lua_tointeger(L, lua_upvalueindex(2)));
+
+    while (1)
+    {
+        index++;
+        lua_pushinteger(L, index);
+        lua_replace(L, lua_upvalueindex(2));
+
+        lua_rawgeti(L, 1, index);
+        if (!lua_isnil(L, -1))
+        {
+            return 1;
+        }
+        lua_pop(L, 1);
+
+        if (index > lua_rawlen(L, 1))
+        {
+            return 0;
+        }
+    }
+}
+
 static int pico8_all(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    lua_pushvalue(L, 1);
+    lua_pushinteger(L, 0);
+    lua_pushcclosure(L, pico8_all_iter, 2);
+
+    return 1;
 }
+
 
 static int pico8_count(lua_State* L)
 {
@@ -1074,7 +1109,6 @@ static int pico8_del(lua_State* L)
     lua_pushnil(L);
     return 1;
 }
-
 
 static int pico8_foreach(lua_State* L)
 {
