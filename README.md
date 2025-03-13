@@ -11,9 +11,9 @@
 
 open8 is a PICO-8 emulator written in C99, currently under active development.
 Designed for portability, it aims to run on a wide range of platforms, including
-the Nokia N-Gage. Any system supported by SDL3 should be capable of running open8.
-
-This project is built on [Simple DirectMedia Layer 3](https://www.libsdl.org/).
+the Nokia N-Gage. Any system supported by
+[Simple DirectMedia Layer 3](https://www.libsdl.org/) should be capable of
+running open8.
 
 ## Why?
 
