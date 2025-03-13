@@ -103,8 +103,6 @@ end
 
 -- Math.
 function test_math()
-    log("Math")
-
     assert_equal(abs(5.000),  5.00,  "abs(5.000)")
     assert_equal(abs(-5.00),  5.00,  "abs(-5.00)")
     assert_equal(abs(0.000),  0.00,  "abs(0.000)")
