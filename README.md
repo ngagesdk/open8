@@ -23,10 +23,11 @@ Arn't there already a lot of other PICO-8 emulators such as
 [retro8](https://github.com/Jakz/retro8)? Why do we need another one?
 
 All the projects mentioned here are written in relatively modern C++.  That's fine and
-all of these projects have their raison d'être, but this poses problems for older platforms.
+all of these projects have their raison d'Ãªtre, but this poses problems for older platforms.
 
 The main focus of open8 is on portability, especially with regard to the retro
-homebrew scene.
+homebrew scene.  Keeping the entire project in C helps to maintain portability
+across different platforms.
 
 ## Screenshots
 
