@@ -292,6 +292,17 @@ function test_operators()
     assert_equal(shr(0b1010, 4), 0x0000.a000, "shr(0b1010, 4)")
 end
 
+-- P8SCII
+
+function test_p8scii()
+    cls(1)
+    for i = 16, 255 do
+        print(chr(i), (i%16)*8, flr(i/16)*8, 7)
+    end
+    local crc = crc32(0x6000, 0x2000);
+    assert_equal(0x561d4500, crc, "P8SCII, (16-255) CRC")
+end
+
 -- Tables.
 function test_tables()
     assert_equal(#"Hello world.", 12, "#\"Hello world.\" == 12")
@@ -356,6 +367,8 @@ function test_tables()
 end
 
 function run_tests()
+    init_crc32()
+
     test_arithmetic_operations()
     test_relational_operations()
     test_logical_operations()
@@ -363,6 +376,7 @@ function run_tests()
     test_math()
     test_memory()
     test_operators()
+    test_p8scii()
     test_tables()
 end
 

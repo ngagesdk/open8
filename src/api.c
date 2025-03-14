@@ -1175,6 +1175,22 @@ static int pico8_setmetatable(lua_State* L)
 
 // Debug functions.
 
+static int pico8_crc32(lua_State* L)
+{
+    uint32_t start = fix32_to_uint32(luaL_checknumber(L, 1));
+    uint32_t length = fix32_to_uint32(luaL_checknumber(L, 2));
+    uint32_t crc = crc32(pico8_ram, start, length);
+
+    lua_pushunsigned(L, fix32_from_uint32(crc));
+    return 1;
+}
+
+static int pico8_init_crc32(lua_State* L)
+{
+    init_crc32();
+    return 0;
+}
+
 static int pico8_log(lua_State* L)
 {
     int n = lua_gettop(L);
@@ -1353,6 +1369,10 @@ void init_api(lua_State* L)
     lua_setglobal(L, "setmetatable");
 
     // Debug.
+    lua_pushcfunction(L, pico8_crc32);
+    lua_setglobal(L, "crc32");
+    lua_pushcfunction(L, pico8_init_crc32);
+    lua_setglobal(L, "init_crc32");
     lua_pushcfunction(L, pico8_log);
     lua_setglobal(L, "log");
 }
