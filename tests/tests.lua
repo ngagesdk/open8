@@ -101,6 +101,51 @@ function test_control_flow()
     assert_equal(sum, 6, "for loop")
 end
 
+-- P8SCII
+function test_graphics()
+    cls()
+
+	for i = 15, 0, -1 do
+        fillp(0x0000)
+        circ(64, 64, 2 + (i * 2), i)
+        fillp(0x51BF)
+        circfill(0, 0, 2 + (i * 2), i)
+    end
+
+    fillp("\x80")
+    rectfill(64, 0, 67, 3, 15)
+    fillp("\x81")
+    rectfill(68, 0, 71, 3, 14)
+    fillp("\x82")
+    rectfill(72, 0, 75, 3, 13)
+    fillp("\x83")
+    rectfill(76, 0, 79, 3, 12)
+    fillp("\x84")
+    rectfill(80, 0, 83, 3, 11)
+    fillp("\x85")
+    rectfill(84, 0, 87, 3, 10)
+    fillp("\x86")
+    rectfill(88, 0, 91, 3, 9)
+    fillp("\x87")
+    rectfill(92, 0, 95, 3, 8)
+
+    fillp(0x0000)
+    pset(64, 64, 142)
+    rect(31, 31, 98, 98, 140)
+
+    rectfill(32, 32, 40, 40, 8)
+    rectfill(89, 32, 97, 40, 9)
+    rectfill(32, 89, 40, 97, 10)
+    rectfill(89, 89, 97, 97, 11)
+
+    ovalfill(105, 105, 127, 115, 13)
+    oval(107, 107, 125, 113, 15)
+    line(110, 110, 122, 110, 8)
+
+    local crc = crc32(0x6000, 0x2000);
+    assert_equal(0x440c2f00, crc, "Graphics, CRC")
+end
+
 -- Math.
 function test_math()
     assert_equal(abs(5.000),  5.00,  "abs(5.000)")
@@ -293,7 +338,6 @@ function test_operators()
 end
 
 -- P8SCII
-
 function test_p8scii()
     cls(1)
     for i = 16, 255 do
@@ -373,6 +417,7 @@ function run_tests()
     test_relational_operations()
     test_logical_operations()
     test_control_flow()
+    test_graphics()
     test_math()
     test_memory()
     test_operators()
