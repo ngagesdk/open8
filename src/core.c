@@ -117,6 +117,60 @@ static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
     }
 }
 
+// It's in fact easier to patch the code than parsing the preset
+// fill-pattern characters using the Lua C-API.
+static void patch_cart_code(cart_t* cart)
+{
+    size_t count = 0;
+
+    // Count occurrences of preset fill-patterns.
+    for (size_t i = 0; i < cart->code_size; i++)
+    {
+        if ((uint8_t)cart->code[i] >= 128 && (uint8_t)cart->code[i] <= 135)
+        {
+            count++;
+        }
+    }
+
+    if (count == 0)
+    {
+        return; // No changes needed.
+    }
+
+    // Compute new size with added quotes.
+    size_t new_size = cart->code_size + count * 2;
+    uint8_t* new_code = (uint8_t*)SDL_realloc(cart->code, new_size + 1); // +1 for null terminator.
+    if (!new_code)
+    {
+        SDL_Log("Memory reallocation failed!");
+        return;
+    }
+
+    cart->code = new_code;
+
+    // Insert quotes while shifting data from end to start.
+    char* src = cart->code + cart->code_size - 1;
+    char* dest = cart->code + new_size;
+    *dest-- = '\0'; // Null-terminate the new string.
+
+    for (size_t i = cart->code_size; i-- > 0;)
+    {
+        if ((unsigned char)*src >= 128 && (unsigned char)*src <= 135)
+        {
+            *dest-- = '"';
+            *dest-- = *src;
+            *dest-- = '"';
+        }
+        else
+        {
+            *dest-- = *src;
+        }
+        src--;
+    }
+
+    cart->code_size = new_size;
+}
+
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart)
 {
     int width, height, bpp;
@@ -223,6 +277,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     else
     {
         cart->is_corrupt = false;
+        patch_cart_code(cart);
     }
 
     cart->image = SDL_CreateTextureFromSurface(renderer, surface);
