@@ -21,5 +21,7 @@ bool init_memory(SDL_Renderer* renderer);
 void reset_memory(void);
 void destroy_memory(void);
 void update_from_virtual_memory(SDL_Renderer* renderer);
+void crc32_init();
+uint32_t crc32(const char* data, size_t start, size_t length, uint32_t previous_crc);
 
 #endif // MEMORY_H
