@@ -13,7 +13,10 @@
 #include "config.h"
 #include "memory.h"
 
+#define CRC32_POLYNOMIAL 0x04c11db7
+
 uint8_t pico8_ram[RAM_SIZE];
+static uint32_t crc32_table[256];
 
 static SDL_Texture* screen;
 static SDL_Texture* sprite_sheet;
@@ -50,6 +53,8 @@ bool init_memory(SDL_Renderer* renderer)
     {
         SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
     }
+
+    crc32_init();
 
     return true;
 }
@@ -185,4 +190,40 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     dest.h = SCREEN_SIZE;
 
     SDL_RenderTexture(renderer, screen, NULL, &dest);
+}
+
+void crc32_init()
+{
+    for (uint32_t i = 0; i < 256; ++i)
+    {
+        uint32_t crc = i;
+        for (uint32_t j = 8; j > 0; --j)
+        {
+            if (crc & 0x80000000)
+            {
+                crc = (crc << 1) ^ CRC32_POLYNOMIAL;
+            }
+            else
+            {
+                crc <<= 1;
+            }
+        }
+        crc32_table[i] = crc;
+    }
+}
+
+uint32_t crc32(const char* data, size_t start, size_t length, uint32_t previous_crc)
+{
+    uint32_t crc = previous_crc;
+
+    for (size_t i = 0; i < length; ++i)
+    {
+        // Wrap around the array using modulus.
+        size_t index = (start + i) % RAM_SIZE;
+        uint8_t byte = (uint8_t)data[index];
+
+        crc = (crc << 8) ^ crc32_table[((crc >> 24) ^ byte) & 0xFF];
+    }
+
+    return crc;
 }
