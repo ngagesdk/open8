@@ -423,42 +423,46 @@ static int pico8_fget(lua_State* L)
 
 static int pico8_fillp(lua_State* L)
 {
-    uint16_t pattern = fix32_to_uint16(luaL_optnumber(L, 1, 0));
+    uint32_t pattern = 0;
 
-#if 0
-    // Predefined pattern values.
-    // P8SCI, 128 - 135.
-    switch (pattern)
+    if (lua_type(L, 1) == LUA_TNUMBER)
     {
-        case 0:
-        case 0x25CB: // 128, Solid.
-            pattern = 0x0000;
-            break;
-        case 0x2588: // 129, Checkerboard.
-            pattern = 0x5A5A;
-            break;
-        case 0x1F431: // 130, Jelpi.
-            pattern = 0x511F;
-            break;
-        case 0x2B07FE0F: // 131, Down key.
-            pattern = 0x0003;
-            break;
-        case 0x2591: // 132, Dot pattern.
-            pattern = 0x7070;
-            break;
-        case 0x273D: // 133, Throwing star.
-            pattern = 0x8810;
-            break;
-        case 0x25CF: // 134, Ball.
-            pattern = 0xF99F;
-            break;
-        case 0x2665: // 135, Heart.
-            pattern = 0x51BF;
-            break;
-        default:
-            break;
+        pattern = fix32_to_uint32(luaL_optnumber(L, 1, 0));
     }
-#endif
+    else if (lua_type(L, 1) == LUA_TSTRING)
+    {
+        const char* str = luaL_checkstring(L, 1);
+        uint8_t fillc = str[0];
+
+        switch (fillc)
+        {
+            default:
+            case 128: // Solid.
+                pattern = 0b0000000000000000;
+                break;
+            case 129: // Checkerboard.
+                pattern = 0b0101101001011010;
+                break;
+            case 130: // Jelpi.
+                pattern = 0b0101000100011111;
+                break;
+            case 131: // Down key.
+                pattern = 0b0000000000000011;
+                break;
+            case 132: // Dot pattern.
+                pattern = 0b0111110101111101;
+                break;
+            case 133: // Throwing star.
+                pattern = 0b1011100000011101;
+                break;
+            case 134: // Ball.
+                pattern = 0b1111100110011111;
+                break;
+            case 135: // Heart.
+                pattern = 0b0101000110111111;
+                break;
+        }
+    }
 
     pico8_ram[0x5f31] = (pattern & 0xFF00) >> 8;
     pico8_ram[0x5f32] = pattern & 0x00FF;
@@ -605,7 +609,7 @@ static int pico8_print(lua_State* L)
 
         uint8_t w, h;
         blit_char_to_screen(text[i], cursor_x, cursor_y, color, &w, &h);
-        cursor_x += (w + 1);
+        cursor_x += (w == 3) ? w + 1 : w - 1;
     }
 
     cursor_y += 6;
@@ -1004,6 +1008,23 @@ static int pico8_poke4(lua_State* L)
     return 0;
 }
 
+// System functions.
+
+static int pico8_menuitem(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_extcmd(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
+static int pico8_run(lua_State* L)
+{
+    TO_BE_DONE;
+}
+
 // Table functions.
 
 static int pico8_add(lua_State* L)
@@ -1300,6 +1321,14 @@ void init_api(lua_State* L)
     lua_setglobal(L, "poke2");
     lua_pushcfunction(L, pico8_poke4);
     lua_setglobal(L, "poke4");
+
+    // System
+    lua_pushcfunction(L, pico8_menuitem);
+    lua_setglobal(L, "menuitem");
+    lua_pushcfunction(L, pico8_extcmd);
+    lua_setglobal(L, "extcmd");
+    lua_pushcfunction(L, pico8_run);
+    lua_setglobal(L, "run");
 
     // Tables.
     lua_pushcfunction(L, pico8_add);
