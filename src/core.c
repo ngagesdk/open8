@@ -571,6 +571,9 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             {
                 switch (event->key.key)
                 {
+                    case SDLK_EQUALS:
+                        SDL_Log("Screen data CRC: 0x%x", crc32(pico8_ram, 0x6000, 0x2000));
+                        break;
                     case SDLK_SOFTLEFT:
                     case SDLK_ESCAPE:
                         destroy_vm();
