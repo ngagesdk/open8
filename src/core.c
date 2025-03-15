@@ -373,6 +373,10 @@ static bool run_cartridge(SDL_Renderer* renderer)
 {
     reset_memory();
 
+    // Copy spritesheet, map, flags, music and sound effects data to memory.
+    // 0x0000-0x42ff
+    SDL_memcpy(pico8_ram, cart.cart_data, 0x42ff * sizeof(uint8_t));
+
     if (!cart.is_corrupt)
     {
         state = STATE_EMULATOR;
