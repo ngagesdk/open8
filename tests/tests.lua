@@ -101,7 +101,7 @@ function test_control_flow()
     assert_equal(sum, 6, "for loop")
 end
 
--- P8SCII
+-- Graphics.
 function test_graphics()
     cls()
 
@@ -337,7 +337,7 @@ function test_operators()
     assert_equal(shr(0b1010, 4), 0x0000.a000, "shr(0b1010, 4)")
 end
 
--- P8SCII
+-- P8SCII.
 function test_p8scii()
     cls(1)
     for i = 16, 255 do
