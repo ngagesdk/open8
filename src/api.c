@@ -687,23 +687,50 @@ static int pico8_sget(lua_State* L)
 static int pico8_spr(lua_State* L)
 {
     uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
-    int32_t x = fix32_to_int32(luaL_optnumber(L, 2, 0));
-    int32_t y = fix32_to_int32(luaL_optnumber(L, 3, 0));
-    fix32_t w = luaL_optnumber(L, 4, fix32_value(4, 0));
-    fix32_t h = luaL_optnumber(L, 5, fix32_value(5, 0));
-    bool flip_x = false;
-    bool flip_y = false;
+    int32_t x = fix32_to_int32(luaL_optunsigned(L, 2, 0));
+    int32_t y = fix32_to_int32(luaL_optunsigned(L, 3, 0));
+    uint8_t w = luaL_optunsigned(L, 4, 1);
+    uint8_t h = luaL_optunsigned(L, 5, 1);
+    bool flip_x = lua_toboolean(L, 6);
+    bool flip_y = lua_toboolean(L, 7);
 
-    if (lua_isboolean(L, 6))
+    uint8_t width = w * 8;
+    uint8_t height = h * 8;
+
+    uint16_t sprite_x_base = (n & 0xF) << 2;
+    uint16_t sprite_y_base = (n >> 4) * 512;
+
+    for (uint8_t dy = 0; dy < height; dy++)
     {
-        flip_x = lua_toboolean(L, 6);
-    }
-    if (lua_isboolean(L, 7))
-    {
-        flip_y = lua_toboolean(L, 7);
+        uint8_t sy = flip_y ? (height - 1 - dy) : dy;
+        uint16_t sprite_row_addr = sprite_y_base + (sy << 6);
+
+        for (uint8_t dx = 0; dx < width; dx++)
+        {
+            uint8_t sx = flip_x ? (width - 1 - dx) : dx;
+            uint16_t sprite_addr = sprite_row_addr + sprite_x_base + (sx >> 1);
+            uint8_t byte = pico8_ram[sprite_addr];
+
+            uint8_t color = (sx & 1) ? (byte >> 4) : (byte & 0x0F);
+
+            if (color)
+            {
+                uint16_t screen_addr = 0x6000 + ((y + dy) << 6) + ((x + dx) >> 1);
+                uint8_t *screen_byte = &pico8_ram[screen_addr];
+
+                if ((x + dx) & 1)
+                {
+                    *screen_byte = (*screen_byte & 0x0F) | (color << 4);
+                }
+                else
+                {
+                    *screen_byte = (*screen_byte & 0xF0) | color;
+                }
+            }
+        }
     }
 
-    TO_BE_DONE;
+    return 0;
 }
 
 static int pico8_sset(lua_State* L)
