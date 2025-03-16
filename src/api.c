@@ -609,15 +609,7 @@ static int pico8_print(lua_State* L)
 
         uint8_t w, h;
         blit_char_to_screen(text[i], cursor_x, cursor_y, color, &w, &h);
-
-        if (text[i] >= 16 && text[i] <= 127)
-        {
-            cursor_x += 4;
-        }
-        else
-        {
-            cursor_x += 8;
-        }
+        cursor_x += (text[i] >= 16 && text[i] <= 127) ? 4 : 8;
     }
 
     cursor_y += 6;
