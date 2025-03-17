@@ -538,7 +538,32 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
         {
             return false;
         }
-        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+#ifndef __SYMBIAN32__
+        case SDL_EVENT_JOYSTICK_ADDED:
+        {
+            const SDL_JoystickID which = event->jdevice.which;
+            SDL_Joystick *joystick = SDL_OpenJoystick(which);
+            if (!joystick)
+            {
+                SDL_Log("Joystick #%u could not be opened: %s", (unsigned int)which, SDL_GetError());
+            }
+            else
+            {
+                SDL_Log("Joystick #%u connected: %s", (unsigned int)which, SDL_GetJoystickName(joystick));
+            }
+            return true;
+        }
+        case SDL_EVENT_JOYSTICK_REMOVED:
+        {
+            const SDL_JoystickID which = event->jdevice.which;
+            SDL_Joystick* joystick = SDL_GetJoystickFromID(which);
+            if (joystick)
+            {
+                SDL_CloseJoystick(joystick);  /* the joystick was unplugged. */
+            }
+            return true;
+        }
+#endif
         case SDL_EVENT_KEY_DOWN:
         {
             if (state == STATE_MENU)
@@ -571,20 +596,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_HASH: // Show FPS on the N-Gage.
                         render_cartridge(renderer);
                 }
-                switch (event->button.button)
-                {
-                    case SDL_BUTTON_LEFT:
-                        select_prev_cartridge(renderer);
-                        render_cartridge(renderer);
-                        return true;
-                    case SDL_BUTTON_RIGHT:
-                        select_next_cartridge(renderer);
-                        render_cartridge(renderer);
-                        return true;
-                    case SDL_BUTTON_X1:
-                        run_cartridge(renderer);
-                        return true;
-                }
             }
             else if (state == STATE_EMULATOR)
             {
@@ -601,9 +612,37 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                         state = STATE_MENU;
                         return true;
                 }
-                switch (event->button.button)
+            }
+            break;
+        }
+#ifndef __SYMBIAN32__
+        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+        {
+            const SDL_JoystickID which = event->jbutton.which;
+            SDL_Log("Joystick #%u button %d -> %s", (unsigned int)which, (int)event->jbutton.button, event->jbutton.down ? "PRESSED" : "RELEASED");
+
+            if (state == STATE_MENU)
+            {
+                switch (event->jbutton.button)
                 {
-                    case SDL_BUTTON_X2:
+                    case 4:
+                        select_prev_cartridge(renderer);
+                        render_cartridge(renderer);
+                        return true;
+                    case 5:
+                        select_next_cartridge(renderer);
+                        render_cartridge(renderer);
+                        return true;
+                    case 0:
+                        run_cartridge(renderer);
+                        return true;
+                }
+            }
+            else if (state == STATE_EMULATOR)
+            {
+                switch (event->jbutton.button)
+                {
+                    case 1:
                         destroy_vm();
                         init_vm(renderer);
                         reset_memory();
@@ -613,6 +652,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             }
             break;
         }
+#endif
     }
     return true;
 }
