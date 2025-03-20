@@ -689,8 +689,8 @@ static int pico8_spr(lua_State* L)
     uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
     int32_t x = fix32_to_int32(luaL_optunsigned(L, 2, 0));
     int32_t y = fix32_to_int32(luaL_optunsigned(L, 3, 0));
-    uint8_t w = luaL_optunsigned(L, 4, 1);
-    uint8_t h = luaL_optunsigned(L, 5, 1);
+    uint8_t w = fix32_to_uint8(luaL_optunsigned(L, 4, fix32_value(1, 0)));
+    uint8_t h = fix32_to_uint8(luaL_optunsigned(L, 5, fix32_value(1, 0)));
     bool flip_x = lua_toboolean(L, 6);
     bool flip_y = lua_toboolean(L, 7);
 
