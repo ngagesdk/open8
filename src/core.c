@@ -89,7 +89,7 @@ static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
     size_t pixel_count = CART_WIDTH * CART_HEIGHT;
 
     // Each Pico-8 byte is stored as the two least significant bits of each of the four
-    // channels, ordered ABGR (E.g: the A channel stores the 2 most significant bits in
+    // channels, ordered ARGB (E.g: the A channel stores the 2 most significant bits in
     // the bytes).  The image is 160 pixels wide and 205 pixels high, for a possible
     // storage of 32,800 (0x8020) bytes.
 
@@ -100,17 +100,14 @@ static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
             break;
         }
 
-        // ABGR8888
-        uint8_t A = image_data[i * 4];     // A channel
-        uint8_t B = image_data[i * 4 + 1]; // B channel
-        uint8_t G = image_data[i * 4 + 2]; // G channel
-        uint8_t R = image_data[i * 4 + 3]; // R channel
+        // stb_image stores components in RGBA32 order
+        uint8_t R = image_data[i * 4];     // R channel
+        uint8_t G = image_data[i * 4 + 1]; // G channel
+        uint8_t B = image_data[i * 4 + 2]; // B channel
+        uint8_t A = image_data[i * 4 + 3]; // A channel
 
         // Extract the 2 least significant bits from each channel.
-        uint8_t byte = ((B & 0x03) << 6) | ((G & 0x03) << 4) | ((R & 0x03) << 2) | (A & 0x03);
-
-        // Swap nibbles.
-        byte = (byte >> 4) | (byte << 4);
+        uint8_t byte = ((A & 0x03) << 6) | ((R & 0x03) << 4) | ((G & 0x03) << 2) | ((B & 0x03) << 0);
 
         cart_data[data_index] = byte;
         data_index++;
@@ -213,7 +210,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         return 0;
     }
 
-    SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ABGR8888, image_data, width * 4);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, image_data, width * 4);
     if (!surface)
     {
         SDL_Log("Couldn't create surface: %s", SDL_GetError());
