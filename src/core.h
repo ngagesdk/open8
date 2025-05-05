@@ -22,8 +22,6 @@
 typedef struct cart
 {
     SDL_Texture* image;
-    uint8_t* data;
-    uint32_t size;
 
     uint8_t cart_data[0x8020];
     uint8_t* code;
