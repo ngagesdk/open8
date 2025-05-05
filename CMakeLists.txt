@@ -164,7 +164,6 @@ else()
 
   if (NINTENDO_3DS)
     set(ROMFS_DIR "${CMAKE_CURRENT_BINARY_DIR}/romfs")
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/data DESTINATION ${ROMFS_DIR})
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/carts DESTINATION ${ROMFS_DIR})
     set(SMDH_FILE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.smdh")
     ctr_generate_smdh("${SMDH_FILE}"
