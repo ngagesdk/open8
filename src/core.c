@@ -83,7 +83,7 @@ static void destroy_vm(void)
     lua_close(vm);
 }
 
-static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
+static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
 {
     size_t data_index = 0;
     size_t pixel_count = CART_WIDTH * CART_HEIGHT;
@@ -108,6 +108,12 @@ static void extract_pico8_data(const uint8_t* image_data, uint8_t* cart_data)
 
         // Extract the 2 least significant bits from each channel.
         uint8_t byte = ((A & 0x03) << 6) | ((R & 0x03) << 4) | ((G & 0x03) << 2) | ((B & 0x03) << 0);
+
+        // Clean up graphical artifacts visible on 32bpp displays
+        image_data[i * 4]     = (R & 0xFC) | (R >> 6);
+        image_data[i * 4 + 1] = (G & 0xFC) | (G >> 6);
+        image_data[i * 4 + 2] = (B & 0xFC) | (B >> 6);
+        image_data[i * 4 + 3] = (A & 0xFC) | (A >> 6);
 
         cart_data[data_index] = byte;
         data_index++;
@@ -197,7 +203,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     cart->size = file_size;
     fclose(file);
 
-    uint32_t* image_data = (uint32_t*)stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
+    uint8_t* image_data = stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
@@ -218,7 +224,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         return 0;
     }
 
-    extract_pico8_data((const uint8_t*)image_data, cart->cart_data);
+    extract_pico8_data(image_data, cart->cart_data);
 
     uint32_t header = *(uint32_t*)&cart->cart_data[0x4300];
     int status = 0;
