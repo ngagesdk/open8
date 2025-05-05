@@ -193,29 +193,33 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    cart->data = (uint8_t*)SDL_calloc(file_size, sizeof(uint8_t));
-    if (!cart->data)
+    uint8_t* data = (uint8_t*)SDL_calloc(file_size, sizeof(uint8_t));
+    if (!data)
     {
         SDL_Log("Couldn't allocate memory for cart data");
         fclose(file);
         return 0;
     }
-    fread(cart->data, 1, file_size, file);
-    cart->size = file_size;
+    fread(data, 1, file_size, file);
     fclose(file);
 
-    uint8_t* image_data = stbi_load_from_memory(cart->data, cart->size, &width, &height, &bpp, 4);
+    uint8_t* image_data = stbi_load_from_memory(data, file_size, &width, &height, &bpp, 4);
     if (!image_data)
     {
         SDL_Log("Couldn't load image data: %s", stbi_failure_reason());
+        SDL_free(data);
         return 0;
     }
+    SDL_free(data);
 
     if (width != CART_WIDTH || height != CART_HEIGHT)
     {
         SDL_Log("Invalid image size: %dx%d", width, height);
+        stbi_image_free(image_data);
         return 0;
     }
+
+    extract_pico8_data(image_data, cart->cart_data);
 
     SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, image_data, width * 4);
     if (!surface)
@@ -225,7 +229,22 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
         return 0;
     }
 
-    extract_pico8_data(image_data, cart->cart_data);
+    cart->image = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!cart->image)
+    {
+        SDL_Log("Couldn't create texture: %s", SDL_GetError());
+        SDL_DestroySurface(surface);
+        stbi_image_free(image_data);
+        return 0;
+    }
+
+    SDL_DestroySurface(surface);
+    stbi_image_free(image_data);
+
+    if (!SDL_SetTextureScaleMode(cart->image, SDL_SCALEMODE_NEAREST))
+    {
+        SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
+    }
 
     uint32_t header = *(uint32_t*)&cart->cart_data[0x4300];
     int status = 0;
@@ -234,7 +253,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     if (!cart->code)
     {
         SDL_Log("Could not allocate code memory: %s", SDL_GetError());
-        stbi_image_free(image_data);
+        SDL_DestroyTexture(cart->image);
         return 0;
     }
 
@@ -270,7 +289,7 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     if (!cart->code)
     {
         SDL_Log("Could not re-allocate code memory: %s", SDL_GetError());
-        stbi_image_free(image_data);
+        SDL_DestroyTexture(cart->image);
         return 0;
     }
 
@@ -282,20 +301,6 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
     {
         cart->is_corrupt = false;
         patch_cart_code(cart);
-    }
-
-    cart->image = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!cart->image)
-    {
-        SDL_Log("Couldn't create texture: %s", SDL_GetError());
-        return 0;
-    }
-    SDL_DestroySurface(surface);
-    stbi_image_free(image_data);
-
-    if (!SDL_SetTextureScaleMode(cart->image, SDL_SCALEMODE_NEAREST))
-    {
-        SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
     }
 
     return 1;
@@ -318,12 +323,6 @@ static void destroy_cart(cart_t* cart)
         SDL_free(cart->code);
     }
     cart->code = NULL;
-
-    if (cart->data)
-    {
-        SDL_free(cart->data);
-    }
-    cart->data = NULL;
 }
 
 static bool is_function_present(lua_State* L, const char* func_name)
