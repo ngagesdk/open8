@@ -49,7 +49,7 @@ SDL_Texture* load_image(SDL_Renderer* renderer, const char* file_name, int* widt
         return NULL;
     }
 
-    SDL_Surface* surface = SDL_CreateSurfaceFrom(*width, *height, SDL_PIXELFORMAT_ABGR8888, image_data, *width * 4);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(*width, *height, SDL_PIXELFORMAT_RGBA32, image_data, *width * 4);
     if (!surface)
     {
         SDL_Log("Couldn't create surface: %s", SDL_GetError());
