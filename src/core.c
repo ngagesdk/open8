@@ -16,8 +16,10 @@
 #include "api.h"
 #include "config.h"
 #include "core.h"
-#include "image_loader.h"
 #include "memory.h"
+
+#define STBI_NO_THREAD_LOCALS
+#define STB_IMAGE_IMPLEMENTATION
 #include "misc/stb_image.h"
 
 #ifdef _WIN32
@@ -26,8 +28,6 @@
 #include <dirent.h>
 #endif
 #include <string.h>
-
-static SDL_Texture* frame;
 
 static char** available_carts;
 static int num_carts;
@@ -429,29 +429,16 @@ static void render_cartridge(SDL_Renderer* renderer)
 {
     SDL_SetRenderTarget(renderer, NULL);
 
-    SDL_FRect source;
     SDL_FRect dest;
-    SDL_FRect frame_dest;
 
-    source.x = 16.f;
-    source.y = 24.f;
-    source.w = SCREEN_SIZE;
-    source.h = SCREEN_SIZE;
-
-    dest.x = SCREEN_OFFSET_X;
-    dest.y = SCREEN_OFFSET_Y;
-    dest.w = SCREEN_SIZE;
-    dest.h = SCREEN_SIZE;
-
-    frame_dest.x = FRAME_OFFSET_X;
-    frame_dest.y = FRAME_OFFSET_Y;
-    frame_dest.w = 176.f;
-    frame_dest.h = 208.f;
+    dest.x = FRAME_OFFSET_X;
+    dest.y = FRAME_OFFSET_Y;
+    dest.w = FRAME_W;
+    dest.h = FRAME_H;
 
     SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
     SDL_RenderClear(renderer);
-    SDL_RenderTexture(renderer, frame, NULL, &frame_dest);
-    SDL_RenderTexture(renderer, cart.image, &source, &dest);
+    SDL_RenderTexture(renderer, cart.image, NULL, &dest);
 }
 
 bool init_core(SDL_Renderer* renderer)
@@ -462,13 +449,6 @@ bool init_core(SDL_Renderer* renderer)
     num_carts = 0;
     selection = 0;
     prev_selection = !selection;
-
-    SDL_snprintf(path, sizeof(path), "%sdata/frame.png", SDL_GetBasePath());
-    frame = load_image(renderer, path, &width, &height, &bpp);
-    if (!frame)
-    {
-        return false;
-    }
 
     SDL_snprintf(path, sizeof(path), "%scarts", SDL_GetBasePath());
 
@@ -520,10 +500,6 @@ void destroy_core(void)
     if (available_carts)
     {
         SDL_free(available_carts);
-    }
-    if (frame)
-    {
-        SDL_DestroyTexture(frame);
     }
 }
 
