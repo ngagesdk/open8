@@ -450,7 +450,6 @@ static void render_cartridge(SDL_Renderer* renderer)
 bool init_core(SDL_Renderer* renderer)
 {
     char path[256];
-    int width, height, bpp;
 
     num_carts = 0;
     selection = 0;
