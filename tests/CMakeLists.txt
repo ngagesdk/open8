@@ -10,7 +10,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXPORT_DIR}")
 set(CMAKE_C_STANDARD 99)
 
 include(get_SDL3)
-get_SDL3("3.2.8")
+get_SDL3("3.2.12")
 
 set(PICO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
