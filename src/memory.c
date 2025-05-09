@@ -18,9 +18,10 @@
 
 uint8_t pico8_ram[RAM_SIZE];
 static uint32_t crc32_table[256];
+static uint32_t palette_map[16];
 
 static SDL_Texture* screen;
-static SDL_Texture* sprite_sheet;
+static SDL_PixelFormat screen_format;
 
 bool init_memory(SDL_Renderer* renderer)
 {
@@ -31,7 +32,27 @@ bool init_memory(SDL_Renderer* renderer)
 
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 
-    screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
+    screen_format = SDL_PIXELFORMAT_UNKNOWN;
+
+    const SDL_PixelFormat *texture_formats = (const SDL_PixelFormat *)SDL_GetPointerProperty(SDL_GetRendererProperties(renderer), SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
+    if (texture_formats) {
+        // Use the first compatible format that the renderer supports
+        for (int i = 0; i < texture_formats[i]; ++i) {
+            if ((SDL_BYTESPERPIXEL(texture_formats[i]) != 1 &&
+                 SDL_BYTESPERPIXEL(texture_formats[i]) != 2 &&
+                 SDL_BYTESPERPIXEL(texture_formats[i]) != 4) ||
+                !SDL_ISPIXELFORMAT_PACKED(texture_formats[i]))
+                break;
+            screen_format = texture_formats[i];
+            break;
+        }
+    }
+
+    // If all else fails, use RGBA32 as a fallback.
+    if (screen_format == SDL_PIXELFORMAT_UNKNOWN)
+        screen_format = SDL_PIXELFORMAT_RGBA32;
+
+    screen = SDL_CreateTexture(renderer, screen_format, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
     if (screen == NULL)
     {
         SDL_Log("Could not create screen texture: %s", SDL_GetError());
@@ -43,16 +64,12 @@ bool init_memory(SDL_Renderer* renderer)
         SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
     }
 
-    sprite_sheet = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
-    if (screen == NULL)
-    {
-        SDL_Log("Could not create sprite sheet texture: %s", SDL_GetError());
-        return false;
-    }
+    uint8_t r, g, b;
+    const SDL_PixelFormatDetails *details = SDL_GetPixelFormatDetails(screen_format);
 
-    if (!SDL_SetTextureScaleMode(sprite_sheet, SDL_SCALEMODE_NEAREST))
-    {
-        SDL_Log("Couldn't set texture scale mode: %s", SDL_GetError());
+    for (int i = 0; i < 16; i++) {
+        color_lookup(i, &r, &g, &b);
+        palette_map[i] = SDL_MapRGB(details, NULL, r, g, b);
     }
 
     init_crc32();
@@ -68,11 +85,6 @@ void reset_memory(void)
 
 void destroy_memory(void)
 {
-    if (sprite_sheet)
-    {
-        SDL_DestroyTexture(sprite_sheet);
-    }
-
     if (screen)
     {
         SDL_DestroyTexture(screen);
@@ -171,15 +183,44 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     if (SDL_LockTexture(screen, NULL, &pixels, &pitch))
     {
         uint8_t* row = (uint8_t*)pixels;
-        for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+        switch (SDL_BYTESPERPIXEL(screen_format))
         {
-            uint32_t* pixel = (uint32_t*)row;
-            for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+        case 1:
+            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
-                uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
-                uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
-                *pixel = lookup_color(color);
+                uint8_t* pixel = (uint8_t*)row;
+                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                {
+                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
+                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
+                    *pixel = palette_map[color];
+                }
             }
+            break;
+        case 2:
+            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+            {
+                uint16_t* pixel = (uint16_t*)row;
+                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                {
+                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
+                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
+                    *pixel = palette_map[color];
+                }
+            }
+            break;
+        case 4:
+            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+            {
+                uint32_t* pixel = (uint32_t*)row;
+                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                {
+                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
+                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
+                    *pixel = palette_map[color];
+                }
+            }
+            break;
         }
         SDL_UnlockTexture(screen);
     }
