@@ -516,32 +516,30 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
         {
             return false;
         }
-#ifndef __SYMBIAN32__
-        case SDL_EVENT_JOYSTICK_ADDED:
+        case SDL_EVENT_GAMEPAD_ADDED:
         {
-            const SDL_JoystickID which = event->jdevice.which;
-            SDL_Joystick *joystick = SDL_OpenJoystick(which);
-            if (!joystick)
+            const SDL_JoystickID which = event->gdevice.which;
+            SDL_Gamepad *gamepad = SDL_OpenGamepad(which);
+            if (!gamepad)
             {
-                SDL_Log("Joystick #%u could not be opened: %s", (unsigned int)which, SDL_GetError());
+                SDL_Log("Joystick #%" SDL_PRIu32 " could not be opened: %s", which, SDL_GetError());
             }
             else
             {
-                SDL_Log("Joystick #%u connected: %s", (unsigned int)which, SDL_GetJoystickName(joystick));
+                SDL_Log("Joystick #%" SDL_PRIu32 " connected: %s", which, SDL_GetGamepadName(gamepad));
             }
             return true;
         }
-        case SDL_EVENT_JOYSTICK_REMOVED:
+        case SDL_EVENT_GAMEPAD_REMOVED:
         {
-            const SDL_JoystickID which = event->jdevice.which;
-            SDL_Joystick* joystick = SDL_GetJoystickFromID(which);
-            if (joystick)
+            const SDL_JoystickID which = event->gdevice.which;
+            SDL_Gamepad *gamepad = SDL_GetGamepadFromID(which);
+            if (gamepad)
             {
-                SDL_CloseJoystick(joystick);  /* the joystick was unplugged. */
+                SDL_CloseGamepad(gamepad);  /* the joystick was unplugged. */
             }
             return true;
         }
-#endif
         case SDL_EVENT_KEY_DOWN:
         {
             if (state == STATE_MENU)
@@ -593,34 +591,33 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             }
             break;
         }
-#ifndef __SYMBIAN32__
-        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         {
-            const SDL_JoystickID which = event->jbutton.which;
-            SDL_Log("Joystick #%u button %d -> %s", (unsigned int)which, (int)event->jbutton.button, event->jbutton.down ? "PRESSED" : "RELEASED");
+            const SDL_JoystickID which = event->gbutton.which;
+            SDL_Log("Gamepad #%" SDL_PRIu32 " button %s -> %s", which, SDL_GetGamepadStringForButton(event->gbutton.button), event->gbutton.down ? "PRESSED" : "RELEASED");
 
             if (state == STATE_MENU)
             {
-                switch (event->jbutton.button)
+                switch (event->gbutton.button)
                 {
-                    case 4:
+                    case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                         select_prev_cartridge(renderer);
                         render_cartridge(renderer);
                         return true;
-                    case 5:
+                    case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                         select_next_cartridge(renderer);
                         render_cartridge(renderer);
                         return true;
-                    case 0:
+                    case SDL_GAMEPAD_BUTTON_EAST: // TODO: A / Circle
                         run_cartridge(renderer);
                         return true;
                 }
             }
             else if (state == STATE_EMULATOR)
             {
-                switch (event->jbutton.button)
+                switch (event->gbutton.button)
                 {
-                    case 1:
+                    case SDL_GAMEPAD_BUTTON_SOUTH: // TODO: B / Cross
                         destroy_vm();
                         init_vm(renderer);
                         reset_memory();
@@ -630,7 +627,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             }
             break;
         }
-#endif
     }
     return true;
 }
