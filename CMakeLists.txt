@@ -56,7 +56,7 @@ if (BUILD_FOR_NOKIA_NGAGE)
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage/ngage_appview.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ngage/ngage_document.cpp")
 
-  add_library(game STATIC ${project_sources} ${ngage_sources})
+  add_library(game STATIC ${project_sources})
   add_library(open8 STATIC ${open8_sources})
   build_exe_static(game exe ${UID1} ${UID2} ${UID3} "${game_static_libs}" "${game_libs}")
   build_dll(open8 app ${UID1} ${UID2} ${APP_UID} "${open8_libs}")

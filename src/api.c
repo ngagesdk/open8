@@ -30,7 +30,7 @@
 
 static fix32_t seed_lo, seed_hi;
 
-fix32_t seconds_since_start;
+static fix32_t seconds_since_start;
 
 // Auxiliary functions.
 
@@ -1404,19 +1404,16 @@ void init_api(lua_State* L)
     lua_setglobal(L, "log");
 }
 
-#ifndef __SYMBIAN32__
-#include <time.h>
-
 void update_time(void)
 {
-    static clock_t start_time = 0;
+    static Uint64 start_time = 0;
     if (start_time == 0)
     {
-        start_time = clock();
+        start_time = SDL_GetTicks();
     }
 
-    clock_t current_time = clock();
-    double elapsed_time = (double)(current_time - start_time) / CLOCKS_PER_SEC;
-    seconds_since_start = fix32_from_double(elapsed_time);
+    Uint64 current_time = SDL_GetTicks();
+    Uint64 elapsed_time_ticks = current_time - start_time;
+    fix32_t elapsed_time = fix32_from_int(elapsed_time_ticks) / 1000;
+    seconds_since_start = elapsed_time;
 }
-#endif
