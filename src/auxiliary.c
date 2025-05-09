@@ -193,10 +193,3 @@ void color_lookup(int col, uint8_t* r, uint8_t* g, uint8_t* b)
             break;
     }
 }
-
-uint32_t lookup_color(int col)
-{
-    uint8_t r, g, b;
-    color_lookup(col, &r, &g, &b);
-    return (r << 24) | (g << 16) | (b << 8) | 0xFF;
-}
