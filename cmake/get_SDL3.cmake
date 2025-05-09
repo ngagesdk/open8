@@ -8,13 +8,13 @@ macro(get_SDL3 version)
       SDL3
       URL https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL3-devel-${version}-VC.zip
       URL_HASH
-        SHA256=a674c6a6c7ece82227ceeb879c35fd4716e351752ff8b030f8629d832d028fa7)
+        SHA256=dd7415a5245ac6cd7f6e08cd6261eebe35c48cfc67ac8c580139c36fd9945344)
   elseif(MINGW)
     FetchContent_Declare(
       SDL3
       URL https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL3-devel-${version}-mingw.zip
       URL_HASH
-        SHA256=557661694a37bf3f9c4076353bebe7c0e5d457077f093d4e52c756a83706ba24)
+        SHA256=34e6eb4b964e612fb36ab58295a00e77ef625d5d5cc88f99317cd0d12a3df415)
   else()
     find_package(SDL3 QUIET)
     if(NOT SDL3_FOUND)
