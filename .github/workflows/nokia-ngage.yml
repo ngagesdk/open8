@@ -53,7 +53,7 @@ jobs:
     - name: Build open8
       run: |
         cmake -DCMAKE_PREFIX_PATH=${env.NGAGESDK}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
-        cmake --build ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
+        cmake --build
       shell: pwsh
 
     #- name: Archive open8.sis
