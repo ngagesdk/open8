@@ -46,10 +46,6 @@ jobs:
       run: cmake -G "Ninja" -P ${{ env.NGAGESDK }}/setup/setup.cmake -B ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
       shell: pwsh
 
-    - name: Remove existing open8 directory
-      run: Remove-Item -Recurse -Force ${{ env.NGAGESDK }}/projects/open8
-      shell: pwsh
-
     - name: Clone open8
       run: git clone https://github.com/ngagesdk/open8.git ${{ env.NGAGESDK }}/projects/open8
       shell: pwsh
