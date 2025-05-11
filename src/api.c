@@ -1414,6 +1414,6 @@ void update_time(void)
 
     Uint64 current_time = SDL_GetTicks();
     Uint64 elapsed_time_ticks = current_time - start_time;
-    fix32_t elapsed_time = fix32_from_int(elapsed_time_ticks) / 1000;
+    fix32_t elapsed_time = fix32_from_int((Sint32)elapsed_time_ticks) / 1000;
     seconds_since_start = elapsed_time;
 }
