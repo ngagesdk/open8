@@ -43,7 +43,7 @@ jobs:
       shell: pwsh
 
     - name: Fetch SDK
-      run: cmake -G "Ninja" -P ${{ env.NGAGESDK }}/setup/setup.cmake -B ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
+      run: cmake -G "Ninja" -P ${{ env.NGAGESDK }}/setup/setup.cmake
       shell: pwsh
 
     - name: Clone open8
@@ -52,7 +52,7 @@ jobs:
 
     - name: Build open8
       run: |
-        cmake -DCMAKE_PREFIX_PATH=${env.NGAGESDK}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -B ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+        cmake -DCMAKE_PREFIX_PATH=${env.NGAGESDK}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
         cmake --build ${{ env.NGAGESDK }}/projects/open8/out/build/N-Gage
       shell: pwsh
 
