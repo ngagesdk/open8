@@ -87,14 +87,14 @@ include_directories(
 if (NINTENDO_3DS)
   set(ROMFS_DIR "${CMAKE_CURRENT_BINARY_DIR}/romfs")
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/export/carts DESTINATION ${ROMFS_DIR})
-  set(SMDH_FILE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.smdh")
+  set(SMDH_FILE "${CMAKE_CURRENT_BINARY_DIR}/open8.smdh")
   ctr_generate_smdh("${SMDH_FILE}"
     NAME "open8"
     DESCRIPTION "A portable PICO-8 emulator"
     AUTHOR "Michael Fitzmayer"
     ICON "${CMAKE_CURRENT_SOURCE_DIR}/icon.png")
   ctr_create_3dsx(
-    ${APP_NAME}
+    open8
     ROMFS "${ROMFS_DIR}"
     SMDH "${SMDH_FILE}")
 endif()
