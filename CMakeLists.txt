@@ -29,45 +29,16 @@ set(open8_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/p8_compress.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/pxa_compress_snippets.c)
 
-set(z8lua_sources
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lapi.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lauxlib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lbaselib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lcode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lcorolib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lctype.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ldblib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ldebug.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ldo.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ldump.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lfunc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lgc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/linit.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/llex.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lmem.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lobject.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lopcodes.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lparser.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lpico8lib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lstate.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lstring.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lstrlib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ltable.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ltablib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/ltm.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lundump.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lvm.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua/lzio.c)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_executable(open8 ${open8_sources} ${z8lua_sources})
+  add_executable(open8 ${open8_sources})
 else()
-  add_executable(open8 WIN32 ${open8_sources} ${z8lua_sources})
+  add_executable(open8 WIN32 ${open8_sources})
 endif()
 
 if (NGAGESDK)
   target_link_libraries(open8 PRIVATE SDL3_mixer::SDL3_mixer)
   target_link_libraries(open8 PRIVATE SDL3::SDL3)
+  target_link_libraries(open8 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
 
   set_property(TARGET open8 PROPERTY C_STANDARD 99)
 
@@ -75,9 +46,11 @@ if (NGAGESDK)
   target_link_options(open8 PRIVATE "SHELL:-s UID2=0x100039ce") # KAppUidValue16, apadef.h
   target_link_options(open8 PRIVATE "SHELL:-s UID3=0x1000c37e") # open8.exe UID
 else()
-  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua)
+  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} z8lua)
 endif()
 
+target_link_libraries(open8 PRIVATE z8lua)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 include_directories(

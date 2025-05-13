@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-option(BUILD_FOR_NOKIA_NGAGE "Build for Nokia N-Gage" OFF)
-
 set(z8lua_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/lapi.c
   ${CMAKE_CURRENT_SOURCE_DIR}/lauxlib.c
@@ -32,26 +30,11 @@ set(z8lua_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/lvm.c
   ${CMAKE_CURRENT_SOURCE_DIR}/lzio.c)
 
-if (BUILD_FOR_NOKIA_NGAGE)
-  if(DEFINED ENV{NGAGESDK})
-    set(NGAGESDK $ENV{NGAGESDK})
-    set(CMAKE_TOOLCHAIN_FILE ${NGAGESDK}/cmake/ngage-legacy-toolchain.cmake)
-  else()
-    message(FATAL_ERROR "The environment variable NGAGESDK needs to be defined.")
-  endif()
+project(z8lua C)
 
-  project(z8lua C)
-
-  set(GCC_MODULE_COMN_DEFS -D__SYMBIAN32__ -D__GCC32__ -D__EPOC32__ -D__MARM__ -D__MARM_ARMI__)
-  set(GCC_MODULE_MODE_DEFS -DNDEBUG -D_UNICODE)
-  set(GCC_MODULE_DEFS      ${GCC_MODULE_COMN_DEFS} ${GCC_MODULE_MODE_DEFS})
+if(NGAGESDK)
 
   add_library(z8lua STATIC ${z8lua_sources})
-
-  target_compile_definitions(
-    z8lua
-    PUBLIC
-    ${GCC_MODULE_DEFS})
 
 else()
 
