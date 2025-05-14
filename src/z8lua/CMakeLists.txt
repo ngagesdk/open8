@@ -39,7 +39,7 @@ if(NGAGESDK)
 else()
 
   project(z8lua C)
-  add_executable(z8lua ${z8lua_sources} ${CMAKE_CURRENT_SOURCE_DIR}/lua.c)
+  add_library(z8lua STATIC ${z8lua_sources})
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 endif()
