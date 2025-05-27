@@ -12,7 +12,6 @@
 
 #include "SDL3/SDL.h"
 
-
 #ifdef __SYMBIAN32__
 #define SCALE 1
 #define WINDOW_W 176
