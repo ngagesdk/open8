@@ -106,7 +106,13 @@ static int pico8_sqrt(lua_State *l) {
     int64_t root = 0, x = ((int64_t)lua_tonumber(l, 1)) << 16;
     if (x > 0) {
         int64_t a;
-        for (a = ((int64_t)1) << 46; a; a >>= 2, root >>= 1) {
+        /* Skip leading bit-pairs where a > x: with root=0 the body can never
+         * fire, so these iterations are pure waste.  On ARM9 every 64-bit op
+         * is emulated, so cutting them gives a proportional speed-up.
+         * For typical PICO-8 inputs (0-8192) this trims ~4-12 of 24 iters. */
+        for (a = ((int64_t)1) << 46; a > x; a >>= 2)
+            ;
+        for (; a; a >>= 2, root >>= 1) {
             if (x >= a + root) {
                 x -= a + root;
                 root += a << 1;
