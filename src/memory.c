@@ -189,11 +189,12 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
                 uint8_t* pixel = (uint8_t*)row;
-                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
+                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
                 {
-                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
-                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
-                    *pixel = palette_map[color];
+                    uint8_t byte = *src;
+                    pixel[0] = (uint8_t)palette_map[byte & 0xF];
+                    pixel[1] = (uint8_t)palette_map[byte >> 4];
                 }
             }
             break;
@@ -201,11 +202,12 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
                 uint16_t* pixel = (uint16_t*)row;
-                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
+                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
                 {
-                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
-                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
-                    *pixel = palette_map[color];
+                    uint8_t byte = *src;
+                    pixel[0] = (uint16_t)palette_map[byte & 0xF];
+                    pixel[1] = (uint16_t)palette_map[byte >> 4];
                 }
             }
             break;
@@ -213,11 +215,12 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
                 uint32_t* pixel = (uint32_t*)row;
-                for (int x = 0; x < SCREEN_SIZE; x++, pixel++)
+                const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
+                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
                 {
-                    uint8_t byte = pico8_ram[0x6000 + (y << 6) + (x >> 1)];
-                    uint8_t color = (byte >> ((x & 1) << 2)) & 0xF;
-                    *pixel = palette_map[color];
+                    uint8_t byte = *src;
+                    pixel[0] = palette_map[byte & 0xF];
+                    pixel[1] = palette_map[byte >> 4];
                 }
             }
             break;

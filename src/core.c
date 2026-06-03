@@ -40,6 +40,10 @@ static lua_State* vm;
 static int prev_selection;
 static int selection;
 
+static bool has_update;
+static bool has_update60;
+static bool has_draw;
+
 static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
 {
     (void)ud;
@@ -368,6 +372,9 @@ static bool run_script(SDL_Renderer* renderer, const char* file_name)
     {
         call_pico8_function(vm, "_init");
     }
+    has_update   = is_function_present(vm, "_update");
+    has_update60 = is_function_present(vm, "_update60");
+    has_draw     = is_function_present(vm, "_draw");
     state = STATE_EMULATOR;
     return true;
 }
@@ -398,6 +405,9 @@ static bool run_cartridge(SDL_Renderer* renderer)
         {
             call_pico8_function(vm, "_init");
         }
+        has_update   = is_function_present(vm, "_update");
+        has_update60 = is_function_present(vm, "_update60");
+        has_draw     = is_function_present(vm, "_draw");
     }
     else
     {
@@ -643,16 +653,16 @@ bool iterate_core(SDL_Renderer* renderer)
     }
     else if (state == STATE_EMULATOR)
     {
-        if (is_function_present(vm, "_update"))
+        if (has_update)
         {
             call_pico8_function(vm, "_update");
         }
-        else if (is_function_present(vm, "_update60"))
+        else if (has_update60)
         {
             call_pico8_function(vm, "_update60");
         }
 
-        if (is_function_present(vm, "_draw"))
+        if (has_draw)
         {
             call_pico8_function(vm, "_draw");
         }
@@ -660,6 +670,7 @@ bool iterate_core(SDL_Renderer* renderer)
         update_time();
         update_from_virtual_memory(renderer);
         SDL_RenderPresent(renderer);
+        return true;
     }
     SDL_Delay(1);
 

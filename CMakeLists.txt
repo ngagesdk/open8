@@ -10,12 +10,11 @@ project(open8 C)
 
 if (NGAGESDK)
   find_package(SDL3 REQUIRED)
-  find_package(SDL3_mixer REQUIRED)
 else()
   set(EXPORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/export)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXPORT_DIR})
   include(get_SDL3)
-  get_SDL3("3.2.12")
+  get_SDL3("3.4.10")
 endif()
 
 set(open8_sources
@@ -36,7 +35,6 @@ else()
 endif()
 
 if (NGAGESDK)
-  target_link_libraries(open8 PRIVATE SDL3_mixer::SDL3_mixer)
   target_link_libraries(open8 PRIVATE SDL3::SDL3)
   target_link_libraries(open8 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
 

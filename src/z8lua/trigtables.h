@@ -1,5 +1,5 @@
 //
-//  ZEPTO-8 — Fantasy console emulator
+//  ZEPTO-8 - Fantasy console emulator
 //
 //  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
