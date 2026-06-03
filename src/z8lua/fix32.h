@@ -394,12 +394,15 @@ static inline fix32_t fix32_pow(fix32_t x, fix32_t y) {
     /* Fast path: integer exponent with no fractional part - use binary
      * exponentiation entirely in fixed-point, avoiding double and pow(). */
     if ((y & 0xffff) == 0) {
+        int negative;
+        fix32_t base;
+        fix32_t result;
         int32_t exp = y >> 16;
         if (exp == 0) return 0x10000; /* x^0 = 1 */
-        int negative = 0;
+        negative = 0;
         if (exp < 0) { negative = 1; exp = -exp; }
-        fix32_t base = x;
-        fix32_t result = 0x10000; /* 1 in fixed-point */
+        base = x;
+        result = 0x10000; /* 1 in fixed-point */
         while (exp > 0) {
             if (exp & 1) result = fix32_mul(result, base);
             base = fix32_mul(base, base);
