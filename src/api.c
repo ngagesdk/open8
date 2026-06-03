@@ -1061,19 +1061,21 @@ static int pico8_run(lua_State* L)
 static int pico8_add(lua_State* L)
 {
     luaL_checktype(L, 1, LUA_TTABLE);
-    lua_settop(L, 3);
+    luaL_checkany(L, 2);
+
+    int index;
 
     if (lua_isnoneornil(L, 3))
     {
-        lua_pushinteger(L, fix32_to_int32(luaL_len(L, 1)) + 1);
+        index = (int)lua_rawlen(L, 1) + 1;
     }
     else
     {
-        luaL_checktype(L, 3, LUA_TNUMBER);
+        index = fix32_to_int(luaL_checkinteger(L, 3));
     }
 
     lua_pushvalue(L, 2);
-    lua_settable(L, 1);
+    lua_rawseti(L, 1, index);
 
     lua_pushvalue(L, 2);
     return 1;
@@ -1090,7 +1092,7 @@ static int pico8_all_iter(lua_State* L)
     while (1)
     {
         index++;
-        lua_pushinteger(L, fix32_from_int(index));
+        lua_pushinteger(L, index);
         lua_replace(L, lua_upvalueindex(2));
 
         lua_rawgeti(L, 1, index);
@@ -1129,33 +1131,28 @@ static int pico8_del(lua_State* L)
     luaL_checktype(L, 1, LUA_TTABLE);
     luaL_checkany(L, 2);
 
-    lua_pushnil(L);
-    while (lua_next(L, 1) != 0)
+    int len = (int)lua_rawlen(L, 1);
+
+    for (int i = 1; i <= len; i++)
     {
-        if (lua_compare(L, -1, 2, LUA_OPEQ))
+        lua_rawgeti(L, 1, i);                    /* push tbl[i] */
+        if (lua_rawequal(L, -1, 2))
         {
-            int index = fix32_to_int(lua_tointeger(L, -2));
-            fix32_t removed_object = lua_tonumber(L, -1);
-
-            // Shift elements down.
-            while (true)
+            /* Shift tbl[i+1..len] down by one. */
+            for (int j = i; j < len; j++)
             {
-                lua_rawgeti(L, 1, index + 1);
-                if (lua_isnil(L, -1))
-                {
-                    lua_pop(L, 1);
-                    break;
-                }
-                lua_rawseti(L, 1, index);
-                index++;
+                lua_rawgeti(L, 1, j + 1);        /* push tbl[j+1] */
+                lua_rawseti(L, 1, j);             /* tbl[j] = tbl[j+1], pops */
             }
-            lua_pushnil(L);
-            lua_rawseti(L, 1, index);
 
-            lua_pushnumber(L, removed_object);
+            /* Nil out the last slot. */
+            lua_pushnil(L);
+            lua_rawseti(L, 1, len);
+
+            /* The matched value is still on the stack — return it. */
             return 1;
         }
-        lua_pop(L, 1);
+        lua_pop(L, 1);                           /* discard tbl[i] */
     }
 
     lua_pushnil(L);
