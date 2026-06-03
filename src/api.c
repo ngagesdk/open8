@@ -69,6 +69,48 @@ static uint8_t pget(int x, int y)
     return p8_color;
 }
 
+static void hline(int x0, int x1, int y, int* color)
+{
+    if ((unsigned)y >= 128) return;
+    if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
+    if (x0 < 0) x0 = 0;
+    if (x1 > 127) x1 = 127;
+    if (x0 > x1) return;
+
+    uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
+    uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
+
+    if (pattern == 0)
+    {
+        uint8_t *row = &pico8_ram[0x6000 + (y << 6)];
+        uint8_t color_pair = p8_color | (p8_color << 4);
+        int bx0 = x0 >> 1;
+        int bx1 = x1 >> 1;
+
+        if (x0 & 1)
+        {
+            row[bx0] = (row[bx0] & 0x0F) | (p8_color << 4);
+            bx0++;
+        }
+        if (!(x1 & 1))
+        {
+            row[bx1] = (row[bx1] & 0xF0) | p8_color;
+            bx1--;
+        }
+        if (bx0 <= bx1)
+        {
+            SDL_memset(&row[bx0], color_pair, bx1 - bx0 + 1);
+        }
+    }
+    else
+    {
+        for (int x = x0; x <= x1; x++)
+        {
+            pset(x, y, color);
+        }
+    }
+}
+
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
 {
     int x = 0;
@@ -79,16 +121,10 @@ static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
     {
         if (fill)
         {
-            for (int i = (cx - x); i <= (cx + x); i++)
-            {
-                pset(i, cy + y, color);
-                pset(i, cy - y, color);
-            }
-            for (int i = (cx - y); i <= (cx + y); i++)
-            {
-                pset(i, cy + x, color);
-                pset(i, cy - x, color);
-            }
+            hline(cx - x, cx + x, cy + y, color);
+            hline(cx - x, cx + x, cy - y, color);
+            hline(cx - y, cx + y, cy + x, color);
+            hline(cx - y, cx + y, cy - x, color);
         }
         else
         {
@@ -164,11 +200,8 @@ static void draw_oval(int x0, int y0, int x1, int y1, int* color, bool fill)
     {
         if (fill)
         {
-            for (int i = xc - x; i <= xc + x; i++)
-            {
-                pset(i, yc + y, color);
-                pset(i, yc - y, color);
-            }
+            hline(xc - x, xc + x, yc + y, color);
+            hline(xc - x, xc + x, yc - y, color);
         }
         else
         {
@@ -195,11 +228,8 @@ static void draw_oval(int x0, int y0, int x1, int y1, int* color, bool fill)
     {
         if (fill)
         {
-            for (int i = xc - x; i <= xc + x; i++)
-            {
-                pset(i, yc + y, color);
-                pset(i, yc - y, color);
-            }
+            hline(xc - x, xc + x, yc + y, color);
+            hline(xc - x, xc + x, yc - y, color);
         }
         else
         {
@@ -225,10 +255,7 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
    {
        for (int y = y0; y <= y1; y++)
        {
-           for (int x = x0; x <= x1; x++)
-           {
-               pset(x, y, color);
-           }
+           hline(x0, x1, y, color);
        }
    }
    else
@@ -560,7 +587,6 @@ static int pico8_pget(lua_State* L)
 static int pico8_print(lua_State* L)
 {
     const char* text = luaL_checkstring(L, 1);
-    int len = SDL_strlen(text);
     int argc = lua_gettop(L);
     uint8_t cursor_x = pico8_ram[0x5f26];
     uint8_t x_cursor = cursor_x;

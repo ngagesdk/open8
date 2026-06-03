@@ -17,7 +17,7 @@
 bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 {
 	SDL_SetHint("SDL_RENDER_VSYNC", "1");
-	SDL_SetHint("SDL_HINT_RENDER_NGAGE_SHOW_FPS", "1");
+	SDL_SetHint("SDL_RENDER_NGAGE_SHOW_FPS", "1");
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
 	SDL_SetAppMetadata("Pico-8", "1.0", "com.open8.ngagesdk");
 
