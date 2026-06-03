@@ -85,7 +85,11 @@ static bool init_vm(SDL_Renderer* renderer)
 
 static void destroy_vm(void)
 {
-    lua_close(vm);
+    if (vm)
+    {
+        lua_close(vm);
+        vm = NULL;
+    }
 }
 
 static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
@@ -379,6 +383,12 @@ static bool run_script(SDL_Renderer* renderer, const char* file_name)
 
 static bool run_cartridge(SDL_Renderer* renderer)
 {
+    destroy_vm();
+    if (!init_vm(renderer))
+    {
+        return false;
+    }
+
     reset_memory();
 
     // Copy spritesheet, map, flags, music and sound effects data to memory.
@@ -591,7 +601,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     case SDLK_SOFTLEFT:
                     case SDLK_ESCAPE:
                         destroy_vm();
-                        init_vm(renderer);
                         reset_memory();
                         state = STATE_MENU;
                         return true;
@@ -627,7 +636,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                 {
                     case SDL_GAMEPAD_BUTTON_SOUTH: // TODO: B / Cross
                         destroy_vm();
-                        init_vm(renderer);
                         reset_memory();
                         state = STATE_MENU;
                         return true;
@@ -651,6 +659,11 @@ bool iterate_core(SDL_Renderer* renderer)
     }
     else if (state == STATE_EMULATOR)
     {
+#ifndef __SYMBIAN32__
+        Uint64 frame_start = SDL_GetTicks();
+        Uint32 frame_ms = has_update60 ? 1000u / 60u : 1000u / 30u;
+#endif
+
         if (has_update)
         {
             call_pico8_function(vm, "_update");
@@ -668,9 +681,20 @@ bool iterate_core(SDL_Renderer* renderer)
         update_time();
         update_from_virtual_memory(renderer);
         SDL_RenderPresent(renderer);
+
+#ifndef __SYMBIAN32__
+        Uint64 elapsed = SDL_GetTicks() - frame_start;
+        if (elapsed < frame_ms)
+        {
+            SDL_Delay((Uint32)(frame_ms - elapsed));
+        }
+#endif
+
         return true;
     }
+#ifndef __SYMBIAN32__
     SDL_Delay(1);
+#endif
 
     return true;
 }
