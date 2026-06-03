@@ -40,6 +40,23 @@ if (NGAGESDK)
   target_link_libraries(open8 PRIVATE SDL3::SDL3)
   target_link_libraries(open8 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
 
+  # Common optimizations for both C and C++
+  target_compile_options(open8 PRIVATE
+    $<$<CONFIG:Release>:-O3>                       # Maximum optimization level
+    $<$<CONFIG:Release>:-ffast-math>               # Fast floating-point operations
+    $<$<CONFIG:Release>:-funroll-loops>            # Loop unrolling for performance
+    $<$<CONFIG:Release>:-fomit-frame-pointer>      # Use frame pointer as general register
+    $<$<CONFIG:Release>:-finline-functions>        # Inline small functions
+    $<$<CONFIG:Release>:-fstrict-aliasing>         # Strict aliasing rules
+    $<$<CONFIG:Release>:-fexpensive-optimizations> # Expensive optimizations
+  )
+
+  # C++-only optimizations
+  target_compile_options(open8 PRIVATE
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CXX>>:-fno-exceptions> # Disable C++ exceptions overhead
+    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CXX>>:-fno-rtti>       # Disable C++ RTTI overhead
+  )
+
   set_property(TARGET open8 PROPERTY C_STANDARD 99)
 
   target_link_options(open8 PRIVATE "SHELL:-s UID1=0x1000007a") # KExecutableImageUidValue, e32uid.h
