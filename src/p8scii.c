@@ -303,7 +303,11 @@ void blit_char_to_screen(uint8_t char_index, int x, int y, uint8_t color, uint8_
             {
                 int screen_x = x + col;
                 int screen_y = y + row;
-                uint16_t addr = 0x6000 + (screen_y << 6) + (screen_x >> 1);
+                if (screen_x < 0 || screen_x > 127 || screen_y < 0 || screen_y > 127)
+                {
+                    continue;
+                }
+                uint16_t addr = 0x6000 + ((uint16_t)screen_y << 6) + ((uint16_t)screen_x >> 1);
                 uint8_t mask = (screen_x & 1) ? 0x0F : 0xF0;
                 uint8_t shift = (screen_x & 1) ? 4 : 0;
                 pico8_ram[addr] = (pico8_ram[addr] & mask) | (color << shift);

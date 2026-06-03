@@ -23,7 +23,7 @@
 #define TO_BE_DONE \
     static bool warning_printed = false; \
     if (!warning_printed) { \
-        SDL_LogWarn(0, "%s not yet implemented.", __func__); \
+        SDL_Log("%s not yet implemented.", __func__); \
         warning_printed = true; \
     } \
     return 0
@@ -596,7 +596,7 @@ static int pico8_print(lua_State* L)
             cursor_y += 6;
             continue;
         }
-        else if (text[1] == '\b') // 8, backspace.
+        else if (text[i] == '\b') // 8, backspace.
         {
             cursor_x -= 4;
             continue;
@@ -608,8 +608,8 @@ static int pico8_print(lua_State* L)
         }
 
         uint8_t w, h;
-        blit_char_to_screen(text[i], cursor_x, cursor_y, color, &w, &h);
-        cursor_x += (text[i] >= 16 && text[i] <= 127) ? 4 : 8;
+        blit_char_to_screen((unsigned char)text[i], cursor_x, cursor_y, color, &w, &h);
+        cursor_x += ((unsigned char)text[i] >= 16 && (unsigned char)text[i] <= 127) ? 4 : 8;
     }
 
     cursor_y += 6;
@@ -715,10 +715,14 @@ static int pico8_spr(lua_State* L)
 
             if (color)
             {
-                uint16_t screen_addr = 0x6000 + ((y + dy) << 6) + ((x + dx) >> 1);
+                int32_t px = x + dx;
+                int32_t py = y + dy;
+                if (px < 0 || px >= 128 || py < 0 || py >= 128)
+                    continue;
+                uint16_t screen_addr = 0x6000 + ((uint16_t)py << 6) + ((uint16_t)px >> 1);
                 uint8_t *screen_byte = &pico8_ram[screen_addr];
 
-                if ((x + dx) & 1)
+                if (px & 1)
                 {
                     *screen_byte = (*screen_byte & 0x0F) | (color << 4);
                 }
@@ -980,13 +984,13 @@ static int pico8_poke(lua_State* L)
     uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
     unsigned int num_args = lua_gettop(L);
 
-    for (unsigned int i = 1; i < num_args; i++)
+    for (unsigned int i = 0; i < num_args - 1; i++)
     {
         if (addr + i >= RAM_SIZE)
         {
             break;
         }
-        uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 1 + i));
+        uint8_t data = fix32_to_uint8(luaL_checkinteger(L, 2 + i));
         pico8_ram[addr + i] = data;
     }
 
@@ -1081,12 +1085,12 @@ static int pico8_all_iter(lua_State* L)
 
     lua_settop(L, 0);
     lua_pushvalue(L, lua_upvalueindex(1));
-    unsigned int index = fix32_to_uint32(lua_tointeger(L, lua_upvalueindex(2)));
+    int index = fix32_to_int(lua_tointeger(L, lua_upvalueindex(2)));
 
     while (1)
     {
         index++;
-        lua_pushinteger(L, index);
+        lua_pushinteger(L, fix32_from_int(index));
         lua_replace(L, lua_upvalueindex(2));
 
         lua_rawgeti(L, 1, index);
@@ -1096,7 +1100,7 @@ static int pico8_all_iter(lua_State* L)
         }
         lua_pop(L, 1);
 
-        if (index > lua_rawlen(L, 1))
+        if ((size_t)index > lua_rawlen(L, 1))
         {
             return 0;
         }
@@ -1130,7 +1134,7 @@ static int pico8_del(lua_State* L)
     {
         if (lua_compare(L, -1, 2, LUA_OPEQ))
         {
-            int index = fix32_to_int32(lua_tointeger(L, -2));
+            int index = fix32_to_int(lua_tointeger(L, -2));
             fix32_t removed_object = lua_tonumber(L, -1);
 
             // Shift elements down.

@@ -1,5 +1,5 @@
 //
-//  ZEPTO-8 — Fantasy console emulator
+//  ZEPTO-8 - Fantasy console emulator
 //
 //  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
@@ -272,12 +272,30 @@ static inline fix32_t fix32_xor(fix32_t a, fix32_t b) {
 }
 
 static inline fix32_t fix32_mul(fix32_t a, fix32_t b) {
+    /* Fast path: if both values are pure integers (no fractional part),
+     * use a plain 32-bit shift to avoid 64-bit multiply on ARM9. */
+    if ((a & 0xffff) == 0 && (b & 0xffff) == 0) {
+        return (a >> 8) * (b >> 8); /* equivalent to (a*b)>>16, stays 32-bit */
+    }
     return (int32_t)(((int64_t)a * b) >> 16);
 }
 
 static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
     if (b == 0x10000) {
-        return a; // Special case: division by 1 (0x10000)
+        return a; /* Special case: division by 1 (0x10000) */
+    }
+
+    /* Fast path: integer divisor - replace 64-bit division with 32-bit division
+     * followed by a fixup for the fractional remainder. Only valid when b is a
+     * non-zero multiple of 0x10000 (i.e. a whole number). */
+    if ((b & 0xffff) == 0) {
+        int32_t bi = b >> 16; /* plain integer value of b */
+        if (bi != 0) {
+            int32_t q = a / bi;       /* 32-bit quotient in fixed-point */
+            int32_t r = a % bi;       /* 32-bit remainder */
+            /* r is already in fixed-point; shift it for fractional digits */
+            return q + (r / bi);
+        }
     }
 
     if (b) {
@@ -287,7 +305,7 @@ static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
         }
     }
 
-    // Return 0x80000001 (not 0x80000000) for -Inf, mimicking PICO-8 behavior.
+    /* Return 0x80000001 (not 0x80000000) for -Inf, mimicking PICO-8 behavior. */
     return ((a ^ b) >= 0) ? 0x7FFFFFFF : 0x80000001;
 }
 
@@ -373,6 +391,22 @@ static inline fix32_t fix32_floor(fix32_t x) {
 }
 
 static inline fix32_t fix32_pow(fix32_t x, fix32_t y) {
+    /* Fast path: integer exponent with no fractional part - use binary
+     * exponentiation entirely in fixed-point, avoiding double and pow(). */
+    if ((y & 0xffff) == 0) {
+        int32_t exp = y >> 16;
+        if (exp == 0) return 0x10000; /* x^0 = 1 */
+        int negative = 0;
+        if (exp < 0) { negative = 1; exp = -exp; }
+        fix32_t base = x;
+        fix32_t result = 0x10000; /* 1 in fixed-point */
+        while (exp > 0) {
+            if (exp & 1) result = fix32_mul(result, base);
+            base = fix32_mul(base, base);
+            exp >>= 1;
+        }
+        return negative ? fix32_div(0x10000, result) : result;
+    }
     return fix32_from_double(pow(fix32_to_double(x), fix32_to_double(y)));
 }
 
