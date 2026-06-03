@@ -19,6 +19,7 @@
 uint8_t pico8_ram[RAM_SIZE];
 static uint32_t crc32_table[256];
 static uint32_t palette_map[16];
+static uint32_t expanded_map[256];
 
 static SDL_Texture* screen;
 static SDL_PixelFormat screen_format;
@@ -32,6 +33,9 @@ bool init_memory(SDL_Renderer* renderer)
 
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
 
+#ifdef __SYMBIAN32__
+    screen_format = SDL_PIXELFORMAT_XRGB4444;
+#else
     screen_format = SDL_PIXELFORMAT_UNKNOWN;
 
     const SDL_PixelFormat *texture_formats = (const SDL_PixelFormat *)SDL_GetPointerProperty(SDL_GetRendererProperties(renderer), SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
@@ -51,6 +55,7 @@ bool init_memory(SDL_Renderer* renderer)
     // If all else fails, use RGBA32 as a fallback.
     if (screen_format == SDL_PIXELFORMAT_UNKNOWN)
         screen_format = SDL_PIXELFORMAT_RGBA32;
+#endif
 
     screen = SDL_CreateTexture(renderer, screen_format, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
     if (screen == NULL)
@@ -70,6 +75,16 @@ bool init_memory(SDL_Renderer* renderer)
     for (int i = 0; i < 16; i++) {
         color_lookup(i, &r, &g, &b);
         palette_map[i] = SDL_MapRGB(details, NULL, r, g, b);
+    }
+
+    for (int i = 0; i < 256; i++) {
+        uint32_t lo = palette_map[i & 0xF];
+        uint32_t hi = palette_map[i >> 4];
+        switch (SDL_BYTESPERPIXEL(screen_format)) {
+        case 1:  expanded_map[i] = (uint8_t)lo  | ((uint8_t)hi  << 8);  break;
+        case 2:  expanded_map[i] = (uint16_t)lo | ((uint32_t)(uint16_t)hi << 16); break;
+        default: expanded_map[i] = 0; break;
+        }
     }
 
     init_crc32();
@@ -188,26 +203,22 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         case 1:
             for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
-                uint8_t* pixel = (uint8_t*)row;
+                uint16_t* pixel = (uint16_t*)row;
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
+                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
                 {
-                    uint8_t byte = *src;
-                    pixel[0] = (uint8_t)palette_map[byte & 0xF];
-                    pixel[1] = (uint8_t)palette_map[byte >> 4];
+                    *pixel = (uint16_t)expanded_map[*src];
                 }
             }
             break;
         case 2:
             for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
             {
-                uint16_t* pixel = (uint16_t*)row;
+                uint32_t* pixel = (uint32_t*)row;
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
+                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
                 {
-                    uint8_t byte = *src;
-                    pixel[0] = (uint16_t)palette_map[byte & 0xF];
-                    pixel[1] = (uint16_t)palette_map[byte >> 4];
+                    *pixel = expanded_map[*src];
                 }
             }
             break;

@@ -225,24 +225,22 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
 
     extract_pico8_data(image_data, cart->cart_data);
 
-    SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_RGBA32, image_data, width * 4);
-    if (!surface)
-    {
-        SDL_Log("Couldn't create surface: %s", SDL_GetError());
-        stbi_image_free(image_data);
-        return 0;
-    }
-
-    cart->image = SDL_CreateTextureFromSurface(renderer, surface);
+    cart->image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height);
     if (!cart->image)
     {
         SDL_Log("Couldn't create texture: %s", SDL_GetError());
-        SDL_DestroySurface(surface);
         stbi_image_free(image_data);
         return 0;
     }
 
-    SDL_DestroySurface(surface);
+    if (!SDL_UpdateTexture(cart->image, NULL, image_data, width * 4))
+    {
+        SDL_Log("Couldn't update texture: %s", SDL_GetError());
+        SDL_DestroyTexture(cart->image);
+        stbi_image_free(image_data);
+        return 0;
+    }
+
     stbi_image_free(image_data);
 
     if (!SDL_SetTextureScaleMode(cart->image, SDL_SCALEMODE_NEAREST))
