@@ -15,45 +15,45 @@
 
 void CNGageAppUi::ConstructL()
 {
-    BaseConstructL();
+	BaseConstructL();
 
-    iAppView = CNGageAppView::NewL(ClientRect());
+	iAppView = CNGageAppView::NewL(ClientRect());
 
-    AddToStackL(iAppView);
+	AddToStackL(iAppView);
 }
 
 CNGageAppUi::CNGageAppUi()
 {
-    RProcess Proc;
+	RProcess Proc;
 
-    iAppView = NULL;
+	iAppView = NULL;
 
-    if (KErrNone == Proc.Create(_L("E:\\System\\Apps\\open8\\game.exe"), _L("")))
-    {
-        TRequestStatus status;
-        Proc.Logon(status);
-        Proc.Resume();
-        User::WaitForRequest(status);
-        Proc.Close();
-        Exit();
-    }
-    else
-    {
-        Exit();
-    }
+	if (KErrNone == Proc.Create(_L("E:\\System\\Apps\\open8\\open8.exe"), _L("")))
+	{
+		TRequestStatus status;
+		Proc.Logon(status);
+		Proc.Resume();
+		User::WaitForRequest(status);
+		Proc.Close();
+		Exit();
+	}
+	else
+	{
+		Exit();
+	}
 }
 
 CNGageAppUi::~CNGageAppUi()
 {
-    if (iAppView)
-    {
-        RemoveFromStack(iAppView);
-        delete iAppView;
-        iAppView = NULL;
-    }
+	if (iAppView)
+	{
+		RemoveFromStack(iAppView);
+		delete iAppView;
+		iAppView = NULL;
+	}
 }
 
 void CNGageAppUi::HandleCommandL(TInt aCommand)
 {
-    /* No implementation required. */
+	/* No implementation required. */
 }
