@@ -2,7 +2,7 @@
  *
  *  A portable PICO-8 emulator written in C.
  *
- *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  Copyright (c) 2026, Michael Fitzmayer. All rights reserved.
  *  SPDX-License-Identifier: MIT
  *
  **/
@@ -183,83 +183,6 @@ static void patch_cart_code(cart_t* cart)
 	cart->code_size = new_size;
 }
 
-// Replace PICO-8 button glyph tokens with their numeric button index.
-// Cartridges compressed in .p8.png use single-byte P8SCII values for glyphs;
-// plain .p8 text files use multi-byte UTF-8 sequences for the same glyphs.
-// Both forms are handled here so that e.g. btn(x) becomes btn(5).
-//
-// PICO-8 button indices: left=0  right=1  up=2  down=3  o=4  x=5
-//
-// P8SCII single-byte values (standard PICO-8 encoding):
-//   0x83 Down  0x8b Left  0x8e O  0x91 Right  0x94 Up  0x97 X
-static void patch_button_glyphs(cart_t* cart)
-{
-	// Multi-byte UTF-8 sequences (longest first to avoid partial matches).
-	static const struct { const uint8_t* seq; size_t len; char repl; } utf8_glyphs[] = {
-		{ (const uint8_t*)"\xf0\x9f\x85\xbe\xef\xb8\x8f", 7, '4' }, // O (U+1F17E + VS16)
-		{ (const uint8_t*)"\xe2\x9d\x8e\xef\xb8\x8f",     6, '5' }, // X (U+274E  + VS16)
-		{ (const uint8_t*)"\xf0\x9f\x85\xbe",             4, '4' }, // O
-		{ (const uint8_t*)"\xe2\xac\x85",                 3, '0' }, // Left.
-		{ (const uint8_t*)"\xe2\x9e\xa1",                 3, '1' }, // Right.
-		{ (const uint8_t*)"\xe2\xac\x86",                 3, '2' }, // Up.
-		{ (const uint8_t*)"\xe2\xac\x87",                 3, '3' }, // Down.
-		{ (const uint8_t*)"\xe2\x9d\x8e",                 3, '5' }, // X
-	};
-	static const size_t utf8_count = sizeof(utf8_glyphs) / sizeof(utf8_glyphs[0]);
-
-	uint8_t* src = cart->code;
-	size_t src_len = cart->code_size;
-
-	// Allocate worst-case output buffer (same size as input; replacements only shrink).
-	uint8_t* out = (uint8_t*)SDL_malloc(src_len + 1);
-	if (!out)
-	{
-		SDL_Log("patch_button_glyphs: out of memory");
-		return;
-	}
-
-	size_t si = 0, oi = 0;
-	while (si < src_len)
-	{
-		uint8_t b = src[si];
-
-		// Single-byte P8SCII button glyphs (from .p8.png decompressed code).
-		if (b == 0x83) { out[oi++] = '3'; si++; continue; } // Down.
-		if (b == 0x8b) { out[oi++] = '0'; si++; continue; } // Left.
-		if (b == 0x8e) { out[oi++] = '4'; si++; continue; } // O
-		if (b == 0x91) { out[oi++] = '1'; si++; continue; } // Right.
-		if (b == 0x94) { out[oi++] = '2'; si++; continue; } // Up.
-		if (b == 0x97) { out[oi++] = '5'; si++; continue; } // X
-
-		// Multi-byte UTF-8 button glyphs (from plain .p8 text files).
-		bool matched = false;
-		if (b >= 0xe2)
-		{
-			for (size_t g = 0; g < utf8_count; g++)
-			{
-				size_t glen = utf8_glyphs[g].len;
-				if (si + glen <= src_len && SDL_memcmp(src + si, utf8_glyphs[g].seq, glen) == 0)
-				{
-					out[oi++] = (uint8_t)utf8_glyphs[g].repl;
-					si += glen;
-					matched = true;
-					break;
-				}
-			}
-		}
-		if (!matched)
-		{
-			out[oi++] = src[si++];
-		}
-	}
-	out[oi] = '\0';
-
-	// Replace cart code buffer with the patched version.
-	SDL_free(cart->code);
-	cart->code = out;
-	cart->code_size = oi;
-}
-
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart)
 {
 	int width, height, bpp;
@@ -384,7 +307,6 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
 	{
 		cart->is_corrupt = false;
 		patch_cart_code(cart);
-		patch_button_glyphs(cart);
 	}
 
 	return 1;
@@ -661,12 +583,10 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 				run_cartridge(renderer);
 				return true;
 			case SDLK_LEFT:
-			case SDLK_A:
 				select_prev_cartridge(renderer);
 				render_cartridge(renderer);
 				return true;
 			case SDLK_RIGHT:
-			case SDLK_D:
 				select_next_cartridge(renderer);
 				render_cartridge(renderer);
 				return true;

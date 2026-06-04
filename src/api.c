@@ -2,7 +2,7 @@
  *
  *  A portable PICO-8 emulator written in C.
  *
- *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  Copyright (c) 2026, Michael Fitzmayer. All rights reserved.
  *  SPDX-License-Identifier: MIT
  *
  **/
@@ -1751,17 +1751,6 @@ void init_api(lua_State* L)
 	lua_pushcfunction(L, pico8_set_btnp_frames);
 	lua_setglobal(L, "set_btnp_frames");
 
-	// Button glyph constants used in .p8 cartridges as identifiers.
-	// ⬅ U+2B05 = 0, ➡ U+27A1 = 1, ⬆ U+2B06 = 2, ⬇ U+2B07 = 3, 🅾 U+1F17E = 4, ❎ U+274E = 5
-	lua_pushinteger(L, fix32_value(0, 0)); lua_setglobal(L, "\xe2\xac\x85");             // ⬅
-	lua_pushinteger(L, fix32_value(1, 0)); lua_setglobal(L, "\xe2\x9e\xa1");             // ➡
-	lua_pushinteger(L, fix32_value(2, 0)); lua_setglobal(L, "\xe2\xac\x86");             // ⬆
-	lua_pushinteger(L, fix32_value(3, 0)); lua_setglobal(L, "\xe2\xac\x87");             // ⬇
-	lua_pushinteger(L, fix32_value(4, 0)); lua_setglobal(L, "\xf0\x9f\x85\xbe");        // 🅾
-	lua_pushinteger(L, fix32_value(4, 0)); lua_setglobal(L, "\xf0\x9f\x85\xbe\xef\xb8\x8f"); // 🅾️ (with variation selector)
-	lua_pushinteger(L, fix32_value(5, 0)); lua_setglobal(L, "\xe2\x9d\x8e");            // ❎
-	lua_pushinteger(L, fix32_value(5, 0)); lua_setglobal(L, "\xe2\x9d\x8e\xef\xb8\x8f"); // ❎️ (with variation selector)
-
 	// Map.
 	lua_pushcfunction(L, pico8_map);
 	lua_setglobal(L, "map");
@@ -1855,24 +1844,71 @@ void update_input(void)
 			// Keyboard input for player 0.
 			int num_keys = 0;
 			const bool* keys = SDL_GetKeyboardState(&num_keys);
-			if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A]) state |= (1 << 0);
-			if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) state |= (1 << 1);
-			if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W]) state |= (1 << 2);
-			if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S]) state |= (1 << 3);
-			if (keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_Y] || keys[SDL_SCANCODE_C] || keys[SDL_SCANCODE_5] || keys[SDL_SCANCODE_KP_5]) state |= (1 << 4);
-			if (keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_7] || keys[SDL_SCANCODE_V] || keys[SDL_SCANCODE_KP_7])                          state |= (1 << 5);
+			if (keys[SDL_SCANCODE_LEFT])
+			{
+				state |= (1 << 0);
+			}
+			if (keys[SDL_SCANCODE_RIGHT])
+			{
+				state |= (1 << 1);
+			}
+			if (keys[SDL_SCANCODE_UP])
+			{
+				state |= (1 << 2);
+			}
+			if (keys[SDL_SCANCODE_DOWN])
+			{
+				state |= (1 << 3);
+			}
+#ifdef __SYMBIAN32__
+			if (keys[SDL_SCANCODE_5] || keys[SDL_SCANCODE_KP_5])
+			{
+				state |= (1 << 4);
+			}
+			if (keys[SDL_SCANCODE_7] || keys[SDL_SCANCODE_KP_7])
+			{
+				state |= (1 << 5);
+			}
+#else
+			if (keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_Y] || keys[SDL_SCANCODE_C])
+			{
+				state |= (1 << 4);
+			}
+			if (keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_V])
+			{
+				state |= (1 << 5);
+			}
+#endif
 		}
 
 		// Gamepad input: first connected gamepad -> player 0, second -> player 1.
 		SDL_Gamepad* gp = SDL_GetGamepadFromPlayerIndex(p);
 		if (gp)
 		{
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_LEFT))  state |= (1 << 0);
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)) state |= (1 << 1);
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_UP))    state |= (1 << 2);
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_DOWN))  state |= (1 << 3);
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_EAST))       state |= (1 << 4);
-			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_SOUTH))      state |= (1 << 5);
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
+			{
+				state |= (1 << 0);
+			}
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
+			{
+				state |= (1 << 1);
+			}
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_UP))
+			{
+				state |= (1 << 2);
+			}
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
+			{
+				state |= (1 << 3);
+			}
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_EAST))
+			{
+				state |= (1 << 4);
+			}
+			if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_SOUTH))
+			{
+				state |= (1 << 5);
+			}
 		}
 
 		pico8_ram[0x5f4c + p] = state;
