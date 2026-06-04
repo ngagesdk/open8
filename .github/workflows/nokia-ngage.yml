@@ -54,6 +54,7 @@ jobs:
       run: |
         echo "NGAGESDK: ${{ env.NGAGESDK }}"
         ls ${{ env.NGAGESDK }}/projects/open8
+        ls ${{ env.NGAGESDK }}/projects/open8/lib/armi/urel
       shell: pwsh
 
     - name: Build open8
