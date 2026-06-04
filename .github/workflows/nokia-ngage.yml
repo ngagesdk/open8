@@ -50,6 +50,12 @@ jobs:
       run: git clone https://github.com/ngagesdk/open8.git ${{ env.NGAGESDK }}/projects/open8
       shell: pwsh
 
+    - name: Verify project directory structure
+      run: |
+        echo "NGAGESDK: ${{ env.NGAGESDK }}"
+        ls ${{ env.NGAGESDK }}/projects/open8
+      shell: pwsh
+
     - name: Build open8
       run: |
         cmake -DPACK_ASSETS=ON -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -B ${{ env.NGAGESDK }}/projects/open8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
@@ -72,7 +78,6 @@ jobs:
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\lukiprueba.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\marble_merger.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\p8scii.p8.png NGAGE\System\Apps\open8\carts\
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\porter.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\sort.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\tajemartu.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\wander.p8.png NGAGE\System\Apps\open8\carts\
