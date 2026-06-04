@@ -293,26 +293,36 @@ void blit_char_to_screen(uint8_t char_index, int x, int y, uint8_t color, uint8_
 {
     const p8char_t* font_char = &font[char_index];
     const uint8_t* char_bitmap = font_char->bitmap;
+    const int char_width  = font_char->width;
+    const int char_height = font_char->height;
 
-    for (int row = 0; row < font_char->height; row++)
+    *w = (uint8_t)char_width;
+    *h = (uint8_t)char_height;
+
+    for (int row = 0; row < char_height; row++)
     {
-        uint8_t row_data = char_bitmap[row];
-        for (int col = 0; col < font_char->width; col++)
+        int screen_y = y + row;
+        if (screen_y < 0 || screen_y > 127)
         {
-            if (row_data & (1 << (font_char->width - 1 - col)))
+            continue;
+        }
+        uint8_t row_data = char_bitmap[row];
+        uint16_t screen_row_addr = 0x6000 + ((uint16_t)screen_y << 6);
+
+        for (int col = 0; col < char_width; col++)
+        {
+            if (row_data & (1 << (char_width - 1 - col)))
             {
                 int screen_x = x + col;
-                int screen_y = y + row;
-                if (screen_x < 0 || screen_x > 127 || screen_y < 0 || screen_y > 127)
+                if (screen_x < 0 || screen_x > 127)
                 {
                     continue;
                 }
-                uint16_t addr = 0x6000 + ((uint16_t)screen_y << 6) + ((uint16_t)screen_x >> 1);
-                uint8_t mask = (screen_x & 1) ? 0x0F : 0xF0;
-                uint8_t shift = (screen_x & 1) ? 4 : 0;
-                pico8_ram[addr] = (pico8_ram[addr] & mask) | (color << shift);
-                *w = font_char->width;
-                *h = font_char->height;
+                uint16_t addr = screen_row_addr + ((uint16_t)screen_x >> 1);
+                if (screen_x & 1)
+                    pico8_ram[addr] = (pico8_ram[addr] & 0x0F) | (color << 4);
+                else
+                    pico8_ram[addr] = (pico8_ram[addr] & 0xF0) | color;
             }
         }
     }

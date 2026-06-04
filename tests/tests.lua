@@ -798,14 +798,13 @@ function test_spr()
     spr(1, 128, 0)
     assert_equal(pget(0, 0), 4, "spr() fully off right: nothing drawn")
 
-    -- Sprite 0: transparent by convention (color 0 only, and color 0 is transparent).
-    -- Just verify spr(0,...) draws whatever is in sprite 0 with normal palette rules.
+    -- Sprite 0: spr(0,...) draws from spritesheet normally like any other sprite.
     fill_sprite(0, 6)
     cls()
     palt(0, false)
     spr(0, 0, 0)
     palt()
-    assert_equal(pget(0, 0), 0, "spr(0): sprite 0 draws from spritesheet normally")
+    assert_equal(pget(0, 0), 6, "spr(0): sprite 0 draws from spritesheet normally")
 
     -- Clean up.
     clear_sprite(0)
@@ -815,6 +814,126 @@ function test_spr()
     clear_sprite(3)
     palt()
     pal()
+end
+
+-- Input: btn.
+function test_btn()
+    -- No buttons pressed: btn() bitfield == 0.
+    poke(0x5f4c, 0x00)
+    assert_equal(btn(), 0, "btn() no buttons")
+
+    -- Single button: btn(b) returns true when bit b is set.
+    for b = 0, 5 do
+        poke(0x5f4c, shl(1, b))
+        assert_true(btn(b) == true, "btn(" .. b .. ") pressed")
+        assert_true(btn(b) == true, "btn(" .. b .. ",0) pressed p0")
+    end
+
+    -- btn() bitfield reflects all pressed buttons.
+    poke(0x5f4c, 0x3f)
+    assert_equal(btn(), 0x3f, "btn() all 6 buttons bitfield")
+
+    -- btn(b) false when bit is clear.
+    poke(0x5f4c, 0x00)
+    assert_true(btn(0) == false, "btn(0) not pressed")
+    assert_true(btn(5) == false, "btn(5) not pressed")
+
+    -- Out-of-range button index returns false.
+    assert_true(btn(6)  == false, "btn(6) out of range")
+    assert_true(btn(-1) == false, "btn(-1) out of range")
+
+    -- Player 1: poke 0x5f4d, read with player=1.
+    poke(0x5f4c, 0x00)
+    poke(0x5f4d, 0x01)
+    assert_true(btn(0, 1) == true,  "btn(0,1) p1 pressed")
+    assert_true(btn(0, 0) == false, "btn(0,0) p0 not pressed")
+
+    -- Clean up.
+    poke(0x5f4c, 0x00)
+    poke(0x5f4d, 0x00)
+end
+
+-- Input: btnp.
+function test_btnp()
+    -- btnp(b): true only on frame 1 (first press).
+    set_btnp_frames(0, 0)
+    assert_true(btnp(0) == false, "btnp(0) frame 0: not triggered")
+
+    set_btnp_frames(0, 1)
+    assert_true(btnp(0) == true,  "btnp(0) frame 1: first press")
+
+    set_btnp_frames(0, 2)
+    assert_true(btnp(0) == false, "btnp(0) frame 2: not triggered")
+
+    -- btnp repeat: triggers again at frame 16 (15+1*4-3... i.e. f>15 and (f-15)%4==0).
+    set_btnp_frames(0, 15)
+    assert_true(btnp(0) == false, "btnp(0) frame 15: not triggered")
+    set_btnp_frames(0, 16)
+    assert_true(btnp(0) == false, "btnp(0) frame 16: not triggered")
+    set_btnp_frames(0, 19)
+    assert_true(btnp(0) == true,  "btnp(0) frame 19: repeat (15+4)")
+    set_btnp_frames(0, 23)
+    assert_true(btnp(0) == true,  "btnp(0) frame 23: repeat (15+8)")
+    set_btnp_frames(0, 20)
+    assert_true(btnp(0) == false, "btnp(0) frame 20: not on repeat boundary")
+
+    -- btnp(b): not triggered when frames==0 for all buttons.
+    for b = 0, 5 do
+        set_btnp_frames(b, 0)
+    end
+    assert_equal(btnp(), 0, "btnp() no buttons held")
+
+    -- btnp() bitfield: set frame 1 on button 2 and 4.
+    set_btnp_frames(2, 1)
+    set_btnp_frames(4, 1)
+    local expected = bor(shl(1, 2), shl(1, 4))
+    assert_equal(btnp(), expected, "btnp() bitfield buttons 2 and 4")
+
+    -- Out-of-range returns false.
+    assert_true(btnp(6)  == false, "btnp(6) out of range")
+    assert_true(btnp(-1) == false, "btnp(-1) out of range")
+
+    -- Player 1: set frame count for p1 button 3.
+    set_btnp_frames(3, 1, 1)
+    assert_true(btnp(3, 1) == true,  "btnp(3,1) p1 first press")
+    assert_true(btnp(3, 0) == false, "btnp(3,0) p0 not pressed")
+
+    -- Clean up.
+    for b = 0, 5 do
+        set_btnp_frames(b, 0)
+        set_btnp_frames(b, 0, 1)
+    end
+end
+
+-- Sprite flags (fget).
+function test_fget()
+    -- Set known flags for sprite 10.
+    poke(0x3000 + 10, 0x00)
+    assert_equal(fget(10),    0,     "fget(10) all flags clear")
+    assert_true(fget(10, 0) == false, "fget(10, 0) flag 0 clear")
+
+    -- Set flag 0 (bit 0 = 1).
+    poke(0x3000 + 10, 0x01)
+    assert_equal(fget(10),    1,     "fget(10) flag 0 set")
+    assert_true(fget(10, 0) == true,  "fget(10, 0) flag 0 set")
+    assert_true(fget(10, 1) == false, "fget(10, 1) flag 1 clear")
+
+    -- Set flags 0 and 7 (bit 0 + bit 7 = 0x81 = 129).
+    poke(0x3000 + 10, 0x81)
+    assert_equal(fget(10),    0x81,  "fget(10) flags 0 and 7 set")
+    assert_true(fget(10, 0) == true,  "fget(10, 0) set")
+    assert_true(fget(10, 7) == true,  "fget(10, 7) set")
+    assert_true(fget(10, 3) == false, "fget(10, 3) clear")
+
+    -- All flags set.
+    poke(0x3000 + 10, 0xff)
+    assert_equal(fget(10), 0xff, "fget(10) all flags set")
+    for f = 0, 7 do
+        assert_true(fget(10, f) == true, "fget(10, " .. f .. ") all set")
+    end
+
+    -- Clean up.
+    poke(0x3000 + 10, 0x00)
 end
 
 function run_tests()
@@ -836,6 +955,9 @@ function run_tests()
     test_pal_sget()
     test_sspr()
     test_spr()
+    test_btn()
+    test_btnp()
+    test_fget()
 end
 
 run_tests()
