@@ -291,8 +291,21 @@ static inline fix32_t fix32_div(fix32_t a, fix32_t b) {
     if ((b & 0xffff) == 0) {
         int32_t bi = b >> 16; /* plain integer value of b */
         if (bi != 0) {
-            int32_t q = a / bi;       /* 32-bit quotient in fixed-point */
-            int32_t r = a % bi;       /* 32-bit remainder */
+            int32_t q;
+            int32_t r;
+
+            /* Power-of-two: arithmetic right shift gives the exact result with
+             * no division at all. Use a de Bruijn sequence to find ctz(bi). */
+            if ((bi & (bi - 1)) == 0) {
+                static const uint8_t debruijn_ctz[32] = {
+                    0,1,28,2,29,14,24,3,30,22,20,15,25,17,4,8,
+                    31,27,13,23,21,19,16,7,26,12,18,6,11,5,10,9
+                };
+                int shift = debruijn_ctz[((uint32_t)bi * 0x077CB531u) >> 27];
+                return a >> shift;
+            }
+            q = a / bi; /* 32-bit quotient in fixed-point */
+            r = a % bi; /* 32-bit remainder */
             /* r is already in fixed-point; shift it for fractional digits */
             return q + (r / bi);
         }
@@ -383,7 +396,8 @@ static inline fix32_t fix32_max(fix32_t a, fix32_t b) {
 }
 
 static inline fix32_t fix32_ceil(fix32_t x) {
-    return fix32_neg(fix32_floor(fix32_neg(x)));
+    /* If there are fractional bits, round up by adding 1 to the integer part. */
+    return (x & 0xffff) ? (x & (int32_t)0xffff0000) + 0x10000 : x;
 }
 
 static inline fix32_t fix32_floor(fix32_t x) {
@@ -409,6 +423,23 @@ static inline fix32_t fix32_pow(fix32_t x, fix32_t y) {
             exp >>= 1;
         }
         return negative ? fix32_div(0x10000, result) : result;
+    }
+    /* Fast path: x^0.5 = sqrt(x) using integer bit-by-bit algorithm. */
+    if (y == 0x8000) {
+        int64_t root = 0;
+        int64_t val = (int64_t)x << 16;
+        if (val > 0) {
+            int64_t a;
+            for (a = ((int64_t)1) << 46; a > val; a >>= 2)
+                ;
+            for (; a; a >>= 2, root >>= 1) {
+                if (val >= a + root) {
+                    val -= a + root;
+                    root += a << 1;
+                }
+            }
+        }
+        return (fix32_t)root;
     }
     return fix32_from_double(pow(fix32_to_double(x), fix32_to_double(y)));
 }

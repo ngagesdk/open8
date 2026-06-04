@@ -848,17 +848,24 @@ void luaV_execute (lua_State *L) {
         }
       )
       vmcase(OP_FORLOOP,
-        lua_Number step = nvalue(ra+2);
-        lua_Number idx = luai_numadd(L, (lua_Number)nvalue(ra), step); /* increment index */
+        lua_Number step  = nvalue(ra+2);
+        lua_Number idx   = luai_numadd(L, nvalue(ra), step); /* increment index */
         lua_Number limit = nvalue(ra+1);
-        /* check for idx sign wrap-around */
-        if (luai_numlt(L, 0, step) ? luai_numle(L, nvalue(ra), idx)
-                                   : luai_numle(L, idx, nvalue(ra)))
-        if (luai_numlt(L, 0, step) ? luai_numle(L, idx, limit)
-                                   : luai_numle(L, limit, idx)) {
-          ci->u.l.savedpc += GETARG_sBx(i);  /* jump back */
-          setnvalue(ra, idx);  /* update internal index... */
-          setnvalue(ra+3, idx);  /* ...and external index */
+        /* Evaluate step direction once; fix32 is int32_t so > 0 is a plain compare. */
+        if (step > 0) {
+          /* positive step: guard against wrap-around, then check idx <= limit */
+          if (idx >= nvalue(ra) && idx <= limit) {
+            ci->u.l.savedpc += GETARG_sBx(i);
+            setnvalue(ra,   idx);
+            setnvalue(ra+3, idx);
+          }
+        } else {
+          /* negative step: guard against wrap-around, then check limit <= idx */
+          if (idx <= nvalue(ra) && limit <= idx) {
+            ci->u.l.savedpc += GETARG_sBx(i);
+            setnvalue(ra,   idx);
+            setnvalue(ra+3, idx);
+          }
         }
       )
       vmcase(OP_FORPREP,
