@@ -52,12 +52,8 @@ jobs:
 
     - name: Build open8
       run: |
-        cmake ^
-          -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake ^
-          -G "Ninja" ^
-          -S ${{ github.workspace }}/open8 ^
-          -B ${{ github.workspace }}/open8/build ^
-          -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+          cmake -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake -G "Ninja" -S ${{ github.workspace }}/open8 -B ${{ github.workspace }}/open8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
+          cmake --build ${{ github.workspace }}/open8/build
       shell: pwsh
 
     #- name: Archive open8.sis
