@@ -2,7 +2,7 @@
  *
  *  A portable PICO-8 emulator written in C.
  *
- *  Copyright (c) 2025, Michael Fitzmayer. All rights reserved.
+ *  Copyright (c) 2025-2026, Michael Fitzmayer. All rights reserved.
  *  SPDX-License-Identifier: MIT
  *
  **/
@@ -18,6 +18,7 @@
 extern fix32_t seconds_since_start;
 
 void init_api(lua_State* L);
+void update_input(void);
 void update_time(void);
 
 #endif // API_H
