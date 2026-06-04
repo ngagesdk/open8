@@ -34,15 +34,12 @@ bool init_memory(SDL_Renderer* renderer)
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
     reset_draw_state();
 
-#ifdef __SYMBIAN32__
-    screen_format = SDL_PIXELFORMAT_XRGB4444;
-#else
     screen_format = SDL_PIXELFORMAT_UNKNOWN;
 
     const SDL_PixelFormat *texture_formats = (const SDL_PixelFormat *)SDL_GetPointerProperty(SDL_GetRendererProperties(renderer), SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
     if (texture_formats) {
         // Use the first compatible format that the renderer supports
-        for (int i = 0; i < texture_formats[i]; ++i) {
+        for (int i = 0; texture_formats[i] != SDL_PIXELFORMAT_UNKNOWN; ++i) {
             if ((SDL_BYTESPERPIXEL(texture_formats[i]) != 1 &&
                  SDL_BYTESPERPIXEL(texture_formats[i]) != 2 &&
                  SDL_BYTESPERPIXEL(texture_formats[i]) != 4) ||
@@ -56,7 +53,6 @@ bool init_memory(SDL_Renderer* renderer)
     // If all else fails, use RGBA32 as a fallback.
     if (screen_format == SDL_PIXELFORMAT_UNKNOWN)
         screen_format = SDL_PIXELFORMAT_RGBA32;
-#endif
 
     screen = SDL_CreateTexture(renderer, screen_format, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
     if (screen == NULL)
