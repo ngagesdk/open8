@@ -331,7 +331,7 @@ static int pico8_split(lua_State *l) {
     if (lua_isnil(l, 1)) {
         return 0;
     }
-    count = 0, hlen;
+    count = 0;
     haystack = luaL_checklstring(l, 1, &hlen);
     if (!haystack) {
         return 0;

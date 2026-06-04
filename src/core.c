@@ -161,13 +161,13 @@ static void patch_cart_code(cart_t* cart)
     cart->code = new_code;
 
     // Insert quotes while shifting data from end to start.
-    char* src = cart->code + cart->code_size - 1;
-    char* dest = cart->code + new_size;
+    uint8_t* src = cart->code + cart->code_size - 1;
+    uint8_t* dest = cart->code + new_size;
     *dest-- = '\0'; // Null-terminate the new string.
 
     for (size_t i = cart->code_size; i-- > 0;)
     {
-        if ((unsigned char)*src >= 128 && (unsigned char)*src <= 135)
+        if (*src >= 128 && *src <= 135)
         {
             *dest-- = '"';
             *dest-- = *src;
