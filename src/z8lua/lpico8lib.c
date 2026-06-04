@@ -218,7 +218,46 @@ static int pico8_tostr(lua_State *l) {
                     sprintf(buffer, "0x%04x.%04x", (b >> 16) & 0xffff, b & 0xffff);
                 }
             } else {
-                sprintf(buffer, "%f", fix32_to_double(x));
+                /* Pure-integer decimal formatter - avoids fix32_to_double.
+                 * PICO-8 tostr() format: [-]intpart[.fracpart], up to 4
+                 * decimal digits, no trailing zeros. */
+                char *p = buffer;
+                uint32_t bits = (uint32_t)x;
+                uint32_t int_part;
+                uint32_t frac16;
+                if (x < 0) {
+                    *p++ = '-';
+                    bits = (uint32_t)(-(int32_t)bits);
+                }
+                int_part = bits >> 16;
+                frac16   = bits & 0xffff;
+                /* Print integer part */
+                {
+                    char tmp[8];
+                    int len = 0;
+                    uint32_t v = int_part;
+                    if (v == 0) { tmp[len++] = '0'; }
+                    else { while (v > 0) { tmp[len++] = (char)('0' + v % 10); v /= 10; } }
+                    /* reverse digits */
+                    { int i, j; for (i = 0, j = len-1; i < j; i++, j--) { char t = tmp[i]; tmp[i] = tmp[j]; tmp[j] = t; } }
+                    { int i; for (i = 0; i < len; i++) *p++ = tmp[i]; }
+                }
+                /* Print fractional part if non-zero */
+                if (frac16 != 0) {
+                    uint32_t frac_dec = ((uint32_t)frac16 * 10000u + 32768u) >> 16;
+                    if (frac_dec > 0) {
+                        char fd[4];
+                        int flen = 4;
+                        fd[0] = (char)('0' + (frac_dec / 1000) % 10);
+                        fd[1] = (char)('0' + (frac_dec / 100)  % 10);
+                        fd[2] = (char)('0' + (frac_dec / 10)   % 10);
+                        fd[3] = (char)('0' + (frac_dec)        % 10);
+                        while (flen > 1 && fd[flen-1] == '0') flen--;
+                        *p++ = '.';
+                        { int i; for (i = 0; i < flen; i++) *p++ = fd[i]; }
+                    }
+                }
+                *p = '\0';
             }
             break;
         }

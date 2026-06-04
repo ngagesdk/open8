@@ -127,10 +127,9 @@ static Node *mainposition (const Table *t, const TValue *key) {
 static int arrayindex (const TValue *key) {
   if (ttisnumber(key)) {
     lua_Number n = nvalue(key);
-    int k;
-    lua_number2int(k, n);
-    if (luai_numeq(cast_num(k), n))
-      return k;
+    /* With fix32, a number is a whole integer iff the low 16 bits are zero. */
+    if ((n & 0xffff) == 0)
+      return fix32_to_int(n);
   }
   return -1;  /* `key' did not match some condition */
 }
@@ -483,11 +482,10 @@ const TValue *luaH_get (Table *t, const TValue *key) {
     case LUA_TSHRSTR: return luaH_getstr(t, rawtsvalue(key));
     case LUA_TNIL: return luaO_nilobject;
     case LUA_TNUMBER: {
-      int k;
       lua_Number n = nvalue(key);
-      lua_number2int(k, n);
-      if (luai_numeq(cast_num(k), n)) /* index is int? */
-        return luaH_getint(t, k);  /* use specialized version */
+      /* With fix32, a number is a whole integer iff the low 16 bits are zero. */
+      if ((n & 0xffff) == 0)
+        return luaH_getint(t, fix32_to_int(n));  /* use specialized version */
       /* else go through */
     }
     default: {

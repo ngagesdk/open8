@@ -171,54 +171,67 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
 
 /*
 ** convert an hexadecimal or binary numeric string to a number
+** Pure-integer implementation: no double arithmetic.
 */
 static lua_Number lua_strany2number (const char *s, char **endptr, int base) {
-  uint32_t fixed_value = 0;
-  uint32_t fractional_value = 0;
-  const char* frac_part;
-  double r = 0.0;
-  int neg = 0;  /* 1 if number is negative */
+  uint32_t int_part = 0;
+  uint32_t frac_part = 0;  /* accumulated fractional bits (16-bit fixed) */
+  uint32_t frac_scale = 65536;  /* current place value: 65536/base^n */
+  int neg = 0;
+  int has_digits = 0;
   *endptr = cast(char *, s);  /* nothing is valid yet */
 
-  while (lisspace(cast_uchar(*s))) s++; /* skip initial spaces */
-  neg = isneg(&s);  /* check sign */
+  while (lisspace(cast_uchar(*s))) s++;
+  neg = isneg(&s);
 
   /* Validate prefix */
-  if (*s != '0' || (base == 2 && *(s + 1) != 'b' && *(s + 1) != 'B')
-                || (base == 16 && *(s + 1) != 'x' && *(s + 1) != 'X'))
-    return 0;  /* invalid format */
+  if (*s != '0' || (base == 2  && *(s+1) != 'b' && *(s+1) != 'B')
+                || (base == 16 && *(s+1) != 'x' && *(s+1) != 'X'))
+    return 0;
 
-  s += 2;  /* Skip '0x' or '0b' */
+  s += 2;  /* skip '0x' or '0b' */
 
-  /* Look for the fractional point */
-  frac_part = strchr(s, '.');
-
-  /* Process integer part */
-  fixed_value = (uint32_t)strtoul(s, endptr, base);
-  if (s == *endptr) return 0;  /* No valid integer part */
-
-  /* Process fractional part if present */
-  if (frac_part) {
-    int frac_digits;
-    uint32_t scale_factor;
-    s = frac_part + 1;
-    fractional_value = (uint32_t)strtoul(s, endptr, base);
-
-    /* Determine the scaling factor */
-    frac_digits = *endptr - s;
-    scale_factor = 1;
-    while (frac_digits-- > 0) scale_factor *= base;
-
-    /* Scale fractional part to fixed-point */
-    r = (double)fixed_value + ((double)fractional_value / scale_factor);
-  } else {
-    r = (double)fixed_value;
+  /* Integer part */
+  for (;;) {
+    int d;
+    char c = *s;
+    if      (c >= '0' && c <= '9') d = c - '0';
+    else if (c >= 'a' && c <= 'f') d = c - 'a' + 10;
+    else if (c >= 'A' && c <= 'F') d = c - 'A' + 10;
+    else break;
+    if (d >= base) break;
+    int_part = int_part * (uint32_t)base + (uint32_t)d;
+    has_digits = 1;
+    s++;
   }
 
-  /* Convert to 16:16 fixed point */
-  fixed_value = (uint32_t)(r * 65536.0);
+  if (!has_digits) return 0;
+  *endptr = cast(char *, s);
 
-  return fix32_from_double(neg ? -r : r);
+  /* Fractional part */
+  if (*s == '.') {
+    s++;
+    for (;;) {
+      int d;
+      char c = *s;
+      if      (c >= '0' && c <= '9') d = c - '0';
+      else if (c >= 'a' && c <= 'f') d = c - 'a' + 10;
+      else if (c >= 'A' && c <= 'F') d = c - 'A' + 10;
+      else break;
+      if (d >= base) break;
+      /* Divide place value by base before accumulating to stay in 16 bits */
+      frac_scale /= (uint32_t)base;
+      if (frac_scale > 0)
+        frac_part += (uint32_t)d * frac_scale;
+      s++;
+    }
+    *endptr = cast(char *, s);
+  }
+
+  {
+    uint32_t bits = (int_part << 16) | (frac_part & 0xffff);
+    return neg ? -(fix32_t)bits : (fix32_t)bits;
+  }
 }
 
 
