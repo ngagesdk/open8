@@ -543,6 +543,58 @@ function test_pal_sget()
     for dy = 0, 7 do memset(dy * 64, 0x00, 4) end
 end
 
+-- mapdraw is an alias for map; verify it produces identical output.
+function test_mapdraw()
+    -- Fill sprite 2 with solid color 6.
+    -- Sprite 2: sprite_x_base = (2 & 0xF) << 2 = 8, sprite_y_base = 0.
+    -- Each row of 8 pixels occupies bytes [8..11] at address: row*64 + 8.
+    for dy = 0, 7 do
+        memset(dy * 64 + 8, 0x66, 4)
+    end
+    mset(0, 0, 2)
+    cls()
+    palt()
+    mapdraw(0, 0, 0, 0, 1, 1)
+    assert_equal(pget(0, 0), 6, "mapdraw() draws sprite at screen (0,0)")
+    assert_equal(pget(7, 7), 6, "mapdraw() draws sprite at screen (7,7)")
+
+    -- Sprite 0 skipped (transparent cell).
+    mset(0, 0, 0)
+    cls()
+    rectfill(0, 0, 7, 7, 3)
+    mapdraw(0, 0, 0, 0, 1, 1)
+    assert_equal(pget(0, 0), 3, "mapdraw() skips sprite 0")
+
+    -- Screen offset: draw map cell at screen position (8, 8).
+    mset(0, 0, 2)
+    cls()
+    mapdraw(0, 0, 8, 8, 1, 1)
+    assert_equal(pget(8, 8),  6, "mapdraw() respects sx/sy offset")
+    assert_equal(pget(0, 0),  0, "mapdraw() does not draw at (0,0) when offset to (8,8)")
+
+    -- Layer filter: sprite with matching flag is drawn.
+    poke(0x3000 + 2, 0x02)
+    mset(0, 0, 2)
+    cls()
+    mapdraw(0, 0, 0, 0, 1, 1, 0x02)
+    assert_equal(pget(0, 0), 6, "mapdraw() layer=2 draws sprite with flag bit 1")
+
+    -- Layer filter: sprite without matching flag is skipped.
+    poke(0x3000 + 2, 0x00)
+    cls()
+    rectfill(0, 0, 7, 7, 3)
+    mapdraw(0, 0, 0, 0, 1, 1, 0x02)
+    assert_equal(pget(0, 0), 3, "mapdraw() layer=2 skips sprite without flag")
+
+    -- Clean up.
+    palt()
+    mset(0, 0, 0)
+    poke(0x3000 + 2, 0x00)
+    for dy = 0, 7 do
+        memset(dy * 64 + 8, 0x00, 4)
+    end
+end
+
 function run_tests()
     init_crc32()
 
@@ -558,6 +610,7 @@ function run_tests()
     test_tables()
     test_palt()
     test_map()
+    test_mapdraw()
     test_pal_sget()
 end
 
