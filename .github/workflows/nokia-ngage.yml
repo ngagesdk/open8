@@ -61,13 +61,6 @@ jobs:
         cmake -E copy_if_different "${{ env.NGAGESDK }}/projects/open8/src/z8lua/build/z8lua.lib" "${{ env.NGAGESDK }}/projects/open8/lib/armi/urel/z8lua.lib"
       shell: pwsh
 
-    - name: Verify project directory structure
-      run: |
-        echo "NGAGESDK: ${{ env.NGAGESDK }}"
-        ls ${{ env.NGAGESDK }}/projects/open8
-        ls ${{ env.NGAGESDK }}/projects/open8/lib/armi/urel
-      shell: pwsh
-
     - name: Build open8
       run: |
         cmake -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -B ${{ env.NGAGESDK }}/projects/open8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
@@ -77,10 +70,6 @@ jobs:
     - name: Prepare open8 artifact directory
       run: |
         New-Item -ItemType Directory -Path NGAGE\System\Apps\open8 -Force
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\build\open8.aif NGAGE\System\Apps\open8\
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\build\open8.app NGAGE\System\Apps\open8\
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\build\open8.exe NGAGE\System\Apps\open8\game.exe
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\build\open8.rsc NGAGE\System\Apps\open8\
         New-Item -ItemType Directory -Path NGAGE\System\Apps\open8\carts -Force
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\api.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\automata.p8.png NGAGE\System\Apps\open8\carts\
