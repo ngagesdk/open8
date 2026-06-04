@@ -18,6 +18,7 @@
 extern fix32_t seconds_since_start;
 
 void init_api(lua_State* L);
+void update_input(void);
 void update_time(void);
 
 #endif // API_H
