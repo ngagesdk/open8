@@ -649,8 +649,13 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 			case SDLK_SOFTLEFT:
 			case SDLK_ESCAPE:
 				return false;
+#ifdef __SYMBIAN32__
 			case SDLK_5:
 			case SDLK_KP_5:
+#endif
+			case SDLK_C:
+			case SDLK_X:
+			case SDLK_Z:
 			case SDLK_SELECT:
 			case SDLK_SPACE:
 				run_cartridge(renderer);
