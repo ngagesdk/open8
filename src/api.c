@@ -46,7 +46,26 @@ static void pset(int x, int y, int* color)
 	}
 
 	uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
-	int row_shift = 12 - ((y & 3) << 2); // Precompute shift amount.
+	uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
+	uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
+
+	/* Fast path: no fill-pattern active (the default state).
+	 * A single OR of both bytes lets the compiler use one branch
+	 * with no extra memory reads beyond what the slow path needs. */
+	if (pattern == 0)
+	{
+		if (x & 1)
+		{
+			pico8_ram[addr] = (pico8_ram[addr] & 0x0F) | (p8_color << 4);
+		}
+		else
+		{
+			pico8_ram[addr] = (pico8_ram[addr] & 0xF0) | p8_color;
+		}
+		return;
+	}
+
+	int row_shift = 12 - ((y & 3) << 2);
 	uint8_t nibble = (pattern >> row_shift) & 0x0F;
 
 	if (nibble & (1 << (3 - (x & 3))))
@@ -54,8 +73,6 @@ static void pset(int x, int y, int* color)
 		return;
 	}
 
-	uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
-	uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
 	uint8_t mask = (x & 1) ? 0x0F : 0xF0;
 	uint8_t shift = (x & 1) ? 4 : 0;
 	pico8_ram[addr] = (pico8_ram[addr] & mask) | (p8_color << shift);
