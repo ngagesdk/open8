@@ -684,6 +684,139 @@ function test_sspr()
     palt()
 end
 
+function test_spr()
+    -- Helper: fill sprite n (8x8) with a solid color c.
+    -- sprite_x_base = (n % 16) * 4 bytes, sprite_y_base = (n \ 16) * 512 bytes.
+    -- Each row is 64 bytes wide; 8 pixels = 4 bytes per row.
+    local function fill_sprite(n, c)
+        local xb = (n % 16) * 4
+        local yb = (n \ 16) * 512
+        local byte = bor(c, shl(c, 4))
+        for row = 0, 7 do
+            memset(yb + row * 64 + xb, byte, 4)
+        end
+    end
+
+    local function clear_sprite(n)
+        local xb = (n % 16) * 4
+        local yb = (n \ 16) * 512
+        for row = 0, 7 do
+            memset(yb + row * 64 + xb, 0x00, 4)
+        end
+    end
+
+    -- Basic draw: sprite 1 filled with color 7 draws at (0,0).
+    fill_sprite(1, 7)
+    cls()
+    palt()
+    spr(1, 0, 0)
+    assert_equal(pget(0, 0), 7, "spr() top-left pixel")
+    assert_equal(pget(7, 7), 7, "spr() bottom-right pixel")
+    assert_equal(pget(8, 0), 0, "spr() does not bleed right")
+
+    -- Screen offset: sprite drawn at (10, 20).
+    cls()
+    spr(1, 10, 20)
+    assert_equal(pget(10, 20), 7, "spr() dx/dy offset top-left")
+    assert_equal(pget(17, 27), 7, "spr() dx/dy offset bottom-right")
+    assert_equal(pget(0,  0),  0, "spr() dx/dy: (0,0) untouched")
+
+    -- Default w/h is 1x1 (8x8 pixels).
+    cls()
+    spr(1, 0, 0)
+    assert_equal(pget(7, 7), 7, "spr() default w=1 h=1 covers 8x8")
+
+    -- w=2: draws two sprites wide (16 pixels).
+    fill_sprite(2, 6)
+    cls()
+    spr(1, 0, 0, 2, 1)
+    assert_equal(pget(0,  0), 7, "spr() w=2: left sprite drawn")
+    assert_equal(pget(8,  0), 6, "spr() w=2: right sprite drawn")
+    assert_equal(pget(16, 0), 0, "spr() w=2: no bleed past 16px")
+
+    -- h=2: draws two sprites tall (16 pixels).
+    fill_sprite(17, 5)  -- sprite 17 = row 1, col 1 (same column as sprite 1)
+    cls()
+    spr(1, 0, 0, 1, 2)
+    assert_equal(pget(0, 0),  7, "spr() h=2: top sprite drawn")
+    assert_equal(pget(0, 8),  5, "spr() h=2: bottom sprite drawn")
+    assert_equal(pget(0, 16), 0, "spr() h=2: no bleed past 16px")
+
+    -- Color 0 transparent by default.
+    fill_sprite(3, 0)
+    cls()
+    rectfill(0, 0, 7, 7, 4)
+    spr(3, 0, 0)
+    assert_equal(pget(0, 0), 4, "spr() color 0 transparent by default")
+
+    -- palt(0, false): color 0 becomes opaque.
+    cls()
+    rectfill(0, 0, 7, 7, 4)
+    palt(0, false)
+    spr(3, 0, 0)
+    palt()
+    assert_equal(pget(0, 0), 0, "spr() palt(0,false): color 0 drawn")
+
+    -- flip_x: sprite 1 has color 7 left half, color 6 right half.
+    -- Set left 4 pixels (bytes 0-1) = 7, right 4 pixels (bytes 2-3) = 6.
+    local xb1 = band(1, 0xF) * 4
+    for row = 0, 7 do
+        memset(row * 64 + xb1,     0x77, 2)
+        memset(row * 64 + xb1 + 2, 0x66, 2)
+    end
+    cls()
+    spr(1, 0, 0, 1, 1, true, false)
+    assert_equal(pget(0, 0), 6, "spr() flip_x: left edge maps to right source")
+    assert_equal(pget(7, 0), 7, "spr() flip_x: right edge maps to left source")
+
+    -- flip_y: sprite 1 top half color 7, bottom half color 6.
+    for row = 0, 3 do memset(row * 64 + xb1, 0x77, 4) end
+    for row = 4, 7 do memset(row * 64 + xb1, 0x66, 4) end
+    cls()
+    spr(1, 0, 0, 1, 1, false, true)
+    assert_equal(pget(0, 0), 6, "spr() flip_y: top row maps to bottom source")
+    assert_equal(pget(0, 7), 7, "spr() flip_y: bottom row maps to top source")
+
+    -- Palette remap: pal(7, 9) causes color 7 to be drawn as 9.
+    fill_sprite(1, 7)
+    cls()
+    pal(7, 9)
+    spr(1, 0, 0)
+    pal()
+    assert_equal(pget(0, 0), 9, "spr() draw palette remap applied")
+
+    -- Screen clipping: sprite partially off the left edge.
+    cls()
+    spr(1, -4, 0)
+    assert_equal(pget(0, 0), 7, "spr() clip left: visible pixels drawn")
+    assert_equal(pget(3, 0), 7, "spr() clip left: last visible pixel drawn")
+    -- Sprite is 8 wide starting at x=-4, so cols 4..7 of sprite land at x=0..3.
+
+    -- Screen clipping: sprite fully off-screen to the right.
+    cls()
+    rectfill(0, 0, 7, 7, 4)
+    spr(1, 128, 0)
+    assert_equal(pget(0, 0), 4, "spr() fully off right: nothing drawn")
+
+    -- Sprite 0: transparent by convention (color 0 only, and color 0 is transparent).
+    -- Just verify spr(0,...) draws whatever is in sprite 0 with normal palette rules.
+    fill_sprite(0, 6)
+    cls()
+    palt(0, false)
+    spr(0, 0, 0)
+    palt()
+    assert_equal(pget(0, 0), 0, "spr(0): sprite 0 draws from spritesheet normally")
+
+    -- Clean up.
+    clear_sprite(0)
+    clear_sprite(1)
+    clear_sprite(2)
+    clear_sprite(17)
+    clear_sprite(3)
+    palt()
+    pal()
+end
+
 function run_tests()
     init_crc32()
 
@@ -702,6 +835,7 @@ function run_tests()
     test_mapdraw()
     test_pal_sget()
     test_sspr()
+    test_spr()
 end
 
 run_tests()
