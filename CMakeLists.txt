@@ -11,22 +11,22 @@ project(open8 C)
 if (NGAGESDK)
   find_package(SDL3 REQUIRED)
 else()
-  set(EXPORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/export)
+  set(EXPORT_DIR ${PROJECT_SOURCE_DIR}/export)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXPORT_DIR})
   include(get_SDL3)
   get_SDL3("3.4.10")
 endif()
 
 set(open8_sources
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/api.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/app.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/auxiliary.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/core.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/p8scii.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/p8_compress.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/lexaloffle/pxa_compress_snippets.c)
+  ${PROJECT_SOURCE_DIR}/src/main.c
+  ${PROJECT_SOURCE_DIR}/src/api.c
+  ${PROJECT_SOURCE_DIR}/src/app.c
+  ${PROJECT_SOURCE_DIR}/src/auxiliary.c
+  ${PROJECT_SOURCE_DIR}/src/core.c
+  ${PROJECT_SOURCE_DIR}/src/memory.c
+  ${PROJECT_SOURCE_DIR}/src/p8scii.c
+  ${PROJECT_SOURCE_DIR}/src/lexaloffle/p8_compress.c
+  ${PROJECT_SOURCE_DIR}/src/lexaloffle/pxa_compress_snippets.c)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_executable(open8 ${open8_sources})
@@ -36,7 +36,7 @@ endif()
 
 if (NGAGESDK)
   target_link_libraries(open8 PRIVATE SDL3::SDL3)
-  target_link_libraries(open8 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
+  target_link_libraries(open8 PRIVATE ${PROJECT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
 
   # Common optimizations for both C and C++
   target_compile_options(open8 PRIVATE
