@@ -595,6 +595,95 @@ function test_mapdraw()
     end
 end
 
+function test_sspr()
+    -- Set up a 4x4 block at sprite-sheet pixel (0,0): solid color 5.
+    -- 4 pixels wide = 2 bytes per row, 4 rows.
+    for row = 0, 3 do
+        memset(row * 64, 0x55, 2)
+    end
+
+    -- 1:1 copy: sspr(0,0,4,4, 0,0) should draw color 5 at screen (0,0).
+    cls()
+    palt()
+    sspr(0, 0, 4, 4, 0, 0)
+    assert_equal(pget(0, 0), 5, "sspr() 1:1 top-left pixel")
+    assert_equal(pget(3, 3), 5, "sspr() 1:1 bottom-right pixel")
+    assert_equal(pget(4, 0), 0, "sspr() 1:1 does not bleed right")
+
+    -- Screen offset: draw at (8, 8).
+    cls()
+    sspr(0, 0, 4, 4, 8, 8)
+    assert_equal(pget(8,  8), 5, "sspr() dx/dy offset top-left")
+    assert_equal(pget(11, 11), 5, "sspr() dx/dy offset bottom-right")
+    assert_equal(pget(0,  0), 0, "sspr() dx/dy offset: (0,0) untouched")
+
+    -- Scale up 2x: sspr(0,0,4,4, 0,0, 8,8) -> 8x8 destination.
+    cls()
+    sspr(0, 0, 4, 4, 0, 0, 8, 8)
+    assert_equal(pget(0, 0), 5, "sspr() 2x scale top-left")
+    assert_equal(pget(7, 7), 5, "sspr() 2x scale bottom-right")
+    assert_equal(pget(8, 0), 0, "sspr() 2x scale does not bleed right")
+
+    -- flip_x: source has color 5 in left half, color 6 in right half.
+    -- 8 pixels wide = 4 bytes per row, left nibbles = 5, right nibbles = 6.
+    for row = 0, 3 do
+        memset(row * 64,     0x55, 2)  -- pixels 0-3: color 5
+        memset(row * 64 + 2, 0x66, 2)  -- pixels 4-7: color 6
+    end
+    cls()
+    sspr(0, 0, 8, 4, 0, 0, 8, 4, true, false)
+    assert_equal(pget(0, 0), 6, "sspr() flip_x: left edge maps to right source")
+    assert_equal(pget(7, 0), 5, "sspr() flip_x: right edge maps to left source")
+
+    -- flip_y: source has color 5 in top half, color 6 in bottom half.
+    for row = 0, 1 do memset(row * 64, 0x55, 4) end  -- rows 0-1: color 5
+    for row = 2, 3 do memset(row * 64, 0x66, 4) end  -- rows 2-3: color 6
+    cls()
+    sspr(0, 0, 8, 4, 0, 0, 8, 4, false, true)
+    assert_equal(pget(0, 0), 6, "sspr() flip_y: top row maps to bottom source")
+    assert_equal(pget(0, 3), 5, "sspr() flip_y: bottom row maps to top source")
+
+    -- Transparency: color 0 in sprite sheet should be skipped.
+    for row = 0, 3 do memset(row * 64, 0x00, 2) end  -- all pixels = color 0
+    cls()
+    rectfill(0, 0, 3, 3, 3)
+    sspr(0, 0, 4, 4, 0, 0)
+    assert_equal(pget(0, 0), 3, "sspr() transparent color 0 not drawn")
+
+    -- Palette remap: pal(5, 9) redirects color 5 to 9.
+    for row = 0, 3 do memset(row * 64, 0x55, 2) end
+    cls()
+    pal(5, 9)
+    sspr(0, 0, 4, 4, 0, 0)
+    pal()
+    assert_equal(pget(0, 0), 9, "sspr() draw palette remap applied")
+
+    -- Negative dw: same as flip_x + draw at dx+dw (backside spin effect).
+    -- Source: left 4 pixels = color 5, right 4 pixels = color 6.
+    for row = 0, 3 do
+        memset(row * 64,     0x55, 2)
+        memset(row * 64 + 2, 0x66, 2)
+    end
+    cls()
+    -- sspr(0,0,8,4, 8,0, -8,4): draws 8 pixels ending at x=7 (dx+dw..dx-1),
+    -- flipped horizontally. Screen x=0 should see source x=7 (color 6).
+    sspr(0, 0, 8, 4, 8, 0, -8, 4)
+    assert_equal(pget(0, 0), 6, "sspr() negative dw: left edge maps to right source")
+    assert_equal(pget(7, 0), 5, "sspr() negative dw: right edge maps to left source")
+
+    -- Negative dh: same as flip_y + draw at dy+dh.
+    for row = 0, 1 do memset(row * 64, 0x55, 4) end  -- rows 0-1: color 5
+    for row = 2, 3 do memset(row * 64, 0x66, 4) end  -- rows 2-3: color 6
+    cls()
+    sspr(0, 0, 8, 4, 0, 4, 8, -4)
+    assert_equal(pget(0, 0), 6, "sspr() negative dh: top row maps to bottom source")
+    assert_equal(pget(0, 3), 5, "sspr() negative dh: bottom row maps to top source")
+
+    -- Clean up spritesheet.
+    for row = 0, 3 do memset(row * 64, 0x00, 4) end
+    palt()
+end
+
 function run_tests()
     init_crc32()
 
@@ -612,6 +701,7 @@ function run_tests()
     test_map()
     test_mapdraw()
     test_pal_sget()
+    test_sspr()
 end
 
 run_tests()

@@ -842,7 +842,72 @@ static int pico8_sset(lua_State* L)
 
 static int pico8_sspr(lua_State* L)
 {
-    TO_BE_DONE;
+    int sx     = fix32_to_int(luaL_checknumber(L, 1));
+    int sy     = fix32_to_int(luaL_checknumber(L, 2));
+    int sw     = fix32_to_int(luaL_checknumber(L, 3));
+    int sh     = fix32_to_int(luaL_checknumber(L, 4));
+    int dx     = fix32_to_int(luaL_checknumber(L, 5));
+    int dy     = fix32_to_int(luaL_checknumber(L, 6));
+    int dw     = fix32_to_int(luaL_optnumber(L, 7, fix32_from_int(sw)));
+    int dh     = fix32_to_int(luaL_optnumber(L, 8, fix32_from_int(sh)));
+    bool flip_x = lua_toboolean(L, 9);
+    bool flip_y = lua_toboolean(L, 10);
+
+    if (sw <= 0 || sh <= 0 || dw == 0 || dh == 0)
+    {
+        return 0;
+    }
+
+    // Negative dw/dh: PICO-8 treats them as a flip + draw with abs size.
+    if (dw < 0) { flip_x = !flip_x; dw = -dw; dx -= dw; }
+    if (dh < 0) { flip_y = !flip_y; dh = -dh; dy -= dh; }
+
+    for (int py = 0; py < dh; py++)
+    {
+        // Map destination row to source row (nearest neighbour).
+        int src_y = flip_y ? (sh - 1 - (py * sh / dh)) : (py * sh / dh);
+        src_y += sy;
+
+        for (int px = 0; px < dw; px++)
+        {
+            // Map destination column to source column (nearest neighbour).
+            int src_x = flip_x ? (sw - 1 - (px * sw / dw)) : (px * sw / dw);
+            src_x += sx;
+
+            // Read sprite-sheet pixel (4-bit packed, 2 pixels per byte).
+            uint16_t sheet_addr = (uint16_t)((src_y & 0x7F) << 6) + (uint16_t)((src_x & 0x7F) >> 1);
+            uint8_t  sheet_byte = pico8_ram[sheet_addr];
+            uint8_t  color      = (src_x & 1) ? (sheet_byte >> 4) : (sheet_byte & 0x0F);
+
+            // Apply draw palette: transparency and remapping.
+            uint8_t pal_entry = pico8_ram[0x5f00 + color];
+            if (pal_entry & 0x10)
+            {
+                continue;
+            }
+            uint8_t mapped_color = pal_entry & 0x0F;
+
+            int32_t screen_x = dx + px;
+            int32_t screen_y = dy + py;
+            if (screen_x < 0 || screen_x >= 128 || screen_y < 0 || screen_y >= 128)
+            {
+                continue;
+            }
+
+            uint16_t screen_addr = 0x6000 + ((uint16_t)screen_y << 6) + ((uint16_t)screen_x >> 1);
+            uint8_t *screen_byte = &pico8_ram[screen_addr];
+            if (screen_x & 1)
+            {
+                *screen_byte = (*screen_byte & 0x0F) | (mapped_color << 4);
+            }
+            else
+            {
+                *screen_byte = (*screen_byte & 0xF0) | mapped_color;
+            }
+        }
+    }
+
+    return 0;
 }
 
 static int pico8_tline(lua_State* L)
