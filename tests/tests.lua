@@ -2,7 +2,7 @@
 
 A portable PICO-8 emulator written in C.
 
-Copyright (c) 2026, Michael Fitzmayer. All rights reserved.
+Copyright (c) 2025-2026, Michael Fitzmayer. All rights reserved.
 SPDX-License-Identifier: MIT
 
 --]]
