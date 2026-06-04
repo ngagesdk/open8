@@ -47,13 +47,17 @@ jobs:
       shell: pwsh
 
     - name: Clone open8
-      run: git clone https://github.com/ngagesdk/open8.git ${{ env.NGAGESDK }}/projects/open8
+      run: git clone https://github.com/ngagesdk/open8.git ${{ github.workspace }}/open8
       shell: pwsh
 
     - name: Build open8
       run: |
-        cmake -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake -G "Ninja" -S ${{ env.NGAGESDK }}/projects/open8 -B ${{ env.NGAGESDK }}/projects/open8/build -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
-        cmake --build ${{ env.NGAGESDK }}/projects/open8/build
+        cmake ^
+          -DCMAKE_PREFIX_PATH=${{ env.NGAGESDK }}/sdk/extras/lib/cmake ^
+          -G "Ninja" ^
+          -S ${{ github.workspace }}/open8 ^
+          -B ${{ github.workspace }}/open8/build ^
+          -DCMAKE_TOOLCHAIN_FILE=${{ env.NGAGESDK }}/cmake/ngage-toolchain.cmake
       shell: pwsh
 
     #- name: Archive open8.sis
