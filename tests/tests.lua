@@ -215,6 +215,17 @@ function test_math()
     assert_equal(sqrt(0.00), 0.0000, "sqrt(0.00)")
     assert_equal(sqrt(-1.0), 0.0000, "sqrt(-1.0)")
 
+    -- Integer-input tests: exercise the 32-bit fast path.
+    -- Perfect squares produce exact whole-number results.
+    assert_equal(sqrt(1),   1,  "sqrt(1)")
+    assert_equal(sqrt(4),   2,  "sqrt(4)")
+    assert_equal(sqrt(100), 10, "sqrt(100)")
+    -- Non-perfect-square integer: hex literal gives the exact fix32_t value.
+    -- floor(sqrt(3) * 65536) = 113511 = 0x1BB67
+    assert_equal(sqrt(3), 0x0001.bb67, "sqrt(3)")
+    -- floor(sqrt(8) * 65536) = 185363 = 0x2D413
+    assert_equal(sqrt(8), 0x0002.d413, "sqrt(8)")
+
     log("srand(1)")
     srand(1)
     assert_equal(rnd(1.00000), 0x0000.14b7, "rnd(1.00000)")

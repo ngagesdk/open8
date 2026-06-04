@@ -426,20 +426,47 @@ static inline fix32_t fix32_pow(fix32_t x, fix32_t y) {
     }
     /* Fast path: x^0.5 = sqrt(x) using integer bit-by-bit algorithm. */
     if (y == 0x8000) {
-        int64_t root = 0;
-        int64_t val = (int64_t)x << 16;
-        if (val > 0) {
-            int64_t a;
-            for (a = ((int64_t)1) << 46; a > val; a >>= 2)
-                ;
-            for (; a; a >>= 2, root >>= 1) {
-                if (val >= a + root) {
-                    val -= a + root;
-                    root += a << 1;
+        if (x <= 0) return 0;
+        /* Fast path: integer input - use 32-bit-only restoring sqrt,
+         * avoiding 64-bit arithmetic entirely.  Identical to the fast
+         * path in pico8_sqrt; see comments there for rationale. */
+        if ((x & 0xffff) == 0) {
+            uint32_t n    = (uint32_t)x >> 16;
+            uint32_t root = 0;
+            uint32_t rem  = 0;
+            uint32_t t;
+            int i;
+            for (i = 7; i >= 0; --i) {
+                rem = (rem << 2) | ((n >> (i * 2)) & 3u);
+                t = (root << 2) | 1u;
+                if (rem >= t) { rem -= t; root = (root << 1) | 1u; }
+                else          {            root <<= 1;               }
+            }
+            for (i = 0; i < 16; ++i) {
+                rem <<= 2;
+                t = (root << 2) | 1u;
+                if (rem >= t) { rem -= t; root = (root << 1) | 1u; }
+                else          {            root <<= 1;               }
+            }
+            return (fix32_t)root;
+        }
+        /* General path: fractional input - 64-bit loop. */
+        {
+            int64_t root = 0;
+            int64_t val = (int64_t)x << 16;
+            if (val > 0) {
+                int64_t a;
+                for (a = ((int64_t)1) << 46; a > val; a >>= 2)
+                    ;
+                for (; a; a >>= 2, root >>= 1) {
+                    if (val >= a + root) {
+                        val -= a + root;
+                        root += a << 1;
+                    }
                 }
             }
+            return (fix32_t)root;
         }
-        return (fix32_t)root;
     }
     return fix32_from_double(pow(fix32_to_double(x), fix32_to_double(y)));
 }
