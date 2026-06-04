@@ -14,6 +14,8 @@
 #include "app.h"
 #include "config.h"
 
+static SDL_AudioDeviceID audio_device;
+
 bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 {
 	SDL_SetHint("SDL_RENDER_VSYNC", "1");
@@ -54,9 +56,22 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 	}
 #endif
 
+	SDL_AudioSpec spec;
+	spec.channels = 1;
+	spec.format = SDL_AUDIO_S16;
+	spec.freq = 8000;
+
+	audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+	if (audio_device == 0)
+	{
+		SDL_Log("SDL_OpenAudioDevice: %s", SDL_GetError());
+		return false;
+	}
+
 	return true;
 }
 
 void destroy_app(void)
 {
+	SDL_CloseAudioDevice(audio_device);
 }
