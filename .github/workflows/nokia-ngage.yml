@@ -70,6 +70,7 @@ jobs:
     - name: Prepare open8 artifact directory
       run: |
         New-Item -ItemType Directory -Path NGAGE\System\Apps\open8 -Force
+        Copy-Item ${{ env.NGAGESDK }}\projects\open8\build\open8.exe NGAGE\System\Apps\open8\game.exe
         New-Item -ItemType Directory -Path NGAGE\System\Apps\open8\carts -Force
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\api.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\automata.p8.png NGAGE\System\Apps\open8\carts\
