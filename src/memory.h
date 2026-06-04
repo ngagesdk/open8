@@ -19,6 +19,7 @@ extern uint8_t pico8_ram[RAM_SIZE];
 
 bool init_memory(SDL_Renderer* renderer);
 void reset_memory(void);
+void reset_draw_state(void);
 void destroy_memory(void);
 void update_from_virtual_memory(SDL_Renderer* renderer);
 uint32_t crc32(const char* data, size_t start, size_t length);
