@@ -111,18 +111,18 @@ int decompress_mini(uint8 *in_p, uint8 *out_p, int max_len)
     // remove injected code (needed to be future compatible with PICO-8 C 0.1.7 / FILE_VERSION 8)
     // older versions will leave this code intact, allowing it to implement fallback 60fps support
 
-    if (strstr(out_p, FUTURE_CODE))
-    if (strlen(out_p)-((char *)strstr(out_p, FUTURE_CODE) - (char *)out_p) == strlen(FUTURE_CODE)) // at end
+    if (strstr((char *)out_p, FUTURE_CODE))
+    if (strlen((char *)out_p)-((char *)strstr((char *)out_p, FUTURE_CODE) - (char *)out_p) == strlen(FUTURE_CODE)) // at end
     {
-        out = out_p + strlen(out_p) - strlen(FUTURE_CODE);
+        out = out_p + strlen((char *)out_p) - strlen(FUTURE_CODE);
         *out = 0;
     }
 
     // queue circus music
-    if (strstr(out_p, FUTURE_CODE2))
-    if (strlen(out_p)-((char *)strstr(out_p, FUTURE_CODE2) - (char *)out_p) == strlen(FUTURE_CODE2)) // at end
+    if (strstr((char *)out_p, FUTURE_CODE2))
+    if (strlen((char *)out_p)-((char *)strstr((char *)out_p, FUTURE_CODE2) - (char *)out_p) == strlen(FUTURE_CODE2)) // at end
     {
-        out = out_p + strlen(out_p) - strlen(FUTURE_CODE2);
+        out = out_p + strlen((char *)out_p) - strlen(FUTURE_CODE2);
         *out = 0;
     }
 

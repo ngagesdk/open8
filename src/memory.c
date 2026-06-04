@@ -261,7 +261,7 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     SDL_RenderTexture(renderer, screen, NULL, &dest);
 }
 
-uint32_t crc32(const char* data, size_t start, size_t length)
+uint32_t crc32(const uint8_t* data, size_t start, size_t length)
 {
     uint32_t crc = CRC32_SEED;
 

@@ -22,7 +22,7 @@ void reset_memory(void);
 void reset_draw_state(void);
 void destroy_memory(void);
 void update_from_virtual_memory(SDL_Renderer* renderer);
-uint32_t crc32(const char* data, size_t start, size_t length);
+uint32_t crc32(const uint8_t* data, size_t start, size_t length);
 void init_crc32();
 
 #endif // MEMORY_H

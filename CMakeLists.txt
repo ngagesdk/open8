@@ -99,7 +99,6 @@ else()
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} z8lua)
 endif()
 
-target_link_libraries(open8 PRIVATE z8lua)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 include_directories(
