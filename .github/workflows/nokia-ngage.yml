@@ -77,7 +77,6 @@ jobs:
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\demo.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\hello.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\lukiprueba.p8.png NGAGE\System\Apps\open8\carts\
-        Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\marble_merger.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\p8scii.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\sort.p8.png NGAGE\System\Apps\open8\carts\
         Copy-Item ${{ env.NGAGESDK }}\projects\open8\export\carts\tajemartu.p8.png NGAGE\System\Apps\open8\carts\
