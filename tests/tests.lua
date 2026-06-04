@@ -410,6 +410,139 @@ function test_tables()
     tbl = {}
 end
 
+-- Palette transparency (palt).
+function test_palt()
+    -- palt() reset: color 0 transparent, all others opaque.
+    palt()
+    assert_equal(peek(0x5f00), 0x10, "palt() reset: color 0 transparent")
+    assert_equal(peek(0x5f01), 0x01, "palt() reset: color 1 opaque")
+    assert_equal(peek(0x5f0f), 0x0f, "palt() reset: color 15 opaque")
+
+    -- palt(col, false): make a color opaque.
+    palt(0, false)
+    assert_equal(peek(0x5f00), 0x00, "palt(0, false): color 0 opaque")
+
+    -- palt(col, true): make a color transparent.
+    palt(1, true)
+    assert_equal(peek(0x5f01), 0x11, "palt(1, true): color 1 transparent")
+
+    -- palt(mask): bit 0 (LSB) = color 15, bit 15 (MSB) = color 0.
+    palt(0x8001)
+    assert_equal(band(peek(0x5f00), 0x10), 0x10, "palt(0x8001): color 0 transparent")
+    assert_equal(band(peek(0x5f0f), 0x10), 0x10, "palt(0x8001): color 15 transparent")
+    assert_equal(band(peek(0x5f01), 0x10), 0x00, "palt(0x8001): color 1 opaque")
+
+    -- palt() reset to restore defaults.
+    palt()
+    assert_equal(band(peek(0x5f00), 0x10), 0x10, "palt() re-reset: color 0 transparent")
+    assert_equal(band(peek(0x5f01), 0x10), 0x00, "palt() re-reset: color 1 opaque")
+end
+
+-- Map get/set and drawing (mget, mset, map).
+function test_map()
+    -- mset/mget: rows 0-31 (stored at 0x2000).
+    mset(0, 0, 42)
+    assert_equal(mget(0, 0), 42, "mset/mget(0, 0, 42)")
+
+    mset(127, 31, 5)
+    assert_equal(mget(127, 31), 5, "mset/mget(127, 31, 5)")
+
+    -- mset/mget: rows 32-63 (stored at 0x1000, shared region).
+    mset(0, 32, 7)
+    assert_equal(mget(0, 32), 7, "mset/mget(0, 32, 7)")
+
+    mset(127, 63, 9)
+    assert_equal(mget(127, 63), 9, "mset/mget(127, 63, 9)")
+
+    -- Verify mset writes to the correct RAM address.
+    -- Row 5, col 10 -> 0x2000 + 5*128 + 10 = 0x228a.
+    mset(10, 5, 33)
+    assert_equal(peek(0x228a), 33, "mset(10, 5, 33): direct memory check")
+
+    -- map() drawing: fill sprite 1 with solid color 7, place at map cell (0,0).
+    -- Sprite 1: sprite_x_base = 4, sprite_y_base = 0.
+    -- Each row of 8 pixels occupies 4 bytes at address: row*64 + 4.
+    for dy = 0, 7 do
+        memset(dy * 64 + 4, 0x77, 4)
+    end
+    mset(0, 0, 1)
+    cls()
+    palt()
+    map(0, 0, 0, 0, 1, 1)
+    assert_equal(pget(0, 0), 7, "map() draws sprite 1 at screen (0,0)")
+    assert_equal(pget(7, 7), 7, "map() draws sprite 1 at screen (7,7)")
+
+    -- Sprite 0 at a map cell must not draw (transparent cell).
+    mset(0, 0, 0)
+    cls()
+    rectfill(0, 0, 7, 7, 5)
+    map(0, 0, 0, 0, 1, 1)
+    assert_equal(pget(0, 0), 5, "map() skips sprite 0 (transparent cell)")
+
+    -- Layer filter: sprite with matching flag is drawn.
+    poke(0x3000 + 1, 0x01)
+    mset(0, 0, 1)
+    cls()
+    map(0, 0, 0, 0, 1, 1, 0x01)
+    assert_equal(pget(0, 0), 7, "map() layer=1 draws sprite with flag bit 0")
+
+    -- Layer filter: sprite without matching flag is skipped.
+    poke(0x3000 + 1, 0x00)
+    cls()
+    rectfill(0, 0, 7, 7, 5)
+    map(0, 0, 0, 0, 1, 1, 0x01)
+    assert_equal(pget(0, 0), 5, "map() layer=1 skips sprite without flag")
+
+    -- Clean up.
+    palt()
+    mset(0, 0, 0)
+    mset(127, 31, 0)
+    mset(0, 32, 0)
+    mset(127, 63, 0)
+    mset(10, 5, 0)
+    poke(0x3000 + 1, 0x00)
+    for dy = 0, 7 do
+        memset(dy * 64 + 4, 0x00, 4)
+    end
+end
+
+function test_pal_sget()
+    -- sget: write a known nibble to spritesheet RAM and read it back.
+    -- Sprite 0, pixel (0,0) is at address 0x0000, low nibble.
+    poke(0x0000, 0x5a) -- low nibble = 0xa (10), high nibble = 0x5
+    assert_equal(sget(0, 0), 10, "sget(0,0) low nibble")
+    assert_equal(sget(1, 0), 5,  "sget(1,0) high nibble")
+
+    -- pal() reset: draw palette back to identity, color 0 transparent.
+    pal(0, 3)           -- remap color 0 -> 3 in draw palette
+    assert_equal(band(peek(0x5f00), 0x0f), 3, "pal(0,3): draw remap applied")
+    pal()               -- reset
+    assert_equal(band(peek(0x5f00), 0x0f), 0,    "pal() reset: color 0 identity")
+    assert_equal(band(peek(0x5f00), 0x10), 0x10, "pal() reset: color 0 transparent")
+    assert_equal(band(peek(0x5f01), 0x0f), 1,    "pal() reset: color 1 identity")
+
+    -- pal(c0,c1,1): display palette remap at 0x5f10.
+    pal(2, 7, 1)
+    assert_equal(band(peek(0x5f12), 0x0f), 7, "pal(2,7,1): display remap at 0x5f12")
+    pal()               -- reset
+    assert_equal(band(peek(0x5f12), 0x0f), 2, "pal() reset: display 0x5f12 identity")
+
+    -- draw remap: pal(7,col) causes spr to write col instead of 7.
+    for dy = 0, 7 do memset(dy * 64, 0x77, 4) end  -- sprite 0 = solid color 7
+    mset(0, 0, 0)
+    cls()
+    pal(7, 9)           -- remap 7 -> 9
+    palt(0, false)      -- draw color 0 opaque so sprite 0 isn't skipped
+    spr(0, 0, 0)
+    pal()               -- reset
+    palt()              -- reset
+    assert_equal(pget(0, 0), 9, "pal(7,9): spr draws remapped color 9")
+
+    -- Clean up spritesheet pixel.
+    poke(0x0000, 0x00)
+    for dy = 0, 7 do memset(dy * 64, 0x00, 4) end
+end
+
 function run_tests()
     init_crc32()
 
@@ -423,6 +556,9 @@ function run_tests()
     test_operators()
     test_p8scii()
     test_tables()
+    test_palt()
+    test_map()
+    test_pal_sget()
 end
 
 run_tests()

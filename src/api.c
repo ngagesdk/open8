@@ -567,12 +567,69 @@ static int pico8_ovalfill(lua_State* L)
 
 static int pico8_pal(lua_State* L)
 {
-    TO_BE_DONE;
+    int argc = lua_gettop(L);
+
+    if (argc == 0)
+    {
+        // Reset draw palette (identity + color 0 transparent) and display palette (identity).
+        for (int i = 0; i < 16; i++)
+        {
+            pico8_ram[0x5f00 + i] = (uint8_t)i | (i == 0 ? 0x10 : 0x00);
+            pico8_ram[0x5f10 + i] = (uint8_t)i;
+        }
+    }
+    else if (argc >= 2)
+    {
+        int c0 = fix32_to_int(luaL_checkinteger(L, 1)) & 0x0F;
+        int c1 = fix32_to_int(luaL_checkinteger(L, 2)) & 0x0F;
+        int p  = (argc >= 3) ? fix32_to_int(luaL_checkinteger(L, 3)) : 0;
+
+        if (p == 1)
+        {
+            // Display palette remap (0x5f10).
+            pico8_ram[0x5f10 + c0] = (pico8_ram[0x5f10 + c0] & 0xF0) | (uint8_t)c1;
+        }
+        else
+        {
+            // Draw palette remap (0x5f00), preserve transparency bit.
+            pico8_ram[0x5f00 + c0] = (pico8_ram[0x5f00 + c0] & 0xF0) | (uint8_t)c1;
+        }
+    }
+
+    return 0;
 }
 
 static int pico8_palt(lua_State* L)
 {
-    TO_BE_DONE;
+    int argc = lua_gettop(L);
+
+    if (argc == 0)
+    {
+        // Reset: color 0 transparent, all others opaque.
+        for (int i = 0; i < 16; i++)
+        {
+            pico8_ram[0x5f00 + i] = (pico8_ram[0x5f00 + i] & 0xEF) | (i == 0 ? 0x10 : 0x00);
+        }
+    }
+    else if (argc == 1)
+    {
+        // 16-bit bitmask: bit 0 (LSB) = color 15, bit 15 (MSB) = color 0.
+        uint16_t mask = (uint16_t)fix32_to_uint32(luaL_checknumber(L, 1));
+        for (int i = 0; i < 16; i++)
+        {
+            int transparent = (mask >> (15 - i)) & 1;
+            pico8_ram[0x5f00 + i] = (pico8_ram[0x5f00 + i] & 0xEF) | (transparent ? 0x10 : 0x00);
+        }
+    }
+    else
+    {
+        // Two args: col, t.
+        int col = fix32_to_int(luaL_checkinteger(L, 1)) & 0x0F;
+        bool transparent = lua_toboolean(L, 2);
+        pico8_ram[0x5f00 + col] = (pico8_ram[0x5f00 + col] & 0xEF) | (transparent ? 0x10 : 0x00);
+    }
+
+    return 0;
 }
 
 static int pico8_pget(lua_State* L)
@@ -707,19 +764,19 @@ static int pico8_rectfill(lua_State* L)
 
 static int pico8_sget(lua_State* L)
 {
-    TO_BE_DONE;
+    int x = fix32_to_int32(luaL_checknumber(L, 1)) & 0x7F;
+    int y = fix32_to_int32(luaL_checknumber(L, 2)) & 0x7F;
+
+    uint16_t addr = (uint16_t)(y << 6) + (uint16_t)(x >> 1);
+    uint8_t byte = pico8_ram[addr];
+    uint8_t color = (x & 1) ? (byte >> 4) : (byte & 0x0F);
+
+    lua_pushunsigned(L, fix32_value(color, 0));
+    return 1;
 }
 
-static int pico8_spr(lua_State* L)
+static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h, bool flip_x, bool flip_y)
 {
-    uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
-    int32_t x = fix32_to_int32(luaL_optunsigned(L, 2, 0));
-    int32_t y = fix32_to_int32(luaL_optunsigned(L, 3, 0));
-    uint8_t w = fix32_to_uint8(luaL_optunsigned(L, 4, fix32_value(1, 0)));
-    uint8_t h = fix32_to_uint8(luaL_optunsigned(L, 5, fix32_value(1, 0)));
-    bool flip_x = lua_toboolean(L, 6);
-    bool flip_y = lua_toboolean(L, 7);
-
     uint8_t width = w * 8;
     uint8_t height = h * 8;
 
@@ -738,9 +795,11 @@ static int pico8_spr(lua_State* L)
             uint8_t byte = pico8_ram[sprite_addr];
 
             uint8_t color = (sx & 1) ? (byte >> 4) : (byte & 0x0F);
+            uint8_t pal_entry = pico8_ram[0x5f00 + color];
 
-            if (color)
+            if (!(pal_entry & 0x10))
             {
+                uint8_t mapped_color = pal_entry & 0x0F;
                 int32_t px = x + dx;
                 int32_t py = y + dy;
                 if (px < 0 || px >= 128 || py < 0 || py >= 128)
@@ -750,15 +809,28 @@ static int pico8_spr(lua_State* L)
 
                 if (px & 1)
                 {
-                    *screen_byte = (*screen_byte & 0x0F) | (color << 4);
+                    *screen_byte = (*screen_byte & 0x0F) | (mapped_color << 4);
                 }
                 else
                 {
-                    *screen_byte = (*screen_byte & 0xF0) | color;
+                    *screen_byte = (*screen_byte & 0xF0) | mapped_color;
                 }
             }
         }
     }
+}
+
+static int pico8_spr(lua_State* L)
+{
+    uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
+    int32_t x = fix32_to_int32(luaL_optunsigned(L, 2, 0));
+    int32_t y = fix32_to_int32(luaL_optunsigned(L, 3, 0));
+    uint8_t w = fix32_to_uint8(luaL_optunsigned(L, 4, fix32_value(1, 0)));
+    uint8_t h = fix32_to_uint8(luaL_optunsigned(L, 5, fix32_value(1, 0)));
+    bool flip_x = lua_toboolean(L, 6);
+    bool flip_y = lua_toboolean(L, 7);
+
+    draw_sprite_n(n, x, y, w, h, flip_x, flip_y);
 
     return 0;
 }
@@ -780,24 +852,96 @@ static int pico8_tline(lua_State* L)
 
 // Map functions.
 
+static uint8_t map_get(int col, int row)
+{
+    if ((unsigned)col >= 128 || (unsigned)row >= 64)
+    {
+        return 0;
+    }
+    if (row < 32)
+    {
+        return pico8_ram[0x2000 + row * 128 + col];
+    }
+    else
+    {
+        return pico8_ram[0x1000 + (row - 32) * 128 + col];
+    }
+}
+
+static void map_set(int col, int row, uint8_t sprite)
+{
+    if ((unsigned)col >= 128 || (unsigned)row >= 64)
+    {
+        return;
+    }
+    if (row < 32)
+    {
+        pico8_ram[0x2000 + row * 128 + col] = sprite;
+    }
+    else
+    {
+        pico8_ram[0x1000 + (row - 32) * 128 + col] = sprite;
+    }
+}
+
 static int pico8_map(lua_State* L)
 {
-    TO_BE_DONE;
+    int celx = fix32_to_int(luaL_optnumber(L, 1, 0));
+    int cely = fix32_to_int(luaL_optnumber(L, 2, 0));
+    int sx   = fix32_to_int(luaL_optnumber(L, 3, 0));
+    int sy   = fix32_to_int(luaL_optnumber(L, 4, 0));
+    int celw = fix32_to_int(luaL_optnumber(L, 5, fix32_value(128, 0)));
+    int celh = fix32_to_int(luaL_optnumber(L, 6, fix32_value(64, 0)));
+    uint8_t layer = 0;
+
+    if (lua_gettop(L) >= 7)
+    {
+        layer = (uint8_t)fix32_to_uint32(luaL_checknumber(L, 7));
+    }
+
+    for (int ty = 0; ty < celh; ty++)
+    {
+        for (int tx = 0; tx < celw; tx++)
+        {
+            uint8_t sprite = map_get(celx + tx, cely + ty);
+
+            if (sprite == 0)
+            {
+                continue;
+            }
+
+            if (layer != 0 && (pico8_ram[0x3000 + sprite] & layer) != layer)
+            {
+                continue;
+            }
+
+            draw_sprite_n(sprite, sx + tx * 8, sy + ty * 8, 1, 1, false, false);
+        }
+    }
+
+    return 0;
 }
 
 static int pico8_mget(lua_State* L)
 {
-    TO_BE_DONE;
+    int col = fix32_to_int(luaL_checknumber(L, 1));
+    int row = fix32_to_int(luaL_checknumber(L, 2));
+    lua_pushnumber(L, fix32_from_uint8(map_get(col, row)));
+    return 1;
 }
 
 static int pico8_mset(lua_State* L)
 {
-    TO_BE_DONE;
+    int col     = fix32_to_int(luaL_checknumber(L, 1));
+    int row     = fix32_to_int(luaL_checknumber(L, 2));
+    uint8_t spr = (uint8_t)fix32_to_uint32(luaL_checknumber(L, 3));
+    map_set(col, row, spr);
+    return 0;
 }
 
 static int pico8_mapdraw(lua_State* L)
 {
-    TO_BE_DONE;
+    return pico8_map(L);
 }
 
 // Input functions.
@@ -1175,7 +1319,7 @@ static int pico8_del(lua_State* L)
             lua_pushnil(L);
             lua_rawseti(L, 1, len);
 
-            /* The matched value is still on the stack — return it. */
+            /* The matched value is still on the stack - return it. */
             return 1;
         }
         lua_pop(L, 1);                           /* discard tbl[i] */
@@ -1269,6 +1413,13 @@ static int pico8_log(lua_State* L)
 
 void init_api(lua_State* L)
 {
+    // Draw state defaults.
+    for (int i = 0; i < 16; i++)
+    {
+        pico8_ram[0x5f00 + i] = (uint8_t)i | (i == 0 ? 0x10 : 0x00);
+    }
+    pico8_ram[0x5f25] = 0x06; // Default draw color: light gray.
+
     // Audio.
     lua_pushcfunction(L, pico8_music);
     lua_setglobal(L, "music");

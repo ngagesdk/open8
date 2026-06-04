@@ -32,6 +32,7 @@ bool init_memory(SDL_Renderer* renderer)
     }
 
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
+    reset_draw_state();
 
 #ifdef __SYMBIAN32__
     screen_format = SDL_PIXELFORMAT_XRGB4444;
@@ -95,7 +96,20 @@ bool init_memory(SDL_Renderer* renderer)
 void reset_memory(void)
 {
     SDL_memset(&pico8_ram, 0x00, RAM_SIZE);
+    reset_draw_state();
+}
+
+void reset_draw_state(void)
+{
     pico8_ram[0x5f25] = 0x06; // Default color, light gray.
+
+    // Initialize draw palette: identity mapping, color 0 transparent by default.
+    // Initialize display palette: identity mapping.
+    for (int i = 0; i < 16; i++)
+    {
+        pico8_ram[0x5f00 + i] = (uint8_t)i | (i == 0 ? 0x10 : 0x00);
+        pico8_ram[0x5f10 + i] = (uint8_t)i;
+    }
 }
 
 void destroy_memory(void)
@@ -207,7 +221,9 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
                 for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
                 {
-                    *pixel = (uint16_t)expanded_map[*src];
+                    uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
+                    uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
+                    *pixel = (uint16_t)expanded_map[(hi << 4) | lo];
                 }
             }
             break;
@@ -218,7 +234,9 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
                 for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
                 {
-                    *pixel = expanded_map[*src];
+                    uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
+                    uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
+                    *pixel = expanded_map[(hi << 4) | lo];
                 }
             }
             break;
@@ -229,9 +247,8 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
                 for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
                 {
-                    uint8_t byte = *src;
-                    pixel[0] = palette_map[byte & 0xF];
-                    pixel[1] = palette_map[byte >> 4];
+                    pixel[0] = palette_map[pico8_ram[0x5f10 + (*src & 0x0F)]];
+                    pixel[1] = palette_map[pico8_ram[0x5f10 + (*src >> 4)]];
                 }
             }
             break;

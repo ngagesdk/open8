@@ -587,8 +587,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                         select_next_cartridge(renderer);
                         render_cartridge(renderer);
                         return true;
-                    case SDLK_HASH: // Show FPS on the N-Gage.
-                        render_cartridge(renderer);
                 }
             }
             else if (state == STATE_EMULATOR)
@@ -675,6 +673,7 @@ bool iterate_core(SDL_Renderer* renderer)
 
         if (has_draw)
         {
+            reset_draw_state();
             call_pico8_function(vm, "_draw");
         }
 
