@@ -604,6 +604,9 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 				destroy_vm();
 				reset_memory();
 				state = STATE_MENU;
+				has_draw = false;
+				has_update = false;
+				has_update60 = false;
 				return true;
 			}
 		}
