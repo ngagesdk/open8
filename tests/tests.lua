@@ -421,6 +421,21 @@ function test_tables()
     tbl = {}
 end
 
+function test_all_mutation()
+    local t = {1,2,3,4}
+    local seen = {}
+
+    for v in all(t) do
+        add(seen, v)
+        if v == 2 then del(t, 1) end
+    end
+
+    assert_equal(seen[1], 1)
+    assert_equal(seen[2], 2)
+    assert_equal(seen[3], 3)
+    assert_equal(seen[4], 4)
+end
+
 -- Palette transparency (palt).
 function test_palt()
     -- palt() reset: color 0 transparent, all others opaque.
@@ -960,6 +975,7 @@ function run_tests()
     test_operators()
     test_p8scii()
     test_tables()
+    test_all_mutation()
     test_palt()
     test_map()
     test_mapdraw()
