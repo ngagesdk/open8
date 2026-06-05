@@ -1546,14 +1546,14 @@ static int pico8_del(lua_State* L)
 
 	for (int i = 1; i <= len; i++)
 	{
-		lua_rawgeti(L, 1, i);                    /* push tbl[i] */
+		lua_rawgeti(L, 1, i); /* push tbl[i] */
 		if (lua_rawequal(L, -1, 2))
 		{
 			/* Shift tbl[i+1..len] down by one. */
 			for (int j = i; j < len; j++)
 			{
-				lua_rawgeti(L, 1, j + 1);        /* push tbl[j+1] */
-				lua_rawseti(L, 1, j);             /* tbl[j] = tbl[j+1], pops */
+				lua_rawgeti(L, 1, j + 1); /* push tbl[j+1] */
+				lua_rawseti(L, 1, j); /* tbl[j] = tbl[j+1], pops */
 			}
 
 			/* Nil out the last slot. */
@@ -1563,7 +1563,7 @@ static int pico8_del(lua_State* L)
 			/* The matched value is still on the stack - return it. */
 			return 1;
 		}
-		lua_pop(L, 1);                           /* discard tbl[i] */
+		lua_pop(L, 1); /* discard tbl[i] */
 	}
 
 	lua_pushnil(L);

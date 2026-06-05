@@ -612,7 +612,6 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 	case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 	{
 		const SDL_JoystickID which = event->gbutton.which;
-		SDL_Log("Gamepad #%" SDL_PRIu32 " button %s -> %s", which, SDL_GetGamepadStringForButton(event->gbutton.button), event->gbutton.down ? "PRESSED" : "RELEASED");
 
 		if (state == STATE_MENU)
 		{
@@ -626,19 +625,9 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 				select_next_cartridge(renderer);
 				render_cartridge(renderer);
 				return true;
-			case SDL_GAMEPAD_BUTTON_EAST: // TODO: A / Circle
+			case SDL_GAMEPAD_BUTTON_EAST:
+			case SDL_GAMEPAD_BUTTON_SOUTH:
 				run_cartridge(renderer);
-				return true;
-			}
-		}
-		else if (state == STATE_EMULATOR)
-		{
-			switch (event->gbutton.button)
-			{
-			case SDL_GAMEPAD_BUTTON_SOUTH: // TODO: B / Cross
-				destroy_vm();
-				reset_memory();
-				state = STATE_MENU;
 				return true;
 			}
 		}
