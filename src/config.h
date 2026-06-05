@@ -28,10 +28,10 @@
 #define FRAME_OFFSET_Y 17
 #else
 #define SCALE 3
-#define WINDOW_W 176
+#define WINDOW_W 208
 #define WINDOW_H 208
-#define WINDOW_FLAGS (SDL_WINDOW_UTILITY)
-#define FRAME_OFFSET_X 8
+#define WINDOW_FLAGS 0
+#define FRAME_OFFSET_X 24
 #define FRAME_OFFSET_Y 1
 #endif
 
