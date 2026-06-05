@@ -774,7 +774,14 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 			case SDL_GAMEPAD_BUTTON_SOUTH:
 				run_cartridge(renderer);
 				return true;
+			}
+		}
+		else if (state == STATE_EMULATOR)
+		{
+			switch (event->gbutton.button)
+			{
 			case SDL_GAMEPAD_BUTTON_BACK:
+			case SDL_GAMEPAD_BUTTON_START:
 				destroy_vm();
 				reset_memory();
 				state = STATE_MENU;
@@ -782,13 +789,12 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 				has_update = false;
 				has_update60 = false;
 				return true;
-
 			}
+			break;
 		}
-		break;
-	}
 	}
 	return true;
+	}
 }
 
 bool iterate_core(SDL_Renderer* renderer)
