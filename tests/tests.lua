@@ -422,18 +422,22 @@ function test_tables()
 end
 
 function test_all_mutation()
-    local t = {1,2,3,4}
+    local t = {1, 2, 3, 4}
     local seen = {}
 
     for v in all(t) do
         add(seen, v)
-        if v == 2 then del(t, 1) end
+
+        if v == 2 then
+            del(t, 1)
+        end
     end
 
-    assert_equal(seen[1], 1)
-    assert_equal(seen[2], 2)
-    assert_equal(seen[3], 3)
-    assert_equal(seen[4], 4)
+    -- We expect full traversal: 1,2,3,4
+    assert_equal(seen[1], 1, "all mutation: index 1")
+    assert_equal(seen[2], 2, "all mutation: index 2")
+    assert_equal(seen[3], 3, "all mutation: index 3")
+    assert_equal(seen[4], 4, "all mutation: index 4")
 end
 
 -- Palette transparency (palt).
