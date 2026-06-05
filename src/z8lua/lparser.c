@@ -1444,12 +1444,15 @@ static int test_then_block (LexState *ls, int *escapelist) {
   luaX_next(ls);  /* skip IF or ELSEIF */
   luaX_trackbraces(ls);  /* track braces for short IF */
   expr(ls, &v);  /* read condition */
-  short_if &= ls->t.token != TK_THEN && ls->t.token != TK_EOS
+  short_if &= ls->t.token != TK_THEN && ls->t.token != TK_DO && ls->t.token != TK_EOS
            && ls->braces == 0 && line == ls->linenumber;
   if (short_if)
     ls->emiteol = 1;
   else
-    checknext(ls, TK_THEN);
+    if (ls->t.token == TK_THEN || ls->t.token == TK_DO)
+      luaX_next(ls);
+    else
+      checknext(ls, TK_THEN);
   if (ls->t.token == TK_GOTO || ls->t.token == TK_BREAK) {
     luaK_goiffalse(ls->fs, &v);  /* will jump to label if condition is true */
     enterblock(fs, &bl, 0);  /* must enter block before 'goto' */
