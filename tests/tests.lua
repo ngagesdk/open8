@@ -14,7 +14,11 @@ function assert_equal(actual, expected, test_name)
     if actual == expected then
         log(test_name .. " passed")
     else
-        log(test_name .. " failed: expected " .. string.format("0x%04x", expected) .. " but got " .. string.format("0x%04x", actual))
+        log(
+            test_name ..
+            " failed: expected " .. tostring(expected) ..
+            " but got " .. tostring(actual)
+        )
         failed_tests += 1
     end
 end
