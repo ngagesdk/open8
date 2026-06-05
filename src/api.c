@@ -1181,7 +1181,38 @@ static int pico8_btnp(lua_State* L)
 		return 1;
 	}
 
-	int b = fix32_to_int(luaL_checkinteger(L, 1));
+	int b;
+	if (lua_type(L, 1) == LUA_TSTRING)
+	{
+		const char* str = luaL_checkstring(L, 1);
+		uint8_t glyph = str[0];
+
+		switch (glyph)
+		{
+			break;
+		case 139: // Left key.
+			b = 2;
+			break;
+		case 142: // O key.
+			b = 4;
+			break;
+		case 145: // Right key.
+			b = 3;
+			break;
+		default:
+		case 148: // Up key.
+			b = 0;
+			break;
+		case 151: // X key.
+			b = 5;
+			break;
+		}
+	}
+	else
+	{
+		b = fix32_to_int(luaL_checkinteger(L, 1));
+	}
+
 	int p = (argc >= 2) ? fix32_to_int(luaL_checkinteger(L, 2)) : 0;
 	if (p < 0 || p > 1 || b < 0 || b > 5)
 	{
@@ -1337,9 +1368,13 @@ static int pico8_peek(lua_State* L)
 	uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
 	unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-	if (len > RAM_SIZE - 1)
-	{
-		len = RAM_SIZE - 1;
+	/* Clamp length so we don't read past RAM end. */
+	if (addr >= RAM_SIZE) {
+		return 0;
+	}
+	unsigned int max_len = RAM_SIZE - addr;
+	if (len > max_len) {
+		len = max_len;
 	}
 
 	for (unsigned int i = 0; i < len; i++)
@@ -1355,14 +1390,21 @@ static int pico8_peek2(lua_State* L)
 	uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
 	unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-	if (len > RAM_SIZE - 1)
+	/* Each peek2 entry is 2 bytes. Clamp by available 16-bit words. */
+	if (addr >= RAM_SIZE)
 	{
-		len = RAM_SIZE - 1;
+		return 0;
+	}
+	unsigned int max_words = (RAM_SIZE - addr) / 2;
+	if (len > max_words)
+	{
+		len = max_words;
 	}
 
 	for (unsigned int i = 0; i < len; i++)
 	{
-		uint16_t data = (uint16_t)pico8_ram[addr + i] << 8 | (uint16_t)pico8_ram[addr + i + 1];
+		unsigned int pos = addr + i * 2;
+		uint16_t data = (uint16_t)pico8_ram[pos] << 8 | (uint16_t)pico8_ram[pos + 1];
 		lua_pushnumber(L, fix32_from_uint16(data));
 	}
 
@@ -1374,14 +1416,21 @@ static int pico8_peek4(lua_State* L)
 	uint16_t addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
 	unsigned int len = fix32_to_uint32(luaL_optunsigned(L, 2, fix32_value(1, 0)));
 
-	if (len > RAM_SIZE - 1)
+	/* Each peek4 entry is 4 bytes. Clamp by available 32-bit words. */
+	if (addr >= RAM_SIZE)
 	{
-		len = RAM_SIZE - 1;
+		return 0;
+	}
+	unsigned int max_words = (RAM_SIZE - addr) / 4;
+	if (len > max_words)
+	{
+		len = max_words;
 	}
 
 	for (unsigned int i = 0; i < len; i++)
 	{
-		uint32_t data = (uint32_t)pico8_ram[addr + i] << 24 | (uint32_t)pico8_ram[addr + i + 1] << 16 | (uint32_t)pico8_ram[addr + i + 2] << 8 | (uint32_t)pico8_ram[addr + i + 3];
+		unsigned int pos = addr + i * 4;
+		uint32_t data = (uint32_t)pico8_ram[pos] << 24 | (uint32_t)pico8_ram[pos + 1] << 16 | (uint32_t)pico8_ram[pos + 2] << 8 | (uint32_t)pico8_ram[pos + 3];
 		lua_pushnumber(L, fix32_from_uint32(data));
 	}
 	return len;

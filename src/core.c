@@ -133,14 +133,91 @@ static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
 // fill-pattern characters using the Lua C-API.
 static void patch_cart_code(cart_t* cart)
 {
+	// State machine: 0=normal, 1=double-quote string, 2=single-quote string,
+	//                3=line comment, 4=long string [[...]].
+	// Special bytes are only wrapped when in normal code (state 0).
 	size_t count = 0;
+	int state = 0;
 
-	// Count occurrences of preset fill-patterns.
+	// Pass 1: count special bytes that appear outside string literals and comments.
 	for (size_t i = 0; i < cart->code_size; i++)
 	{
-		if ((uint8_t)cart->code[i] >= 128 && (uint8_t)cart->code[i] <= 135)
+		unsigned char c = (unsigned char)cart->code[i];
+
+		if (state == 1) // Double-quoted string.
 		{
-			count++;
+			if (c == '\\')
+			{
+				i++; // Skip escaped character.
+			}
+			else if (c == '"')
+			{
+				state = 0;
+			}
+		}
+		else if (state == 2) // Single-quoted string.
+		{
+			if (c == '\\')
+			{
+				i++; // Skip escaped character.
+			}
+			else if (c == '\'')
+			{
+				state = 0;
+			}
+		}
+		else if (state == 3) // Line comment.
+		{
+			if (c == '\n')
+			{
+				state = 0;
+			}
+		}
+		else if (state == 4) // Long string.
+		{
+			if (c == ']' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == ']')
+			{
+				state = 0;
+				i++;
+			}
+		}
+		else // Normal code.
+		{
+			if (c == '"')
+			{
+				state = 1;
+			}
+			else if (c == '\'')
+			{
+				state = 2;
+			}
+			else if (c == '-' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == '-')
+			{
+				i++;
+				if (i + 2 < cart->code_size && (unsigned char)cart->code[i + 1] == '[' && (unsigned char)cart->code[i + 2] == '[')
+				{
+					state = 4;
+					i += 2;
+				}
+				else
+				{
+					state = 3;
+				}
+			}
+			else if (c == '[' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == '[')
+			{
+				state = 4;
+				i++;
+			}
+			else if ((c >= 128 && c <= 135)
+				|| c == 139  // Left key.
+				|| c == 142  // O key.
+				|| c == 145  // Right key.
+				|| c == 148  // Up key.
+				|| c == 151) // X key.
+			{
+				count++;
+			}
 		}
 	}
 
@@ -151,35 +228,100 @@ static void patch_cart_code(cart_t* cart)
 
 	// Compute new size with added quotes.
 	size_t new_size = cart->code_size + count * 2;
-	uint8_t* new_code = (uint8_t*)SDL_realloc(cart->code, new_size + 1); // +1 for null terminator.
+	uint8_t* new_code = (uint8_t*)SDL_malloc(new_size + 1); // +1 for null terminator.
 	if (!new_code)
 	{
 		SDL_Log("Memory reallocation failed!");
 		return;
 	}
 
-	cart->code = new_code;
-
-	// Insert quotes while shifting data from end to start.
-	char* src = cart->code + cart->code_size - 1;
-	char* dest = cart->code + new_size;
-	*dest-- = '\0'; // Null-terminate the new string.
-
-	for (size_t i = cart->code_size; i-- > 0;)
+	// Pass 2: copy bytes into new_code, wrapping special bytes outside string literals.
+	state = 0;
+	size_t j = 0;
+	for (size_t i = 0; i < cart->code_size; i++)
 	{
-		if ((unsigned char)*src >= 128 && (unsigned char)*src <= 135)
-		{
-			*dest-- = '"';
-			*dest-- = *src;
-			*dest-- = '"';
-		}
-		else
-		{
-			*dest-- = *src;
-		}
-		src--;
-	}
+		unsigned char c = (unsigned char)cart->code[i];
 
+		if (state == 1) // Double-quoted string.
+		{
+			new_code[j++] = c;
+			if (c == '\\' && i + 1 < cart->code_size)
+				new_code[j++] = (unsigned char)cart->code[++i]; // Copy escaped character.
+			else if (c == '"')
+				state = 0;
+		}
+		else if (state == 2) // Single-quoted string.
+		{
+			new_code[j++] = c;
+			if (c == '\\' && i + 1 < cart->code_size)
+			{
+				new_code[j++] = (unsigned char)cart->code[++i]; // Copy escaped character.
+			}
+			else if (c == '\'')
+			{
+				state = 0;
+			}
+		}
+		else if (state == 3) // Line comment.
+		{
+			new_code[j++] = c;
+			if (c == '\n')
+			{
+				state = 0;
+			}
+		}
+		else if (state == 4) // Long string.
+		{
+			new_code[j++] = c;
+			if (c == ']' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == ']')
+			{
+				new_code[j++] = (unsigned char)cart->code[++i];
+				state = 0;
+			}
+		}
+		else // Normal code.
+		{
+			if (c == '"') { state = 1; new_code[j++] = c; }
+			else if (c == '\'') { state = 2; new_code[j++] = c; }
+			else if (c == '-' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == '-')
+			{
+				new_code[j++] = c;
+				new_code[j++] = (unsigned char)cart->code[++i];
+				if (i + 2 < cart->code_size && (unsigned char)cart->code[i + 1] == '[' && (unsigned char)cart->code[i + 2] == '[')
+				{
+					new_code[j++] = (unsigned char)cart->code[++i];
+					new_code[j++] = (unsigned char)cart->code[++i];
+					state = 4;
+				}
+				else state = 3;
+			}
+			else if (c == '[' && i + 1 < cart->code_size && (unsigned char)cart->code[i + 1] == '[')
+			{
+				state = 4;
+				new_code[j++] = c;
+				new_code[j++] = (unsigned char)cart->code[++i];
+			}
+			else if ((c >= 128 && c <= 135)
+				|| c == 139  // Left key.
+				|| c == 142  // O key.
+				|| c == 145  // Right key.
+				|| c == 148  // Up key.
+				|| c == 151) // X key.
+			{
+				new_code[j++] = '"';
+				new_code[j++] = c;
+				new_code[j++] = '"';
+			}
+			else
+			{
+				new_code[j++] = c;
+			}
+		}
+	}
+	new_code[j] = '\0';
+
+	SDL_free(cart->code);
+	cart->code = new_code;
 	cart->code_size = new_size;
 }
 
@@ -632,6 +774,15 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 			case SDL_GAMEPAD_BUTTON_SOUTH:
 				run_cartridge(renderer);
 				return true;
+			case SDL_GAMEPAD_BUTTON_BACK:
+				destroy_vm();
+				reset_memory();
+				state = STATE_MENU;
+				has_draw = false;
+				has_update = false;
+				has_update60 = false;
+				return true;
+
 			}
 		}
 		break;
