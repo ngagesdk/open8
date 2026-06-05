@@ -1183,7 +1183,6 @@ static int pico8_btnp(lua_State* L)
 
 	int b = fix32_to_int(luaL_checkinteger(L, 1));
 	int p = (argc >= 2) ? fix32_to_int(luaL_checkinteger(L, 2)) : 0;
-
 	if (p < 0 || p > 1 || b < 0 || b > 5)
 	{
 		lua_pushboolean(L, 0);
@@ -1522,13 +1521,36 @@ static int pico8_all(lua_State* L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
 
-	lua_pushvalue(L, 1);
+	/* Make a compact snapshot copy of the array portion of the table.
+	 * This makes the iterator resilient to mutations (del/add) of the
+	 * original table while iterating, matching PICO-8 semantics.
+	 * The copy packs non-nil values into a new dense table. */
+	size_t len = lua_rawlen(L, 1);
+	lua_newtable(L); /* copy table */
+	int copy_index = lua_gettop(L);
+
+	size_t dest = 0;
+	for (size_t i = 1; i <= len; i++)
+	{
+		lua_rawgeti(L, 1, (int)i); /* push original[i] */
+		if (!lua_isnil(L, -1))
+		{
+			dest++;
+			lua_rawseti(L, copy_index, (int)dest); /* copy[dest] = value, pops value */
+		}
+		else
+		{
+			lua_pop(L, 1);
+		}
+	}
+
+	/* Push the snapshot and an initial index 0 as upvalues for the iterator. */
+	lua_pushvalue(L, copy_index); /* push copy */
 	lua_pushinteger(L, 0);
 	lua_pushcclosure(L, pico8_all_iter, 2);
 
 	return 1;
 }
-
 
 static int pico8_count(lua_State* L)
 {
