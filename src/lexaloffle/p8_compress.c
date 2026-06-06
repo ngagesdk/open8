@@ -103,6 +103,8 @@ int decompress_mini(uint8 *in_p, uint8 *out_p, int max_len)
             block_offset += val % 16;
             block_length = (val / 16) + 2;
 
+            if (block_offset == 0 || (out - out_p) < block_offset || out + block_length > out_p + len)
+                return 1; // corrupt data: back-reference out of bounds
             memcpy(out, out - block_offset, block_length);
             out += block_length;
         }
