@@ -933,6 +933,14 @@ static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h,
 
 static int pico8_spr(lua_State* L)
 {
+	/* Be defensive: some carts may attempt to call spr(nil) when an object's
+	 * spr field is missing. Instead of raising a Lua type error, silently
+	 * ignore the call which matches the robustness of the original PICO-8. */
+	if (lua_isnoneornil(L, 1) || !lua_isnumber(L, 1))
+	{
+		return 0;
+	}
+
 	uint8_t n = fix32_to_uint8(luaL_checkunsigned(L, 1));
 	int32_t x = fix32_to_int32(luaL_optunsigned(L, 2, 0));
 	int32_t y = fix32_to_int32(luaL_optunsigned(L, 3, 0));
@@ -1598,6 +1606,10 @@ static int pico8_all(lua_State* L)
 	lua_pushinteger(L, 0);
 	lua_pushcclosure(L, pico8_all_iter, 2);
 
+	/* remove the temporary copy table left on the stack so only the
+	 * iterator closure remains as the return value */
+	lua_remove(L, copy_index);
+
 	return 1;
 }
 
@@ -1646,13 +1658,35 @@ static int pico8_foreach(lua_State* L)
 	luaL_checktype(L, 1, LUA_TTABLE);
 	luaL_checktype(L, 2, LUA_TFUNCTION);
 
-	int len = (int)lua_rawlen(L, 1);
-	for (int i = 1; i <= len; i++)
+	/* Make a compact snapshot copy of the array portion of the table so
+	 * that mutations (add/del) performed by the callback do not affect the
+	 * iteration order or cause duplicate/skip behaviour. This matches PICO-8
+	 * semantics and mirrors the approach used by pico8_all(). */
+	size_t len = lua_rawlen(L, 1);
+	lua_newtable(L); /* copy */
+	int copy_index = lua_gettop(L);
+
+	size_t dest = 0;
+	for (size_t i = 1; i <= len; i++)
 	{
-		/* Push fn first, then item.  If item is nil we pop both and skip,
-		 * otherwise lua_call(1,0) consumes them with no extra pop needed. */
+		lua_rawgeti(L, 1, (int)i); /* push original[i] */
+		if (!lua_isnil(L, -1))
+		{
+			dest++;
+			lua_rawseti(L, copy_index, (int)dest); /* copy[dest] = value, pops value */
+		}
+		else
+		{
+			lua_pop(L, 1);
+		}
+	}
+
+	int copy_len = (int)lua_rawlen(L, copy_index);
+	for (int i = 1; i <= copy_len; i++)
+	{
 		lua_pushvalue(L, 2);      /* fn */
-		lua_rawgeti(L, 1, i);     /* item */
+		lua_rawgeti(L, copy_index, i); /* item */
+		/* item should never be nil in our dense copy, but check defensively */
 		if (lua_isnil(L, -1))
 		{
 			lua_pop(L, 2);
@@ -1662,6 +1696,9 @@ static int pico8_foreach(lua_State* L)
 			lua_call(L, 1, 0);
 		}
 	}
+
+	/* remove the temporary copy table */
+	lua_pop(L, 1);
 
 	return 0;
 }
