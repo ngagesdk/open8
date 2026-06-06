@@ -1210,6 +1210,39 @@ static int pico8_mapdraw(lua_State* L)
 
 // Input functions.
 
+// Parse a button argument which may be either a numeric value or a single-byte
+// string containing a special glyph. Returns button index 0..5 on success,
+// or -1 on error.
+static int parse_button_arg(lua_State* L, int idx)
+{
+	if (lua_type(L, idx) == LUA_TSTRING)
+	{
+		const char* str = luaL_checkstring(L, idx);
+		uint8_t glyph = (uint8_t)str[0];
+
+		switch (glyph)
+		{
+		case 131: // Down key.
+			return 3;
+		case 139: // Left key.
+			return 0;
+		case 142: // O key.
+			return 4;
+		case 145: // Right key.
+			return 1;
+		case 148: // Up key.
+			return 2;
+		case 151: // X key.
+			return 5;
+		default:
+			return -1;
+		}
+	}
+
+	/* Fallback: numeric button index (PICO-8 uses fix32 numbers). */
+	return fix32_to_int(luaL_checknumber(L, idx));
+}
+
 static int pico8_btn(lua_State* L)
 {
 	int argc = lua_gettop(L);
@@ -1220,10 +1253,11 @@ static int pico8_btn(lua_State* L)
 		return 1;
 	}
 
-	int b = (int)(lua_tonumber(L, 1) >> 16);
-	int p = (argc >= 2) ? (int)(lua_tonumber(L, 2) >> 16) : 0;
+	int b = parse_button_arg(L, 1);
 
-	if ((unsigned)p > 1 || (unsigned)b > 5)
+	int p = (argc >= 2) ? fix32_to_int(luaL_checknumber(L, 2)) : 0;
+
+	if ((unsigned)p > 1 || b < 0 || (unsigned)b > 5)
 	{
 		lua_pushboolean(L, 0);
 		return 1;
@@ -1269,39 +1303,9 @@ static int pico8_btnp(lua_State* L)
 		return 1;
 	}
 
-	int b;
-	if (lua_type(L, 1) == LUA_TSTRING)
-	{
-		const char* str = luaL_checkstring(L, 1);
-		uint8_t glyph = str[0];
+	int b = parse_button_arg(L, 1);
 
-		switch (glyph)
-		{
-			break;
-		case 139: // Left key.
-			b = 2;
-			break;
-		case 142: // O key.
-			b = 4;
-			break;
-		case 145: // Right key.
-			b = 3;
-			break;
-		default:
-		case 148: // Up key.
-			b = 0;
-			break;
-		case 151: // X key.
-			b = 5;
-			break;
-		}
-	}
-	else
-	{
-		b = fix32_to_int(luaL_checkinteger(L, 1));
-	}
-
-	int p = (argc >= 2) ? fix32_to_int(luaL_checkinteger(L, 2)) : 0;
+	int p = (argc >= 2) ? fix32_to_int(luaL_checknumber(L, 2)) : 0;
 	if (p < 0 || p > 1 || b < 0 || b > 5)
 	{
 		lua_pushboolean(L, 0);
