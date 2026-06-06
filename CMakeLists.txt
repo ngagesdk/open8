@@ -18,15 +18,16 @@ else()
 endif()
 
 set(open8_sources
-  ${PROJECT_SOURCE_DIR}/src/main.c
-  ${PROJECT_SOURCE_DIR}/src/api.c
-  ${PROJECT_SOURCE_DIR}/src/app.c
-  ${PROJECT_SOURCE_DIR}/src/auxiliary.c
-  ${PROJECT_SOURCE_DIR}/src/core.c
-  ${PROJECT_SOURCE_DIR}/src/memory.c
-  ${PROJECT_SOURCE_DIR}/src/p8scii.c
-  ${PROJECT_SOURCE_DIR}/src/lexaloffle/p8_compress.c
-  ${PROJECT_SOURCE_DIR}/src/lexaloffle/pxa_compress_snippets.c)
+  src/icon.rc
+  src/main.c
+  src/api.c
+  src/app.c
+  src/auxiliary.c
+  src/core.c
+  src/memory.c
+  src/p8scii.c
+  src/lexaloffle/p8_compress.c
+  src/lexaloffle/pxa_compress_snippets.c)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_executable(open8 ${open8_sources})
@@ -36,11 +37,11 @@ endif()
 
 if (NGAGESDK)
   set(open8_app_sources
-    ${PROJECT_SOURCE_DIR}/src/ngage/ngage.cpp
-    ${PROJECT_SOURCE_DIR}/src/ngage/ngage_application.cpp
-    ${PROJECT_SOURCE_DIR}/src/ngage/ngage_appui.cpp
-    ${PROJECT_SOURCE_DIR}/src/ngage/ngage_appview.cpp
-    ${PROJECT_SOURCE_DIR}/src/ngage/ngage_document.cpp
+    src/ngage/ngage.cpp
+    src/ngage/ngage_application.cpp
+    src/ngage/ngage_appui.cpp
+    src/ngage/ngage_appview.cpp
+    src/ngage/ngage_document.cpp
   )
 
   set(open8_app_libs

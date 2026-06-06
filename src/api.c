@@ -416,10 +416,16 @@ static int pico8_stat(lua_State* L)
 			uint64_t now = SDL_GetTicks();
 			double elapsed = (double)(now - pico8_frame_start);
 			double usage = elapsed / (double)pico8_frame_ms;
-			if (usage < 0.0) usage = 0.0;
-			if (usage > 4.0) usage = 4.0; // clamp to some sane upper bound
+			if (usage < 0.0)
+			{
+				usage = 0.0;
+			}
+			if (usage > 4.0)
+			{
+				usage = 4.0; // clamp to some sane upper bound
+			}
 			// Convert to pico8 fix32-style number (store as Lua number)
-			lua_pushnumber(L, usage);
+			lua_pushnumber(L, fix32_from_double(usage));
 		}
 		break;
 	}
