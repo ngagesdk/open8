@@ -7,30 +7,32 @@
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 
-## About the project
+## About the Project
 
-open8 is a PICO-8 emulator written in C99, currently under active development.
-Designed for portability, it aims to run on a wide range of platforms, including
-the Nokia N-Gage. Any system supported by
-[Simple DirectMedia Layer 3](https://www.libsdl.org/) should be capable of
-running open8.
+open8 is a PICO-8 emulator written in **C99** and currently under active development.
+Built with portability as a primary goal, it is designed to run on a wide variety
+of platforms—including devices such as the Nokia N-Gage. In principle, any system
+supported by **SDL3** ([**Simple DirectMedia Layer 3**](https://www.libsdl.org/))
+should`be able to run open8.
 
-## Why?
+## Why Another PICO-8 Emulator?
 
-Arn't there already a lot of other PICO-8 emulators such as
+There are already several excellent PICO-8 emulators available, including
 [fake-08](https://github.com/jtothebell/fake-08),
 [pemsa](https://github.com/egordorichev/pemsa) and
-[retro8](https://github.com/Jakz/retro8)? Why do we need another one?
+[retro8](https://github.com/Jakz/retro8). Each of these projects serves its
+own purpose and has contributed significantly to the community.
 
-All the projects mentioned here are written in relatively modern C++.  That's fine and
-all of these projects have their raison d'être, but this poses problems for older platforms.
+However, most existing emulators are written in modern C++, which can present
+challenges when targeting older hardware and operating systems. These platforms
+often have limited compiler support and may struggle with newer language features.
 
-The main focus of open8 is on portability, especially with regard to the retro
-homebrew scene.  Keeping the project source code in C helps to maintain portability.
-
-## Screenshots
-
-![Celeste 2](media/screenshot-1.png) ![Porter](media/screenshot-2.png)
+open8 takes a different approach by using **C99**, prioritizing portability and
+compatibility across a broad range of systems. This focus makes it particularly
+well-suited for the retro homebrew community, where support for legacy hardware
+is often a key requirement. By keeping the codebase in C, open8 aims to remain
+accessible, lightweight, and easy to port to unconventional or
+resource-constrained platforms.
 
 ## Licence and Credits
 
