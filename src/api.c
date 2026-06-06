@@ -1235,7 +1235,7 @@ static int parse_button_arg(lua_State* L, int idx)
 		case 151: // X key.
 			return 5;
 		default:
-			return -1;
+			return -1;	
 		}
 	}
 

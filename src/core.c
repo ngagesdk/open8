@@ -732,9 +732,11 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 			}
 			switch (event->key.key)
 			{
+#ifndef __EMSCRIPTEN__
 			case SDLK_SOFTLEFT:
 			case SDLK_ESCAPE:
 				return false;
+#endif
 #ifdef __SYMBIAN32__
 			case SDLK_5:
 			case SDLK_KP_5:

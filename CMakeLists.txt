@@ -1,7 +1,3 @@
-# Do not modify this file unless absolutely necessary.
-# All project-specific settings can be found in the file:
-# project_config.cmake
-
 cmake_minimum_required(VERSION 3.10)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -119,4 +115,20 @@ if (NINTENDO_3DS)
     open8
     ROMFS "${ROMFS_DIR}"
     SMDH "${SMDH_FILE}")
+
+elseif(EMSCRIPTEN)
+  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
+  target_link_options(open8 PRIVATE
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/api.p8.png@carts/api.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/automata.p8.png@carts/automata.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/celeste.p8.png@carts/celeste.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/demo.p8.png@carts/demo.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/hello.p8.png@carts/hello.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/lukiprueba.p8.png@carts/lukiprueba.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/p8scii.p8.png@carts/p8scii.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/porterpatch1.p8.png@carts/porterpatch1.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/sort.p8.png@carts/sort.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/waves.p8.png@carts/waves.p8.png"
+  )
+  set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
 endif()

@@ -19,6 +19,29 @@
       ]
     },
     {
+      "name": "emscripten-wasm32-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}/out/build/${name}",
+      "installRoot": "${projectDir}/out/install/${name}",
+      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=\"${env.EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake\"",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "emscripten" ],
+      "variables": [
+        {
+          "name": "CMAKE_INTERPROCEDURAL_OPTIMIZATION",
+          "value": "ON",
+          "type": "STRING"
+        },
+        {
+          "name": "EMSCRIPTEN_KEEP_ASSERTIONS",
+          "value": "OFF",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
       "name": "x86-Release",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",

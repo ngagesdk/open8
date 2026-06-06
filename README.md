@@ -2,10 +2,13 @@
 
 ![open8 logo](media/logo.png)
 
+[![Emscripten](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml)
+[![Linux](https://github.com/ngagesdk/open8/actions/workflows/linux.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)
 [![Nokia N-Gage](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/nokia-ngage.yml)
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
+[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f)](https://ngagesdk.de/open8)
 
 ## About the Project
 

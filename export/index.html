@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:title" content="open8 - A portable PICO-8 emulator written in C99. ">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ngagesdk.de/open8">
+    <meta property="og:image" content="/ogp-1200x1200.png">
+
+    <title>open8</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+  <body>
+      <div class="emscripten_border">
+          <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+      </div>
+      <div class="emscripten_controls">
+          <input type="checkbox" id="resize">Resize canvas
+          <input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer
+          <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
+      </div>
+
+      <script async src="open8.js"></script>
+  </body>
+</html>

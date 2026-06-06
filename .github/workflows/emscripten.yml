@@ -1,0 +1,45 @@
+name: Emscripten
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Setup Emscripten SDK
+        uses: emscripten-core/setup-emsdk@v15
+        with:
+          version: 5.0.1
+
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Configure with CMake (Emscripten)
+        run: |
+          emcmake cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build with CMake (Emscripten)
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Archive open8
+        uses: actions/upload-artifact@v4
+        with:
+          name: open8-Emscripten
+          path: export
