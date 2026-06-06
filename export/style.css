@@ -11,7 +11,11 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: auto;
+    /* Make the border fill the viewport so flex centering also works vertically.
+       Use viewport units (min-height:100vh) to be robust when parent heights aren't fixed. */
+    box-sizing: border-box;
+    min-height: 100vh;
+    width: 100%;
 }
 
 canvas.emscripten {
