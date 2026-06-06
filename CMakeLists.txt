@@ -131,4 +131,7 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/waves.p8.png@carts/waves.p8.png"
   )
   set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
+
+elseif(UNIX)
+  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} m)
 endif()
