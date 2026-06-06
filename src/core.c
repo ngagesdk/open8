@@ -809,10 +809,11 @@ bool iterate_core(SDL_Renderer* renderer)
 	}
 	else if (state == STATE_EMULATOR)
 	{
-#ifndef __SYMBIAN32__
 		Uint64 frame_start = SDL_GetTicks();
 		Uint32 frame_ms = has_update60 ? 1000u / 60u : 1000u / 30u;
-#endif
+		// Expose timing to API for stat(1) CPU usage reporting.
+		pico8_frame_start = frame_start;
+		pico8_frame_ms = frame_ms;
 
 		if (has_update)
 		{
@@ -835,11 +836,11 @@ bool iterate_core(SDL_Renderer* renderer)
 		update_from_virtual_memory(renderer);
 		SDL_RenderPresent(renderer);
 
-#ifndef __SYMBIAN32__
 		Uint64 elapsed = SDL_GetTicks() - frame_start;
+#ifndef __SYMBIAN32__
 		if (elapsed < frame_ms)
 		{
-			SDL_Delay((Uint32)(frame_ms - elapsed));
+			SDL_Delay((Uint32)(frame_ms - elapsed));	
 		}
 #endif
 

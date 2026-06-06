@@ -32,6 +32,11 @@ static fix32_t seed_lo, seed_hi;
 
 static fix32_t seconds_since_start;
 
+// Frame timing info provided by core.c (frame_start in ms, frame_ms target in ms).
+// These are declared in api.h and set inside core.c each frame.
+uint64_t pico8_frame_start = 0;
+uint32_t pico8_frame_ms = 0;
+
 // Input state: tracks how many consecutive frames each button has been held.
 // Index [player][button], players 0-1, buttons 0-5.
 static uint8_t btn_held_frames[2][6];
@@ -376,6 +381,62 @@ static int pico8_dget(lua_State* L)
 }
 
 static int pico8_dset(lua_State* L)
+{
+	TO_BE_DONE;
+}
+
+// Debugging functions.
+
+static int pico8_assert(lua_State* L)
+{
+	TO_BE_DONE;
+}
+
+static int pico8_printh(lua_State* L)
+{
+	TO_BE_DONE;
+}
+
+static int pico8_stat(lua_State* L)
+{
+	uint32_t id = fix32_to_uint32(luaL_checkunsigned(L, 1));
+
+	switch (id)
+	{
+	case 1:
+	{
+		// Return CPU usage as fraction [0,1].
+		// Usage = elapsed_time_since_frame_start / frame_ms.
+		if (pico8_frame_ms == 0)
+		{
+			lua_pushnumber(L, 0);
+		}
+		else
+		{
+			uint64_t now = SDL_GetTicks();
+			double elapsed = (double)(now - pico8_frame_start);
+			double usage = elapsed / (double)pico8_frame_ms;
+			if (usage < 0.0) usage = 0.0;
+			if (usage > 4.0) usage = 4.0; // clamp to some sane upper bound
+			// Convert to pico8 fix32-style number (store as Lua number)
+			lua_pushnumber(L, usage);
+		}
+		break;
+	}
+	case 26:
+		lua_pushnumber(L, 0);
+		break;
+	}
+
+	return 1;
+}
+
+static int pico8_stop(lua_State* L)
+{
+	TO_BE_DONE;
+}
+
+static int pico8_trace(lua_State* L)
 {
 	TO_BE_DONE;
 }
@@ -1504,6 +1565,12 @@ static int pico8_poke4(lua_State* L)
 	return 0;
 }
 
+// String functions.
+static int pico8_sub(lua_State* L)
+{
+	TO_BE_DONE;
+}
+
 // System functions.
 
 static int pico8_menuitem(lua_State* L)
@@ -1791,6 +1858,18 @@ void init_api(lua_State* L)
 	lua_pushcfunction(L, pico8_dset);
 	lua_setglobal(L, "dset");
 
+	// Debugging.
+	lua_pushcfunction(L, pico8_assert);
+	lua_setglobal(L, "assert");
+	lua_pushcfunction(L, pico8_printh);
+	lua_setglobal(L, "printh");
+	lua_pushcfunction(L, pico8_stat);
+	lua_setglobal(L, "stat");
+	lua_pushcfunction(L, pico8_stop);
+	lua_setglobal(L, "stop");
+	lua_pushcfunction(L, pico8_trace);
+	lua_setglobal(L, "trace");
+
 	// Flow-control.
 	lua_pushcfunction(L, pico8_time);
 	lua_setglobal(L, "time");
@@ -1902,7 +1981,11 @@ void init_api(lua_State* L)
 	lua_pushcfunction(L, pico8_poke4);
 	lua_setglobal(L, "poke4");
 
-	// System
+	// Strings.
+	lua_pushcfunction(L, pico8_sub);
+	lua_setglobal(L, "sub");
+
+	// System.
 	lua_pushcfunction(L, pico8_menuitem);
 	lua_setglobal(L, "menuitem");
 	lua_pushcfunction(L, pico8_extcmd);
