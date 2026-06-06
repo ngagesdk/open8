@@ -702,9 +702,22 @@ static int pico8_pal(lua_State* L)
 	}
 	else if (argc >= 2)
 	{
-		int c0 = fix32_to_int(luaL_checkinteger(L, 1)) & 0x0F;
-		int c1 = fix32_to_int(luaL_checkinteger(L, 2)) & 0x0F;
-		int p = (argc >= 3) ? fix32_to_int(luaL_checkinteger(L, 3)) : 0;
+        /* Some carts compute indices that can occasionally be out-of-range
+		 * and yield nil when indexing tables; historically PICO-8 did not
+		 * crash in these situations. Treat a missing/nil target color as
+		 * an identity (no-op) mapping.
+		 */
+		int c0 = fix32_to_int(luaL_checknumber(L, 1)) & 0x0F;
+		int c1;
+		if (lua_isnoneornil(L, 2))
+		{
+			c1 = c0;
+		}
+		else
+		{
+			c1 = fix32_to_int(luaL_checknumber(L, 2)) & 0x0F;
+		}
+		int p = fix32_to_int(luaL_optnumber(L, 3, 0));
 
 		if (p == 1)
 		{

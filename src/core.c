@@ -551,7 +551,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
 		print_memory_usage(vm);
 
-		if (is_function_present(vm, "_init"));
+		if (is_function_present(vm, "_init"))
 		{
 			call_pico8_function(vm, "_init");
 		}
