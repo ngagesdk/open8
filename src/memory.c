@@ -253,12 +253,33 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
     }
 
     SDL_FRect dest;
+
+#if defined(__SYMBIAN32__) || defined(__3DS__)
+
     dest.x = SCREEN_OFFSET_X;
     dest.y = SCREEN_OFFSET_Y;
     dest.w = SCREEN_SIZE;
     dest.h = SCREEN_SIZE;
 
     SDL_RenderTexture(renderer, screen, NULL, &dest);
+
+#else
+
+    SDL_FRect source;
+    source.x = 0;
+    source.y = 0;
+    source.w = 128;
+    source.h = 128;
+
+    dest.x = 0;
+    dest.y = 0;
+    dest.w = WINDOW_W;
+    dest.h = WINDOW_H;
+
+    SDL_RenderTexture(renderer, screen, &source, &dest);
+
+#endif
+
 }
 
 uint32_t crc32(const uint8_t* data, size_t start, size_t length)

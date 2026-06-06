@@ -551,7 +551,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
 		print_memory_usage(vm);
 
-		if (is_function_present(vm, "_init"))
+		if (is_function_present(vm, "_init"));
 		{
 			call_pico8_function(vm, "_init");
 		}
@@ -597,6 +597,8 @@ static void render_cartridge(SDL_Renderer* renderer)
 
 	SDL_FRect dest;
 
+#if defined(__SYMBIAN32__) || defined(__3DS__)
+
 	dest.x = FRAME_OFFSET_X;
 	dest.y = FRAME_OFFSET_Y;
 	dest.w = FRAME_W;
@@ -605,6 +607,25 @@ static void render_cartridge(SDL_Renderer* renderer)
 	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
 	SDL_RenderClear(renderer);
 	SDL_RenderTexture(renderer, cart.image, NULL, &dest);
+
+#else
+
+	SDL_FRect source;
+	source.x = 16;
+	source.y = 24;
+	source.w = 128;
+	source.h = 128;
+
+	dest.x = 0;
+	dest.y = 0;
+	dest.w = WINDOW_W;
+	dest.h = WINDOW_H;
+
+	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
+	SDL_RenderClear(renderer);
+	SDL_RenderTexture(renderer, cart.image, &source, &dest);
+
+#endif
 }
 
 bool init_core(SDL_Renderer* renderer)
@@ -640,6 +661,7 @@ bool init_core(SDL_Renderer* renderer)
 		SDL_Log("No carts found in directory: %s", path);
 		return false;
 	}
+
 	if (!load_cart(renderer, (const char*)available_carts[0], &cart))
 	{
 		return false;
@@ -793,8 +815,8 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 			break;
 		}
 	}
-	return true;
 	}
+	return true;
 }
 
 bool iterate_core(SDL_Renderer* renderer)
