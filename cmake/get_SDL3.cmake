@@ -12,7 +12,8 @@ macro(get_SDL3 version)
       FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG "release-${version}")
+        GIT_TAG main
+      )
       FetchContent_MakeAvailable(SDL3)
       set(SDL3_LIBRARIES SDL3::SDL3)
     endif()
