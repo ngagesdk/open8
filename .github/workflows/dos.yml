@@ -65,12 +65,19 @@ jobs:
         shell: pwsh
         run: |
           echo "${{ runner.temp }}/djgpp/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # Also set DJGPP environment variable for the toolchain
+          $djgpp_env = "${{ runner.temp }}/djgpp/djgpp.env"
+          if (Test-Path $djgpp_env) {
+            echo "DJGPP=$djgpp_env" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
 
       - name: Verify DJGPP installation
         shell: pwsh
         run: |
           gcc --version
           g++ --version
+          # Verify djgpp.env exists
+          Get-Item "${{ runner.temp }}/djgpp/djgpp.env" -ErrorAction SilentlyContinue
 
       - name: Create build directory
         run: mkdir build
