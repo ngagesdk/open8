@@ -860,8 +860,8 @@ bool iterate_core(SDL_Renderer* renderer)
 		update_from_virtual_memory(renderer);
 		SDL_RenderPresent(renderer);
 
-		Uint64 elapsed = SDL_GetTicks() - frame_start;
 #ifndef __SYMBIAN32__
+		Uint64 elapsed = SDL_GetTicks() - frame_start;
 		if (elapsed < frame_ms)
 		{
 			SDL_Delay((Uint32)(frame_ms - elapsed));	

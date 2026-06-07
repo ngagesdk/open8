@@ -443,6 +443,18 @@ static int pico8_stat(lua_State* L)
 {
 	uint32_t id = fix32_to_uint32(luaL_checkunsigned(L, 1));
 
+#ifdef __SYMBIAN32__
+	static bool once = false;
+	static uint32_t inv_frame_ms_q16; // Q16.16 reciprocal
+
+	if (!once)
+	{
+		// 65536 == 1<<16 (Q16.16)
+		inv_frame_ms_q16 = (pico8_frame_ms != 0) ? ((1u << 16) / pico8_frame_ms) : 0;
+		once = true;
+	}
+#endif
+
 	switch (id)
 	{
 	case 1:
@@ -455,6 +467,23 @@ static int pico8_stat(lua_State* L)
 		}
 		else
 		{
+#ifdef __SYMBIAN32__
+			uint32_t now = SDL_GetTicks();
+			uint32_t delta = now - pico8_frame_start;
+
+			// Q16.16 fixed-point usage = (delta / frame_ms)
+			uint32_t usage_fp = delta * inv_frame_ms_q16;
+
+			// clamp to 4.0 in Q16.16
+			uint32_t max_fp = (4u << 16);
+			if (usage_fp > max_fp)
+			{
+				usage_fp = max_fp;
+			}
+
+			// push to Lua without any custom float conversion
+			lua_pushnumber(L, (lua_Number)usage_fp * (1.0 / 65536.0));
+#else
 			uint64_t now = SDL_GetTicks();
 			double elapsed = (double)(now - pico8_frame_start);
 			double usage = elapsed / (double)pico8_frame_ms;
@@ -468,6 +497,7 @@ static int pico8_stat(lua_State* L)
 			}
 			// Convert to pico8 fix32-style number (store as Lua number)
 			lua_pushnumber(L, fix32_from_double(usage));
+#endif
 		}
 		break;
 	}
