@@ -52,6 +52,16 @@ static void pset(int x, int y, int* color)
 
 	uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
 	uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
+
+	/* Apply draw palette remapping to the color */
+	uint8_t pal_entry = pico8_ram[0x5f00 + p8_color];
+	if (pal_entry & 0x10)
+	{
+		/* Color is transparent in the draw palette, skip drawing */
+		return;
+	}
+	p8_color = pal_entry & 0x0F;
+
 	uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
 
 	/* Fast path: no fill-pattern active (the default state).
@@ -108,6 +118,10 @@ static void hline(int x0, int x1, int y, int* color)
 
 	if (pattern == 0)
 	{
+		/* Apply draw palette remapping to the color */
+		uint8_t pal_entry = pico8_ram[0x5f00 + p8_color];
+		p8_color = pal_entry & 0x0F;
+
 		uint8_t* row = &pico8_ram[0x6000 + (y << 6)];
 		uint8_t color_pair = p8_color | (p8_color << 4);
 		int bx0 = x0 >> 1;
@@ -139,7 +153,7 @@ static void hline(int x0, int x1, int y, int* color)
 
 static void draw_circle(int cx, int cy, int radius, int* color, bool fill)
 {
-	/* Fast paths for the small radii used by hair dots (r=0,1,2). */
+	/* Fast paths for the small radii (r=0,1,2). */
 	if (fill)
 	{
 		if (radius == 0) { pset(cx, cy, color); return; }
@@ -484,15 +498,14 @@ static int pico8_circ(lua_State* L)
 
 static int pico8_circfill(lua_State* L)
 {
-	int cx = (int)(lua_tonumber(L, 1) >> 16);
-	int cy = (int)(lua_tonumber(L, 2) >> 16);
-	int top = lua_gettop(L);
-	int radius = top >= 3 ? (int)(lua_tonumber(L, 3) >> 16) : 4;
-	int color;
+	int cx = fix32_to_int(luaL_checknumber(L, 1));
+	int cy = fix32_to_int(luaL_checknumber(L, 2));
+	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
+	int color = 0;
 
-	if (top >= 4)
+	if (lua_gettop(L) >= 4)
 	{
-		color = (int)(lua_tonumber(L, 4) >> 16);
+		color = fix32_to_int(luaL_checkinteger(L, 4));
 		draw_circle(cx, cy, radius, &color, true);
 	}
 	else
