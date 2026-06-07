@@ -4,6 +4,10 @@
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR i386)
 
+# Mark that we're building for DOS
+# This triggers SDL3's PreseedDOSCache.cmake automatically
+set(DOS TRUE)
+
 # Specify the cross-compiler
 find_program(CMAKE_C_COMPILER i586-pc-msdosdjgpp-gcc REQUIRED)
 find_program(CMAKE_CXX_COMPILER i586-pc-msdosdjgpp-g++ REQUIRED)
@@ -35,4 +39,5 @@ set(CMAKE_CXX_COMPILER_FORCED TRUE)
 # Disable shared libraries for DOS
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
+
 

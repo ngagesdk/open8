@@ -4,30 +4,11 @@ macro(get_SDL3 version)
   endif()
   include(FetchContent)
 
-  # For DOS/DJGPP, build SDL3 from source with DOS-appropriate configuration
+  # For DOS/DJGPP, build SDL3 from source
+  # SDL3's built-in PreseedDOSCache.cmake will automatically configure DOS support
   if(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
     find_package(SDL3 QUIET)
     if(NOT SDL3_FOUND)
-      # Set cache variables for SDL3 DJGPP/DOS build
-      # SDL3 has built-in DOS support, so we configure minimal features
-      set(SDL_SHARED OFF CACHE BOOL "Build SDL3 as a shared library" FORCE)
-      set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
-      set(SDL_TESTS OFF CACHE BOOL "Build SDL3 tests" FORCE)
-      set(SDL_EXAMPLES OFF CACHE BOOL "Build SDL3 examples" FORCE)
-      set(SDL_GPU OFF CACHE BOOL "Disable GPU support for DOS" FORCE)
-      set(SDL_CAMERA OFF CACHE BOOL "Disable camera for DOS" FORCE)
-      set(SDL_HAPTIC OFF CACHE BOOL "Disable haptic for DOS" FORCE)
-      set(SDL_HIDAPI OFF CACHE BOOL "Disable HIDAPI for DOS" FORCE)
-      set(SDL_POWER OFF CACHE BOOL "Disable power for DOS" FORCE)
-      set(SDL_SENSOR OFF CACHE BOOL "Disable sensors for DOS" FORCE)
-      set(SDL_DIALOG OFF CACHE BOOL "Disable dialogs for DOS" FORCE)
-      set(SDL_DUMMYCAMERA OFF CACHE BOOL "Disable dummy camera for DOS" FORCE)
-      set(SDL_OFFSCREEN OFF CACHE BOOL "Disable offscreen video for DOS" FORCE)
-      set(SDL_RENDER_GPU OFF CACHE BOOL "Disable GPU render for DOS" FORCE)
-      set(SDL_TRAY OFF CACHE BOOL "Disable tray for DOS" FORCE)
-      set(SDL_PROCESS OFF CACHE BOOL "Disable process for DOS" FORCE)
-      # Note: SDL_THREADS is NOT disabled - SDL3 requires it even for DOS
-
       FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
