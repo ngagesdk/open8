@@ -1,0 +1,84 @@
+﻿name: DOS Build (DJGPP)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Calculate DJGPP variables
+        id: calc
+        shell: sh
+        run: |
+          version="12.2.0"
+          case "${{ runner.os }}-${{ runner.arch }}" in
+            "Windows-X86" | "Windows-X64")
+              archive="djgpp-mingw-gcc1220.zip"
+              ;;
+            *)
+              echo "Unsupported ${{ runner.os }}-${{ runner.arch }}"
+              exit 1
+              ;;
+          esac
+          echo "url=https://github.com/andrewwutw/build-djgpp/releases/download/v3.4/${archive}" >> ${GITHUB_OUTPUT}
+          echo "archive=${archive}" >> ${GITHUB_OUTPUT}
+          echo "version=${version}" >> ${GITHUB_OUTPUT}
+          echo "cache-key=${archive}-v${version}-${{ runner.os }}-${{ runner.arch }}" >> ${GITHUB_OUTPUT}
+
+      - name: Restore cached DJGPP toolchain
+        id: cache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: '${{ runner.temp }}/${{ steps.calc.outputs.archive }}'
+          key: ${{ steps.calc.outputs.cache-key }}
+
+      - name: Download DJGPP ${{ steps.calc.outputs.version }}
+        if: ${{ !steps.cache-restore.outputs.cache-hit || steps.cache-restore.outputs.cache-hit == 'false' }}
+        shell: pwsh
+        run: |
+          Invoke-WebRequest "${{ steps.calc.outputs.url }}" -OutFile "${{ runner.temp }}/${{ steps.calc.outputs.archive }}"
+
+      - name: Cache DJGPP toolchain
+        if: ${{ !steps.cache-restore.outputs.cache-hit || steps.cache-restore.outputs.cache-hit == 'false' }}
+        uses: actions/cache/save@v5
+        with:
+          path: '${{ runner.temp }}/${{ steps.calc.outputs.archive }}'
+          key: ${{ steps.calc.outputs.cache-key }}
+
+      - name: Extract DJGPP archive
+        shell: pwsh
+        run: |
+          7z "-o${{ runner.temp }}" x "${{ runner.temp }}/${{ steps.calc.outputs.archive }}"
+
+      - name: Setup DJGPP toolchain path
+        shell: pwsh
+        run: |
+          echo "${{ runner.temp }}/djgpp/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Configure with CMake
+        shell: cmd
+        run: cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=djgpp.cmake
+
+      - name: Build with CMake
+        shell: cmd
+        run: cmake --build build
+
+      - name: Archive open8
+        uses: actions/upload-artifact@v4
+        with:
+          name: open8-DOS-djgpp.zip
+          path: export
