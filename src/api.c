@@ -1053,50 +1053,6 @@ static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h,
 
 		int32_t dx = dx_start;
 
-		// Fast path: no flip, process two horizontally-adjacent pixels per iteration
-		// when both screen pixels share the same byte (even-aligned) and both are opaque.
-		if (!flip_x && !flip_y)
-		{
-			// Align dx to even boundary.
-			if (dx & 1)
-			{
-				uint16_t sprite_addr = sprite_row_addr + sprite_x_base + ((uint16_t)dx >> 1);
-				uint8_t byte = pico8_ram[sprite_addr];
-				uint8_t pal = color_map[(byte >> 4) & 0x0F];
-				if (!(pal & 0x10))
-				{
-					uint16_t screen_addr = screen_row_addr + ((uint16_t)(x + dx) >> 1);
-					pico8_ram[screen_addr] = (pico8_ram[screen_addr] & 0x0F) | ((pal & 0x0F) << 4);
-				}
-				dx++;
-			}
-
-			for (; dx + 1 < dx_end; dx += 2)
-			{
-				int32_t px = x + dx;
-				uint16_t sprite_addr = sprite_row_addr + sprite_x_base + ((uint16_t)dx >> 1);
-				uint8_t sprite_byte = pico8_ram[sprite_addr];
-				uint8_t pal_lo = color_map[sprite_byte & 0x0F];
-				uint8_t pal_hi = color_map[(sprite_byte >> 4) & 0x0F];
-				uint16_t screen_addr = screen_row_addr + ((uint16_t)px >> 1);
-
-				if (!(pal_lo & 0x10) && !(pal_hi & 0x10))
-				{
-					// Both opaque: single write.
-					pico8_ram[screen_addr] = (pal_lo & 0x0F) | ((pal_hi & 0x0F) << 4);
-				}
-				else
-				{
-					uint8_t* screen_byte = &pico8_ram[screen_addr];
-					if (!(pal_lo & 0x10))
-						*screen_byte = (*screen_byte & 0xF0) | (pal_lo & 0x0F);
-					if (!(pal_hi & 0x10))
-						*screen_byte = (*screen_byte & 0x0F) | ((pal_hi & 0x0F) << 4);
-				}
-			}
-		}
-
-		// Scalar tail / flip fallback.
 		for (; dx < dx_end; dx++)
 		{
 			int32_t sx = flip_x ? (width - 1 - dx) : dx;
@@ -1111,9 +1067,13 @@ static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h,
 				uint16_t screen_addr = screen_row_addr + ((uint16_t)px >> 1);
 				uint8_t* screen_byte = &pico8_ram[screen_addr];
 				if (px & 1)
+				{
 					*screen_byte = (*screen_byte & 0x0F) | (mapped_color << 4);
+				}
 				else
+				{
 					*screen_byte = (*screen_byte & 0xF0) | mapped_color;
+				}
 			}
 		}
 	}
