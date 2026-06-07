@@ -77,7 +77,7 @@ jobs:
 
       - name: Configure with CMake
         shell: cmd
-        run: cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/djgpp.cmake
 
       - name: Build with CMake
         shell: cmd

@@ -3,7 +3,19 @@ macro(get_SDL3 version)
     cmake_policy(SET CMP0135 NEW)
   endif()
   include(FetchContent)
-  if(MSVC OR (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang"))
+
+  # For DOS/DJGPP, always build SDL3 from source
+  if(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
+    find_package(SDL3 QUIET)
+    if(NOT SDL3_FOUND)
+      FetchContent_Declare(
+        SDL3
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG "release-${version}")
+      FetchContent_MakeAvailable(SDL3)
+      set(SDL3_LIBRARIES SDL3::SDL3)
+    endif()
+  elseif(MSVC OR (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang"))
     FetchContent_Declare(
       SDL3
       URL https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL3-devel-${version}-VC.zip
@@ -27,10 +39,12 @@ macro(get_SDL3 version)
     endif()
   endif()
 
-  if(WIN32)
+  if(WIN32 AND NOT (CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "i386"))
     FetchContent_MakeAvailable(SDL3)
     find_package(SDL3 CONFIG REQUIRED PATHS ${sdl3_SOURCE_DIR} NO_DEFAULT_PATH)
     get_target_property(SDL3_DLL SDL3::SDL3 IMPORTED_LOCATION)
-    file(COPY_FILE ${SDL3_DLL} ${EXPORT_DIR}/SDL3.dll ONLY_IF_DIFFERENT)
+    if(SDL3_DLL)
+      file(COPY_FILE ${SDL3_DLL} ${EXPORT_DIR}/SDL3.dll ONLY_IF_DIFFERENT)
+    endif()
   endif()
 endmacro(get_SDL3)
