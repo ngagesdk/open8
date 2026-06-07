@@ -39,5 +39,3 @@ set(CMAKE_CXX_COMPILER_FORCED TRUE)
 # Disable shared libraries for DOS
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
-
-

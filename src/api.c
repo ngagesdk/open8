@@ -43,6 +43,25 @@ static uint8_t btn_held_frames[2][6];
 
 // Auxiliary functions.
 
+// Helper function to read the camera offset from memory
+// Camera values at 0x5f29-0x5f2c are stored as two signed 16-bit integers (pixel values)
+// 0x5f29-0x5f2a: camera X (int16_t in pixels)
+// 0x5f2b-0x5f2c: camera Y (int16_t in pixels)
+static void get_camera_offset(int* cam_x, int* cam_y)
+{
+	// Read camera X as 16-bit signed little-endian integer
+	uint16_t cam_x_unsigned = pico8_ram[0x5f29] | ((uint16_t)pico8_ram[0x5f2a] << 8);
+	int16_t cam_x_int = (int16_t)cam_x_unsigned;
+
+	// Read camera Y as 16-bit signed little-endian integer
+	uint16_t cam_y_unsigned = pico8_ram[0x5f2b] | ((uint16_t)pico8_ram[0x5f2c] << 8);
+	int16_t cam_y_int = (int16_t)cam_y_unsigned;
+
+	// Return as integer pixel offsets
+	*cam_x = cam_x_int;
+	*cam_y = cam_y_int;
+}
+
 static void pset(int x, int y, int* color)
 {
 	if (((unsigned)x | (unsigned)y) >= 128)
@@ -473,7 +492,45 @@ static int pico8_time(lua_State* L)
 
 static int pico8_camera(lua_State* L)
 {
-	TO_BE_DONE;
+	// Read the current camera offset from memory (16-bit signed integers in pixels)
+	uint16_t prev_x_unsigned = pico8_ram[0x5f29] | ((uint16_t)pico8_ram[0x5f2a] << 8);
+	int16_t prev_x_int = (int16_t)prev_x_unsigned;
+
+	uint16_t prev_y_unsigned = pico8_ram[0x5f2b] | ((uint16_t)pico8_ram[0x5f2c] << 8);
+	int16_t prev_y_int = (int16_t)prev_y_unsigned;
+
+	// If arguments are provided, set the new camera offset.
+	// Otherwise, reset camera to (0, 0)
+	int new_x = 0;
+	int new_y = 0;
+
+	if (lua_gettop(L) >= 1)
+	{
+		fix32_t input = luaL_optnumber(L, 1, 0);
+		new_x = fix32_to_int(input);
+	}
+
+	if (lua_gettop(L) >= 2)
+	{
+		fix32_t input = luaL_optnumber(L, 2, 0);
+		new_y = fix32_to_int(input);
+	}
+
+	// Always store the new camera values (whether they came from arguments or defaults to 0)
+	int16_t value_x = (int16_t)new_x;
+	pico8_ram[0x5f29] = (uint8_t)(value_x & 0xFF);
+	pico8_ram[0x5f2a] = (uint8_t)((value_x >> 8) & 0xFF);
+
+	int16_t value_y = (int16_t)new_y;
+	pico8_ram[0x5f2b] = (uint8_t)(value_y & 0xFF);
+	pico8_ram[0x5f2c] = (uint8_t)((value_y >> 8) & 0xFF);
+
+	// Return the previous camera offset as an x,y tuple (fix32_t)
+	// Convert from integer pixels back to fix32 format  
+	lua_pushnumber(L, fix32_from_int((int)prev_x_int));
+	lua_pushnumber(L, fix32_from_int((int)prev_y_int));
+
+	return 2;
 }
 
 static int pico8_circ(lua_State* L)
@@ -481,6 +538,7 @@ static int pico8_circ(lua_State* L)
 	int cx = fix32_to_int(luaL_checknumber(L, 1));
 	int cy = fix32_to_int(luaL_checknumber(L, 2));
 	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
+
 	int color;
 
 	if (lua_gettop(L) == 4)
@@ -501,6 +559,7 @@ static int pico8_circfill(lua_State* L)
 	int cx = fix32_to_int(luaL_checknumber(L, 1));
 	int cy = fix32_to_int(luaL_checknumber(L, 2));
 	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
+
 	int color = 0;
 
 	if (lua_gettop(L) >= 4)
@@ -649,6 +708,7 @@ static int pico8_line(lua_State* L)
 	int y0 = fix32_to_int(luaL_checknumber(L, 2));
 	int x1 = fix32_to_int(luaL_checknumber(L, 3));
 	int y1 = fix32_to_int(luaL_checknumber(L, 4));
+
 	int color;
 	if (lua_gettop(L) == 5)
 	{
@@ -814,6 +874,12 @@ static int pico8_print(lua_State* L)
 		cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
 	}
 
+	// Apply camera offset
+	int cam_x, cam_y;
+	get_camera_offset(&cam_x, &cam_y);
+	cursor_x -= cam_x;
+	cursor_y -= cam_y;
+
 	for (int i = 0; text[i] != '\0'; i++)
 	{
 		if (text[i] == '\t') // 9, tab.
@@ -856,6 +922,12 @@ static int pico8_pset(lua_State* L)
 {
 	int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
 	int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
+
+	// Apply camera offset
+	int cam_x, cam_y;
+	get_camera_offset(&cam_x, &cam_y);
+	x -= cam_x;
+	y -= cam_y;
 
 	if (lua_gettop(L) == 3)
 	{
@@ -1042,6 +1114,12 @@ static int pico8_spr(lua_State* L)
 	bool flip_x = lua_toboolean(L, 6);
 	bool flip_y = lua_toboolean(L, 7);
 
+	// Apply camera offset
+	int cam_x, cam_y;
+	get_camera_offset(&cam_x, &cam_y);
+	x -= cam_x;
+	y -= cam_y;
+
 	draw_sprite_n(n, x, y, w, h, flip_x, flip_y);
 
 	return 0;
@@ -1073,6 +1151,12 @@ static int pico8_sspr(lua_State* L)
 	// Negative dw/dh: PICO-8 treats them as a flip + draw with abs size.
 	if (dw < 0) { flip_x = !flip_x; dw = -dw; dx -= dw; }
 	if (dh < 0) { flip_y = !flip_y; dh = -dh; dy -= dh; }
+
+	// Apply camera offset
+	int cam_x, cam_y;
+	get_camera_offset(&cam_x, &cam_y);
+	dx -= cam_x;
+	dy -= cam_y;
 
 	for (int py = 0; py < dh; py++)
 	{
@@ -1175,6 +1259,12 @@ static int pico8_map(lua_State* L)
 	{
 		layer = (uint8_t)fix32_to_uint32(luaL_checknumber(L, 7));
 	}
+
+	// Apply camera offset
+	int cam_x, cam_y;
+	get_camera_offset(&cam_x, &cam_y);
+	sx -= cam_x;
+	sy -= cam_y;
 
 	for (int ty = 0; ty < celh; ty++)
 	{
