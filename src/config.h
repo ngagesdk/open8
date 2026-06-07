@@ -27,9 +27,9 @@
 #define FRAME_OFFSET_X 120
 #define FRAME_OFFSET_Y 17
 #else
-#define SCALE 2
-#define WINDOW_W 256
-#define WINDOW_H 256
+#define SCALE 3
+#define WINDOW_W 128
+#define WINDOW_H 128
 #define WINDOW_FLAGS 0
 #define FRAME_OFFSET_X 24
 #define FRAME_OFFSET_Y 1
