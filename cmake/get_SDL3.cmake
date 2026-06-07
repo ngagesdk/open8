@@ -4,10 +4,28 @@ macro(get_SDL3 version)
   endif()
   include(FetchContent)
 
-  # For DOS/DJGPP, always build SDL3 from source
+  # For DOS/DJGPP, always build SDL3 from source with minimal configuration
   if(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
     find_package(SDL3 QUIET)
     if(NOT SDL3_FOUND)
+      # Set cache variables for SDL3 DJGPP build
+      set(SDL_SHARED OFF CACHE BOOL "Build SDL3 as a shared library" FORCE)
+      set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
+      set(SDL_TESTS OFF CACHE BOOL "Build SDL3 tests" FORCE)
+      set(SDL_EXAMPLES OFF CACHE BOOL "Build SDL3 examples" FORCE)
+      set(SDL_ENABLE_GUDEV OFF CACHE BOOL "Use gudev for device detection" FORCE)
+      set(SDL_ALSA OFF CACHE BOOL "Enable ALSA audio" FORCE)
+      set(SDL_PULSEAUDIO OFF CACHE BOOL "Enable PulseAudio support" FORCE)
+      set(SDL_PIPEWIRE OFF CACHE BOOL "Enable PipeWire audio support" FORCE)
+      set(SDL_JACK OFF CACHE BOOL "Enable JACK audio support" FORCE)
+      set(SDL_WASAPI OFF CACHE BOOL "Enable WASAPI audio support" FORCE)
+      set(SDL_X11 OFF CACHE BOOL "Enable X11 support" FORCE)
+      set(SDL_WAYLAND OFF CACHE BOOL "Enable Wayland support" FORCE)
+      # Disable threading for DJGPP
+      set(SDL_THREADS OFF CACHE BOOL "Enable SDL threads" FORCE)
+      set(SDL_PTHREADS OFF CACHE BOOL "Enable POSIX threads" FORCE)
+      set(SDL_WINDOWS_THREADING OFF CACHE BOOL "Enable Windows threading" FORCE)
+
       FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
