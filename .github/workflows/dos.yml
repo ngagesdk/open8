@@ -70,7 +70,7 @@ jobs:
         shell: pwsh
         run: |
           gcc --version
-          gpp --version
+          g++ --version
 
       - name: Create build directory
         run: mkdir build
