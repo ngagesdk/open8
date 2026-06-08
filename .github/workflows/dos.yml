@@ -24,7 +24,7 @@ jobs:
           version="12.2.0"
           case "${{ runner.os }}-${{ runner.arch }}" in
             "Windows-X86" | "Windows-X64")
-              archive="djgpp-mingw-gcc1220.zip"
+              archive="djgpp-mingw-gcc1220-standalone.zip"
               ;;
             *)
               echo "Unsupported ${{ runner.os }}-${{ runner.arch }}"
