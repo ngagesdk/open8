@@ -27,6 +27,8 @@ set(open8_sources
 
 add_executable(open8 WIN32 ${open8_sources})
 
+set_property(TARGET open8 PROPERTY C_STANDARD 99)
+
 if (NGAGESDK)
   set(open8_app_sources
     src/ngage/ngage.cpp
@@ -82,8 +84,6 @@ if (NGAGESDK)
     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CXX>>:-fno-rtti>       # Disable C++ RTTI overhead
   )
 
-  set_property(TARGET open8 PROPERTY C_STANDARD 99)
-
   target_link_options(open8 PRIVATE "SHELL:-s UID1=0x1000007a") # KExecutableImageUidValue, e32uid.h
   target_link_options(open8 PRIVATE "SHELL:-s UID2=0x100039ce") # KAppUidValue16, apadef.h
   target_link_options(open8 PRIVATE "SHELL:-s UID3=0x1000c37e") # open8.exe UID
@@ -135,6 +135,27 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/waves.png@carts/waves.png"
   )
   set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
+
+elseif(RISCOS)
+  file(COPY
+    ${CMAKE_SOURCE_DIR}/res/!Boot,feb
+    ${CMAKE_SOURCE_DIR}/res/!Run,feb
+    ${CMAKE_SOURCE_DIR}/res/!Sprites,ff9
+    ${CMAKE_SOURCE_DIR}/export/carts
+    DESTINATION !Open8/
+  )
+
+  target_link_options(open8 PRIVATE -static)
+  add_custom_command(
+    OUTPUT "!Open8/!RunImage,ff8"
+    COMMAND elf2aif "$<TARGET_FILE:open8>" "!Open8/!RunImage,ff8"
+    DEPENDS open8
+    VERBATIM
+  )
+  add_custom_target(
+    open8_aif ALL
+    DEPENDS "!Open8/!RunImage,ff8"
+  )
 
 elseif(UNIX)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} m)

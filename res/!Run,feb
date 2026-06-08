@@ -1,0 +1,4 @@
+Set Open8$Dir <Obey$Dir>
+
+WimpSlot -min 3072K
+Run <Open8$Dir>.!RunImage
