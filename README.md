@@ -9,7 +9,7 @@
 [![DOS](https://github.com/ngagesdk/open8/actions/workflows/dos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/dos.yml)
 [![Emscripten](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml)
 [![Linux](https://github.com/ngagesdk/open8/actions/workflows/linux.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)
-[![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/n-gage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n-gage.yml)
+[![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
 [![Windows](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 

@@ -1,0 +1,43 @@
+name: PSP
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  psp:
+    name: Build (PSP)
+    runs-on: ubuntu-latest
+    container: pspdev/pspdev:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apk update
+          apk add cmake
+
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -B build \
+                -DCMAKE_TOOLCHAIN_FILE=$PSPDEV/psp/share/pspdev.cmake \
+                -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build project
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Move files together
+        run: |
+          mkdir output
+          cp build/EBOOT.PBP build/PARAM.SFO output
+          cp -r export/carts output
+
+      - name: Archive open8
+        uses: actions/upload-artifact@v4
+        with:
+          name: open8-PSP
+          path: output
+          if-no-files-found: error
