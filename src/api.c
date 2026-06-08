@@ -8,8 +8,10 @@
  **/
 
 #include <SDL3/SDL.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <wchar.h>
+
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
@@ -17,8 +19,6 @@
 #include "config.h"
 #include "memory.h"
 #include "p8scii.h"
-
-#include <stdbool.h>
 
 #define TO_BE_DONE \
     static bool warning_printed = false; \
@@ -443,7 +443,7 @@ static int pico8_stat(lua_State* L)
 {
 	uint32_t id = fix32_to_uint32(luaL_checkunsigned(L, 1));
 
-#ifdef __SYMBIAN32__
+#if defined(__SYMBIAN32__) || defined(__3DS__) || defined(__DOS__)
 	static bool once = false;
 	static uint32_t inv_frame_ms_q16; // Q16.16 reciprocal
 

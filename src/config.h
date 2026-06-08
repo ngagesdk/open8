@@ -26,8 +26,15 @@
 #define WINDOW_FLAGS 0
 #define FRAME_OFFSET_X 120
 #define FRAME_OFFSET_Y 17
+#elif defined __DOS__
+#define SCALE 1
+#define WINDOW_W 320
+#define WINDOW_H 200
+#define WINDOW_FLAGS 0
+#define FRAME_OFFSET_X 96
+#define FRAME_OFFSET_Y 36
 #else
-#define SCALE 3
+#define SCALE 2
 #define WINDOW_W 128
 #define WINDOW_H 128
 #define WINDOW_FLAGS 0
