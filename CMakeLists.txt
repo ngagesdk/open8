@@ -119,7 +119,6 @@ elseif(PSP)
     BACKGROUND_PATH NULL
     PREVIEW_PATH NULL
 	TITLE ${PROJECT})
-  endif()
 
 elseif(EMSCRIPTEN)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
