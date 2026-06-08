@@ -3,6 +3,12 @@ set(CMAKE_SYSTEM_NAME DOS)
 set(DJGPP TRUE)
 set(DOS TRUE)
 
+set(CMAKE_C_COMPILER_WORKS TRUE CACHE INTERNAL "")
+set(CMAKE_CXX_COMPILER_WORKS TRUE CACHE INTERNAL "")
+
+set(CMAKE_C_ABI_COMPILED TRUE CACHE INTERNAL "")
+set(CMAKE_CXX_ABI_COMPILED TRUE CACHE INTERNAL "")
+
 # CMake's Platform/DOS.cmake assumes OpenWatcom naming conventions (no prefix,
 # .lib suffix).  DJGPP uses standard Unix/GCC conventions for its system
 # libraries (lib prefix, .a suffix — e.g. libm.a), so we override the platform
