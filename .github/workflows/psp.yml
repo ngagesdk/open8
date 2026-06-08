@@ -31,9 +31,11 @@ jobs:
 
       - name: Move files together
         run: |
-          mkdir output
-          cp export/EBOOT.PBP export/PARAM.SFO output
-          cp -r export/carts output
+            mkdir -p output
+
+            find export -name "*.PBP" -exec cp {} output/EBOOT.PBP \;
+            cp export/PARAM.SFO output/
+            cp -r export/carts output/
 
       - name: Archive open8
         uses: actions/upload-artifact@v4
