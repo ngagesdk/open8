@@ -6,7 +6,7 @@ macro(get_SDL3 version)
 
   # For DOS/DJGPP, build SDL3 from source
   # SDL3's built-in PreseedDOSCache.cmake will automatically configure DOS support
-  if(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "i386")
+  if(CMAKE_SYSTEM_NAME STREQUAL "DOS")
     find_package(SDL3 QUIET)
     if(NOT SDL3_FOUND)
       FetchContent_Declare(
