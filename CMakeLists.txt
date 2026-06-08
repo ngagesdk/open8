@@ -25,11 +25,7 @@ set(open8_sources
   src/lexaloffle/p8_compress.c
   src/lexaloffle/pxa_compress_snippets.c)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_executable(open8 ${open8_sources})
-else()
-  add_executable(open8 WIN32 ${open8_sources})
-endif()
+add_executable(open8 WIN32 ${open8_sources})
 
 if (NGAGESDK)
   set(open8_app_sources
