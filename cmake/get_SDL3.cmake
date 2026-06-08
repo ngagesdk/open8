@@ -23,6 +23,16 @@ macro(get_SDL3 version)
       URL https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL3-devel-${version}-VC.zip
       URL_HASH
         SHA256=e2b336b10b037934af98308027410732ef7b22f2c6697d58092aa1c209fae7d7)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "DOS")
+    find_package(SDL3 QUIET)
+    if(NOT SDL3_FOUND)
+      FetchContent_Declare(
+        SDL3
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG main)
+      FetchContent_MakeAvailable(SDL3)
+      set(SDL3_LIBRARIES SDL3::SDL3)
+    endif()
   elseif(MINGW)
     FetchContent_Declare(
       SDL3
