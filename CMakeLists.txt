@@ -115,16 +115,16 @@ if (NINTENDO_3DS)
 elseif(EMSCRIPTEN)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
   target_link_options(open8 PRIVATE
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/api.p8.png@carts/api.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/automata.p8.png@carts/automata.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/celeste.p8.png@carts/celeste.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/demo.p8.png@carts/demo.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/hello.p8.png@carts/hello.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/lukiprueba.p8.png@carts/lukiprueba.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/p8scii.p8.png@carts/p8scii.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/porterpatch1.p8.png@carts/porterpatch1.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/sort.p8.png@carts/sort.p8.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/waves.p8.png@carts/waves.p8.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/api.png@carts/api.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/automata.png@carts/automata.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/celeste.png@carts/celeste.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/demo.png@carts/demo.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/hello.png@carts/hello.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/lukip.png@carts/lukip.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/p8scii.png@carts/p8scii.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/porter.png@carts/porter.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/sort.png@carts/sort.png"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/waves.png@carts/waves.png"
   )
   set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
 

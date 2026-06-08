@@ -647,7 +647,7 @@ bool init_core(SDL_Renderer* renderer)
 	struct dirent* entry;
 	while ((entry = readdir(dir)))
 	{
-		if (SDL_strstr(entry->d_name, ".p8.png"))
+		if (SDL_strstr(entry->d_name, ".png"))
 		{
 			available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
 			available_carts[num_carts] = SDL_strdup(entry->d_name);

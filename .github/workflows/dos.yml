@@ -1,4 +1,4 @@
-﻿name: DOS Build (DJGPP)
+﻿name: DOS
 
 on:
   push:
