@@ -8,6 +8,7 @@
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
 [![Windows Build](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 [![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a1d30d31ef0f4cd7ab26304b6031a0e5)](https://app.codacy.com/gh/ngagesdk/open8/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f)](https://ngagesdk.de/open8)
 
 ## About the Project
