@@ -32,7 +32,7 @@ jobs:
       - name: Move files together
         run: |
           mkdir output
-          cp build/EBOOT.PBP build/PARAM.SFO output
+          cp export/EBOOT.PBP export/PARAM.SFO output
           cp -r export/carts output
 
       - name: Archive open8
