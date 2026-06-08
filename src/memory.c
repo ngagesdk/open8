@@ -12,7 +12,6 @@
 
 #include "auxiliary.h"
 #include "app.h"
-#include "config.h"
 #include "memory.h"
 
 #define CRC32_POLYNOMIAL 0x04c11db7

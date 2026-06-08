@@ -16,7 +16,6 @@
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
 #include "auxiliary.h"
-#include "config.h"
 #include "memory.h"
 #include "p8scii.h"
 

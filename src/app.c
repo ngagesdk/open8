@@ -8,8 +8,8 @@
  **/
 
 #include "SDL3/SDL.h"
+
 #include "app.h"
-#include "config.h"
 
 static SDL_AudioDeviceID audio_device;
 static int scale;

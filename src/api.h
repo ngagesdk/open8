@@ -10,11 +10,11 @@
 #ifndef API_H
 #define API_H
 
+#include <stdint.h>
+
 #include "z8lua/fix32.h"
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
-#include  "config.h"
-#include <stdint.h>
 
 extern fix32_t seconds_since_start;
 

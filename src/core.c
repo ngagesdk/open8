@@ -16,7 +16,6 @@
 #include "z8lua/lualib.h"
 #include "api.h"
 #include "app.h"
-#include "config.h"
 #include "core.h"
 #include "memory.h"
 
