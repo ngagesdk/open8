@@ -45,6 +45,8 @@ static bool has_update;
 static bool has_update60;
 static bool has_draw;
 
+SDL_FRect cart_rect;
+
 static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
 {
 	(void)ud;
@@ -594,37 +596,9 @@ static void select_prev_cartridge(SDL_Renderer* renderer)
 
 static void render_cartridge(SDL_Renderer* renderer)
 {
-	SDL_SetRenderTarget(renderer, NULL);
-
-	SDL_FRect dest;
-	SDL_FRect source;
-
-#ifdef __SYMBIAN32__
-	source.x = 0.f;
-	source.y = 0.f;
-	source.w = 160.f;
-	source.h = 205.f;
-#else
-	source.x = 16.f;
-	source.y = 24.f;
-	source.w = 128.f;
-	source.h = 128.f;
-#endif
-
-	int window_w, window_h;
-	get_window_size(&window_w, &window_h);
-
-	int offset_x, offset_y;
-	get_window_offset(&offset_x, &offset_y);
-
-	dest.x = (float)offset_x;
-	dest.y = (float)offset_y;
-	dest.w = (float)window_w;
-	dest.h = (float)window_h;
-
-	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
+	SDL_SetRenderDrawColor(renderer, 0x64, 0x64, 0x64, 0xff);
 	SDL_RenderClear(renderer);
-	SDL_RenderTexture(renderer, cart.image, &source, &dest);
+	SDL_RenderTexture(renderer, cart.image, NULL, &cart_rect);
 }
 
 bool init_core(SDL_Renderer* renderer)
@@ -856,6 +830,7 @@ bool iterate_core(SDL_Renderer* renderer)
 		}
 
 		update_time();
+		render_cartridge(renderer);
 		update_from_virtual_memory(renderer);
 		SDL_RenderPresent(renderer);
 

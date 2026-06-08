@@ -25,6 +25,8 @@ static uint32_t expanded_map[256];
 static SDL_Texture* screen;
 static SDL_PixelFormat screen_format;
 
+SDL_FRect screen_rect;
+
 bool init_memory(SDL_Renderer* renderer)
 {
     if (!renderer)
@@ -255,31 +257,7 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         SDL_UnlockTexture(screen);
     }
 
-    SDL_FRect dest;
-
-#ifdef __SYMBIAN32__
-    dest.x = 24.f;
-    dest.y = 25.f;
-    dest.w = 128.f;
-	dest.h = 128.f;
-
-    SDL_RenderTexture(renderer, screen, NULL, &dest);
-
-#else
-
-    int window_w, window_h;
-    get_window_size(&window_w, &window_h);
-
-    int offset_x, offset_y;
-    get_window_offset(&offset_x, &offset_y);
-
-    dest.x = (float)offset_x;
-    dest.y = (float)offset_y;
-    dest.w = (float)window_w;
-    dest.h = (float)window_h;
-
-    SDL_RenderTexture(renderer, screen, NULL, &dest);
-#endif
+    SDL_RenderTexture(renderer, screen, NULL, &screen_rect);
 }
 
 uint32_t crc32(const uint8_t* data, size_t start, size_t length)
