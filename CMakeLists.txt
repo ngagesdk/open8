@@ -112,6 +112,15 @@ if (NINTENDO_3DS)
     ROMFS "${ROMFS_DIR}"
     SMDH "${SMDH_FILE}")
 
+elseif(PSP)
+  create_pbp_file(
+	TARGET ${PROJECT}
+    ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/icon.png"
+    BACKGROUND_PATH NULL
+    PREVIEW_PATH NULL
+	TITLE ${PROJECT})
+  endif()
+
 elseif(EMSCRIPTEN)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
   target_link_options(open8 PRIVATE
