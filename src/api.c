@@ -80,11 +80,11 @@ static void pset(int x, int y, int* color)
 
 	/* Apply draw palette remapping to the color */
 	uint8_t pal_entry = pico8_ram[0x5f00 + p8_color];
-	if (pal_entry & 0x10)
-	{
-		/* Color is transparent in the draw palette, skip drawing */
-		return;
-	}
+	//if (pal_entry & 0x10)
+	//{
+	//	/* Color is transparent in the draw palette, skip drawing */
+	//	return;
+	//}
 	p8_color = pal_entry & 0x0F;
 
 	uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
@@ -125,7 +125,7 @@ static uint8_t pget(int x, int y)
 		return 0;
 	}
 
-	apply_camera_offset(&x, &y);
+	apply_camera_offset((int*)&x, (int*)&y);
 
 	uint16_t addr = 0x6000 + (y << 6) + (x >> 1);
 	uint8_t shift = (x & 1) ? 4 : 0;
@@ -577,7 +577,7 @@ static int pico8_circ(lua_State* L)
 	int cx = fix32_to_int(luaL_checknumber(L, 1));
 	int cy = fix32_to_int(luaL_checknumber(L, 2));
 
-	apply_camera_offset(&cx, &cy);
+	apply_camera_offset((int*)&cx, (int*)&cy);
 
 	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
 	int color;
@@ -600,7 +600,7 @@ static int pico8_circfill(lua_State* L)
 	int cx = fix32_to_int(luaL_checknumber(L, 1));
 	int cy = fix32_to_int(luaL_checknumber(L, 2));
 
-	apply_camera_offset(&cx, &cy);
+	apply_camera_offset((int*)&cx, (int*)&cy);
 
 	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
 	int color = 0;
@@ -752,8 +752,8 @@ static int pico8_line(lua_State* L)
 	int x1 = fix32_to_int(luaL_checknumber(L, 3));
 	int y1 = fix32_to_int(luaL_checknumber(L, 4));
 
-	apply_camera_offset(&x0, &y0);
-	apply_camera_offset(&x1, &y1);
+	apply_camera_offset((int*)&x0, (int*)&y0);
+	apply_camera_offset((int*)&x1, (int*)&y1);
 
 	int color;
 	if (lua_gettop(L) == 5)
@@ -776,8 +776,8 @@ static int pico8_oval(lua_State* L)
 	int y1 = fix32_to_int(luaL_checknumber(L, 4));
 	int color;
 
-	apply_camera_offset(&x0, &y0);
-	apply_camera_offset(&x1, &y1);
+	apply_camera_offset((int*)&x0, (int*)&y0);
+	apply_camera_offset((int*)&x1, (int*)&y1);
 
 	if (lua_gettop(L) == 5)
 	{
@@ -954,7 +954,7 @@ static int pico8_print(lua_State* L)
 
 		uint8_t w, h;
 		int x = cursor_x, y = cursor_y;
-		apply_camera_offset(&x, &y);
+		apply_camera_offset((int*)&x, (int*)&y);
 
 		blit_char_to_screen((unsigned char)text[i], x, y, color, &w, &h);
 		cursor_x += w + 1;
@@ -974,7 +974,7 @@ static int pico8_pset(lua_State* L)
 	int x = (int)fix32_to_int32(luaL_checknumber(L, 1));
 	int y = (int)fix32_to_int32(luaL_checknumber(L, 2));
 
-	apply_camera_offset(&x, &y);
+	apply_camera_offset((int*)&x, (int*)&y);
 
 	if (lua_gettop(L) == 3)
 	{
@@ -1127,7 +1127,7 @@ static int pico8_spr(lua_State* L)
 	bool flip_x = lua_toboolean(L, 6);
 	bool flip_y = lua_toboolean(L, 7);
 
-	apply_camera_offset(&x, &y);
+	apply_camera_offset((int*)&x, (int*)&y);
 
 	draw_sprite_n(n, x, y, w, h, flip_x, flip_y);
 
@@ -1152,7 +1152,7 @@ static int pico8_sspr(lua_State* L)
 	bool flip_x = lua_toboolean(L, 9);
 	bool flip_y = lua_toboolean(L, 10);
 
-	apply_camera_offset(&dx, &dy);
+	apply_camera_offset((int*)&dx, (int*)&dy);
 
 	if (sw <= 0 || sh <= 0 || dw == 0 || dh == 0)
 	{
@@ -1260,7 +1260,7 @@ static int pico8_map(lua_State* L)
 	int celh = fix32_to_int(luaL_optnumber(L, 6, fix32_value(64, 0)));
 	uint8_t layer = 0;
 
-	apply_camera_offset(&sx, &sy);
+	apply_camera_offset((int*)&sx, (int*)&sy);
 
 	if (lua_gettop(L) >= 7)
 	{
