@@ -34,7 +34,7 @@ jobs:
             mkdir -p output
 
             find export -name "*.PBP" -exec cp {} output/EBOOT.PBP \;
-            cp export/PARAM.SFO output/
+            find export -name "*.SFO" -exec cp {} output/PARAM.SDO \;
             cp -r export/carts output/
 
       - name: Archive open8
