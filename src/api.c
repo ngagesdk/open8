@@ -603,7 +603,7 @@ static int pico8_circfill(lua_State* L)
 	apply_camera_offset((int*)&cx, (int*)&cy);
 
 	int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
-	int color = 0;
+	int color;
 
 	if (lua_gettop(L) >= 4)
 	{

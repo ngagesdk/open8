@@ -153,7 +153,6 @@ void color_lookup(int col, uint8_t* r, uint8_t* g, uint8_t* b)
             *r = 0xff;
             *g = 0x6c;
             *b = 0x24;
-            *b = 0x24;
             break;
         case -6: // lime-green
         case 138:
