@@ -256,10 +256,17 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         SDL_UnlockTexture(screen);
     }
 
-#ifdef __SYMBIAN32__
-    SDL_RenderTexture(renderer, screen, NULL, NULL);
-#else
     SDL_FRect dest;
+
+#ifdef __SYMBIAN32__
+    dest.x = 24.f;
+    dest.y = 25.f;
+    dest.w = 128.f;
+	dest.h = 128.f;
+
+    SDL_RenderTexture(renderer, screen, NULL, &dest);
+
+#else
 
     int window_w, window_h;
     get_window_size(&window_w, &window_h);
