@@ -114,11 +114,11 @@ if (NINTENDO_3DS)
 
 elseif(PSP)
   create_pbp_file(
-	TARGET ${PROJECT}
+	TARGET open8
     ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/icon.png"
     BACKGROUND_PATH NULL
     PREVIEW_PATH NULL
-	TITLE ${PROJECT})
+	TITLE open8)
 
 elseif(EMSCRIPTEN)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
