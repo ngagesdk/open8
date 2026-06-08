@@ -382,6 +382,11 @@ static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart
 		return 0;
 	}
 
+	if (!SDL_SetTextureBlendMode(cart->image, SDL_BLENDMODE_BLEND))
+	{
+		SDL_Log("Couldn't set texture blend mode: %s", SDL_GetError());
+	}
+
 	if (!SDL_UpdateTexture(cart->image, NULL, image_data, width * 4))
 	{
 		SDL_Log("Couldn't update texture: %s", SDL_GetError());
@@ -596,7 +601,7 @@ static void select_prev_cartridge(SDL_Renderer* renderer)
 
 static void render_cartridge(SDL_Renderer* renderer)
 {
-	SDL_SetRenderDrawColor(renderer, 0x64, 0x64, 0x64, 0xff);
+	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
 	SDL_RenderClear(renderer);
 	SDL_RenderTexture(renderer, cart.image, NULL, &cart_rect);
 }
