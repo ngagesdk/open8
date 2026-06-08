@@ -10,10 +10,12 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include <stdint.h>
+
 #include "lexaloffle/p8_compress.h"
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
 #include "api.h"
+#include "app.h"
 #include "config.h"
 #include "core.h"
 #include "memory.h"
@@ -596,36 +598,34 @@ static void render_cartridge(SDL_Renderer* renderer)
 	SDL_SetRenderTarget(renderer, NULL);
 
 	SDL_FRect dest;
-
-#if defined(__SYMBIAN32__) || defined(__3DS__)
-
-	dest.x = FRAME_OFFSET_X;
-	dest.y = FRAME_OFFSET_Y;
-	dest.w = FRAME_W;
-	dest.h = FRAME_H;
-
-	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
-	SDL_RenderClear(renderer);
-	SDL_RenderTexture(renderer, cart.image, NULL, &dest);
-
-#else
-
 	SDL_FRect source;
-	source.x = 16;
-	source.y = 24;
-	source.w = 128;
-	source.h = 128;
 
-	dest.x = 0;
-	dest.y = 0;
-	dest.w = WINDOW_W;
-	dest.h = WINDOW_H;
+#ifdef __SYMBIAN32__
+	source.x = 0.f;
+	source.y = 0.f;
+	source.w = 160.f;
+	source.h = 205.f;
+#else
+	source.x = 16.f;
+	source.y = 24.f;
+	source.w = 128.f;
+	source.h = 128.f;
+#endif
+
+	int window_w, window_h;
+	get_window_size(&window_w, &window_h);
+
+	int offset_x, offset_y;
+	get_window_offset(&offset_x, &offset_y);
+
+	dest.x = (float)offset_x;
+	dest.y = (float)offset_y;
+	dest.w = (float)window_w;
+	dest.h = (float)window_h;
 
 	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
 	SDL_RenderClear(renderer);
 	SDL_RenderTexture(renderer, cart.image, &source, &dest);
-
-#endif
 }
 
 bool init_core(SDL_Renderer* renderer)
@@ -864,7 +864,7 @@ bool iterate_core(SDL_Renderer* renderer)
 		Uint64 elapsed = SDL_GetTicks() - frame_start;
 		if (elapsed < frame_ms)
 		{
-			SDL_Delay((Uint32)(frame_ms - elapsed));	
+			SDL_Delay((Uint32)(frame_ms - elapsed));
 		}
 #endif
 

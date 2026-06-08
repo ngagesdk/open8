@@ -12,6 +12,10 @@
 
 #include <SDL3/SDL.h>
 
+int get_scale(void);
+void get_window_offset(int* x, int* y);
+void get_window_size(int* w, int* h);
+
 bool init_app(SDL_Renderer** renderer, SDL_Window* window);
 void destroy_app(void);
 

@@ -33,20 +33,6 @@
 #define WINDOW_FLAGS 0
 #define FRAME_OFFSET_X 96
 #define FRAME_OFFSET_Y 36
-#else
-#define SCALE 2
-#define WINDOW_W 128
-#define WINDOW_H 128
-#define WINDOW_FLAGS 0
-#define FRAME_OFFSET_X 24
-#define FRAME_OFFSET_Y 1
 #endif
-
-#define FRAME_W 160
-#define FRAME_H 205
-
-#define SCREEN_OFFSET_X FRAME_OFFSET_X + 16
-#define SCREEN_OFFSET_Y FRAME_OFFSET_Y + 24
-#define SCREEN_SIZE 128
 
 #endif // CONFIG_H

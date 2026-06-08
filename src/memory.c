@@ -9,7 +9,9 @@
 
 #include <SDL3/SDL.h>
 #include <stdint.h>
+
 #include "auxiliary.h"
+#include "app.h"
 #include "config.h"
 #include "memory.h"
 
@@ -36,13 +38,13 @@ bool init_memory(SDL_Renderer* renderer)
 
     screen_format = SDL_PIXELFORMAT_UNKNOWN;
 
-    const SDL_PixelFormat *texture_formats = (const SDL_PixelFormat *)SDL_GetPointerProperty(SDL_GetRendererProperties(renderer), SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
+    const SDL_PixelFormat* texture_formats = (const SDL_PixelFormat*)SDL_GetPointerProperty(SDL_GetRendererProperties(renderer), SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
     if (texture_formats) {
         // Use the first compatible format that the renderer supports
         for (int i = 0; texture_formats[i] != SDL_PIXELFORMAT_UNKNOWN; ++i) {
             if ((SDL_BYTESPERPIXEL(texture_formats[i]) != 1 &&
-                 SDL_BYTESPERPIXEL(texture_formats[i]) != 2 &&
-                 SDL_BYTESPERPIXEL(texture_formats[i]) != 4) ||
+                SDL_BYTESPERPIXEL(texture_formats[i]) != 2 &&
+                SDL_BYTESPERPIXEL(texture_formats[i]) != 4) ||
                 !SDL_ISPIXELFORMAT_PACKED(texture_formats[i]))
                 break;
             screen_format = texture_formats[i];
@@ -52,9 +54,11 @@ bool init_memory(SDL_Renderer* renderer)
 
     // If all else fails, use RGBA32 as a fallback.
     if (screen_format == SDL_PIXELFORMAT_UNKNOWN)
+    {
         screen_format = SDL_PIXELFORMAT_RGBA32;
+    }
 
-    screen = SDL_CreateTexture(renderer, screen_format, SDL_TEXTUREACCESS_STREAMING, SCREEN_SIZE, SCREEN_SIZE);
+    screen = SDL_CreateTexture(renderer, screen_format, SDL_TEXTUREACCESS_STREAMING, 128, 128);
     if (screen == NULL)
     {
         SDL_Log("Could not create screen texture: %s", SDL_GetError());
@@ -67,7 +71,7 @@ bool init_memory(SDL_Renderer* renderer)
     }
 
     uint8_t r, g, b;
-    const SDL_PixelFormatDetails *details = SDL_GetPixelFormatDetails(screen_format);
+    const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(screen_format);
 
     for (int i = 0; i < 16; i++) {
         color_lookup(i, &r, &g, &b);
@@ -78,7 +82,7 @@ bool init_memory(SDL_Renderer* renderer)
         uint32_t lo = palette_map[i & 0xF];
         uint32_t hi = palette_map[i >> 4];
         switch (SDL_BYTESPERPIXEL(screen_format)) {
-        case 1:  expanded_map[i] = (uint8_t)lo  | ((uint8_t)hi  << 8);  break;
+        case 1:  expanded_map[i] = (uint8_t)lo | ((uint8_t)hi << 8);  break;
         case 2:  expanded_map[i] = (uint16_t)lo | ((uint32_t)(uint16_t)hi << 16); break;
         default: expanded_map[i] = 0; break;
         }
@@ -211,11 +215,11 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         switch (SDL_BYTESPERPIXEL(screen_format))
         {
         case 1:
-            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+            for (int y = 0; y < 128; y++, row += pitch)
             {
                 uint16_t* pixel = (uint16_t*)row;
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
+                for (int x = 0; x < 64; x++, src++, pixel++)
                 {
                     uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
                     uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
@@ -224,11 +228,11 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             }
             break;
         case 2:
-            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+            for (int y = 0; y < 128; y++, row += pitch)
             {
                 uint32_t* pixel = (uint32_t*)row;
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel++)
+                for (int x = 0; x < 64; x++, src++, pixel++)
                 {
                     uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
                     uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
@@ -237,11 +241,11 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
             }
             break;
         case 4:
-            for (int y = 0; y < SCREEN_SIZE; y++, row += pitch)
+            for (int y = 0; y < 128; y++, row += pitch)
             {
                 uint32_t* pixel = (uint32_t*)row;
                 const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-                for (int x = 0; x < SCREEN_SIZE / 2; x++, src++, pixel += 2)
+                for (int x = 0; x < 64; x++, src++, pixel += 2)
                 {
                     pixel[0] = palette_map[pico8_ram[0x5f10 + (*src & 0x0F)]];
                     pixel[1] = palette_map[pico8_ram[0x5f10 + (*src >> 4)]];
@@ -252,34 +256,24 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
         SDL_UnlockTexture(screen);
     }
 
+#ifdef __SYMBIAN32__
+    SDL_RenderTexture(renderer, screen, NULL, NULL);
+#else
     SDL_FRect dest;
 
-#if defined(__SYMBIAN32__) || defined(__3DS__)
+    int window_w, window_h;
+    get_window_size(&window_w, &window_h);
 
-    dest.x = SCREEN_OFFSET_X;
-    dest.y = SCREEN_OFFSET_Y;
-    dest.w = SCREEN_SIZE;
-    dest.h = SCREEN_SIZE;
+    int offset_x, offset_y;
+    get_window_offset(&offset_x, &offset_y);
+
+    dest.x = (float)offset_x;
+    dest.y = (float)offset_y;
+    dest.w = (float)window_w;
+    dest.h = (float)window_h;
 
     SDL_RenderTexture(renderer, screen, NULL, &dest);
-
-#else
-
-    SDL_FRect source;
-    source.x = 0;
-    source.y = 0;
-    source.w = 128;
-    source.h = 128;
-
-    dest.x = 0;
-    dest.y = 0;
-    dest.w = WINDOW_W;
-    dest.h = WINDOW_H;
-
-    SDL_RenderTexture(renderer, screen, &source, &dest);
-
 #endif
-
 }
 
 uint32_t crc32(const uint8_t* data, size_t start, size_t length)

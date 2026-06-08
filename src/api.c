@@ -34,7 +34,7 @@ static fix32_t seconds_since_start;
 
 // Frame timing info provided by core.c (frame_start in ms, frame_ms target in ms).
 // These are declared in api.h and set inside core.c each frame.
-uint64_t pico8_frame_start = 0;
+uint32_t pico8_frame_start = 0;
 uint32_t pico8_frame_ms = 0;
 
 // Input state: tracks how many consecutive frames each button has been held.
@@ -443,7 +443,6 @@ static int pico8_stat(lua_State* L)
 {
 	uint32_t id = fix32_to_uint32(luaL_checkunsigned(L, 1));
 
-#if defined(__SYMBIAN32__) || defined(__3DS__) || defined(__DOS__)
 	static bool once = false;
 	static uint32_t inv_frame_ms_q16; // Q16.16 reciprocal
 
@@ -453,7 +452,6 @@ static int pico8_stat(lua_State* L)
 		inv_frame_ms_q16 = (pico8_frame_ms != 0) ? ((1u << 16) / pico8_frame_ms) : 0;
 		once = true;
 	}
-#endif
 
 	switch (id)
 	{
@@ -467,8 +465,7 @@ static int pico8_stat(lua_State* L)
 		}
 		else
 		{
-#ifdef __SYMBIAN32__
-			uint32_t now = SDL_GetTicks();
+			uint32_t now = (uint32_t)SDL_GetTicks();
 			uint32_t delta = now - pico8_frame_start;
 
 			// Q16.16 fixed-point usage = (delta / frame_ms)
@@ -482,22 +479,7 @@ static int pico8_stat(lua_State* L)
 			}
 
 			// push to Lua without any custom float conversion
-			lua_pushnumber(L, (lua_Number)usage_fp * (1.0 / 65536.0));
-#else
-			uint64_t now = SDL_GetTicks();
-			double elapsed = (double)(now - pico8_frame_start);
-			double usage = elapsed / (double)pico8_frame_ms;
-			if (usage < 0.0)
-			{
-				usage = 0.0;
-			}
-			if (usage > 4.0)
-			{
-				usage = 4.0; // clamp to some sane upper bound
-			}
-			// Convert to pico8 fix32-style number (store as Lua number)
-			lua_pushnumber(L, fix32_from_double(usage));
-#endif
+			lua_pushnumber(L, (lua_Number)usage_fp * (lua_Number)(1.0 / 65536.0));
 		}
 		break;
 	}
@@ -829,7 +811,7 @@ static int pico8_pal(lua_State* L)
 	}
 	else if (argc >= 2)
 	{
-        /* Some carts compute indices that can occasionally be out-of-range
+		/* Some carts compute indices that can occasionally be out-of-range
 		 * and yield nil when indexing tables; historically PICO-8 did not
 		 * crash in these situations. Treat a missing/nil target color as
 		 * an identity (no-op) mapping.
@@ -1339,7 +1321,7 @@ static int parse_button_arg(lua_State* L, int idx)
 		case 151: // X key.
 			return 5;
 		default:
-			return -1;	
+			return -1;
 		}
 	}
 
