@@ -19,6 +19,12 @@ jobs:
           apk update
           apk add cmake make
 
+      - name: Debug PS2DEV
+        run: |
+          echo "PS2DEV=$PS2DEV"
+          ls -R /usr/local/ps2dev || true
+          find / -name ps2dev.cmake 2>/dev/null || true
+
       - name: Configure project
         run: |
           cmake -S . \
