@@ -17,7 +17,7 @@ jobs:
       - name: Install build dependencies
         run: |
           apk update
-          apk add cmake make
+          apk add cmake make git bash curl
 
       - name: Configure project
         run: |
