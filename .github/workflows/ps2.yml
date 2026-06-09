@@ -50,5 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open8-PS2
-          path: output
+          path: |
+            export/carts
+            export/open8.elf
           if-no-files-found: error
