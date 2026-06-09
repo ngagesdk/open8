@@ -93,5 +93,7 @@ jobs:
       - name: Archive open8
         uses: actions/upload-artifact@v4
         with:
-          name: open8-DOS-djgpp.zip
-          path: export
+          name: open8-DOS.zip
+          path: |
+            export/carts/*.png
+            export/open8.exe
