@@ -19,17 +19,11 @@ jobs:
           apk update
           apk add cmake make
 
-      - name: Debug PS2DEV
-        run: |
-          echo "PS2DEV=$PS2DEV"
-          ls -R /usr/local/ps2dev || true
-          find / -name ps2dev.cmake 2>/dev/null || true
-
       - name: Configure project
         run: |
           cmake -S . \
                 -B build \
-                -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2dev.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=/usr/local/ps2dev/ps2sdk/ps2dev.cmake \
                 -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
       - name: Build project
