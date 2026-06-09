@@ -624,6 +624,36 @@ static void render_cartridge(SDL_Renderer* renderer)
 	}
 }
 
+void handle_resize(SDL_Renderer *renderer) {
+	int native_w, native_h;
+	SDL_GetRenderOutputSize(renderer, &native_w, &native_h);
+
+	int base_w = 160;
+	int base_h = 205;
+
+	int scale_x = native_w / base_w;
+	int scale_y = native_h / base_h;
+
+	int scale = (scale_x < scale_y) ? scale_x : scale_y;
+	if (scale < 1)
+	{
+		scale = 1;
+	}
+
+	int window_w = base_w * scale;
+	int window_h = base_h * scale;
+
+	cart_rect.x = ((float)(native_w - window_w) + 0.5f) / 2.f;
+	cart_rect.y = ((float)(native_h - window_h) + 0.5f) / 2.f;
+	cart_rect.w = (float)window_w;
+	cart_rect.h = (float)window_h;
+
+	screen_rect.x = cart_rect.x + (scale * 16);
+	screen_rect.y = cart_rect.y + (scale * 24);
+	screen_rect.w = (float)(scale * 128);
+	screen_rect.h = (float)(scale * 128);
+}
+
 bool init_core(SDL_Renderer* renderer)
 {
 	char path[256];
@@ -693,6 +723,11 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 	case SDL_EVENT_QUIT:
 	{
 		return false;
+	}
+	case SDL_EVENT_WINDOW_RESIZED:
+	{
+		handle_resize(renderer);
+		return true;
 	}
 	case SDL_EVENT_GAMEPAD_ADDED:
 	{
