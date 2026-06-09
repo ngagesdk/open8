@@ -42,4 +42,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open8-Emscripten
-          path: export
+          path: |
+            export/index.html
+            export/ogp-1200x1200.png
+            export/open8.data
+            export/open8.js
+            export/open8.wasm
+            export/style.css
