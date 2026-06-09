@@ -1,34 +1,27 @@
 name: Haiku OS
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: ghcr.io/haiku/cross-compiler:x86_64-r1beta5
 
     steps:
-      - name: Build on Haiku VM
-        uses: vmactions/haiku-vm@v1
-        with:
-          usesh: true
+      - uses: actions/checkout@v4
 
-          prepare: |
-            pkgman refresh
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -B build \
+                -G Ninja \
+                -DCMAKE_C_COMPILER=x86_64-unknown-haiku-gcc \
+                -DCMAKE_CXX_COMPILER=x86_64-unknown-haiku-g++ \
+                -DCMAKE_SYSTEM_NAME=Haiku \
+                -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
-            pkgman install -y git
-            pkgman install -y cmake
-            pkgman install -y ninja
-            pkgman install -y pkgconfig
-
-          run: |
-            set -e
-
-            git clone "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
-            mkdir -p build
-
-            cmake -S . -B build -G Ninja
-            cmake --build build
+      - name: Build project
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
