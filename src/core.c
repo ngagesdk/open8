@@ -10,6 +10,7 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "lexaloffle/p8_compress.h"
 #include "z8lua/lua.h"
@@ -23,13 +24,6 @@
 #define STBI_NO_THREAD_LOCALS
 #define STB_IMAGE_IMPLEMENTATION
 #include "misc/stb_image.h"
-
-#ifdef _WIN32
-#include "misc/dirent.h"
-#else
-#include <dirent.h>
-#endif
-#include <string.h>
 
 static char** available_carts;
 static int num_carts;
@@ -331,14 +325,11 @@ static void patch_cart_code(cart_t* cart)
 static int load_cart(SDL_Renderer* renderer, const char* file_name, cart_t* cart)
 {
 	int width, height, bpp;
-	char path[256];
 
-	SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), file_name);
-
-	FILE* file = fopen(path, "rb");
+	FILE* file = fopen(file_name, "rb");
 	if (!file)
 	{
-		SDL_Log("Couldn't open file: %s", path);
+		SDL_Log("Couldn't open file: %s", file_name);
 		return 0;
 	}
 
@@ -507,10 +498,7 @@ static void print_memory_usage(lua_State* L)
 
 static bool run_script(SDL_Renderer* renderer, const char* file_name)
 {
-	char path[256];
-	SDL_snprintf(path, sizeof(path), "%scarts/%s", SDL_GetBasePath(), file_name);
-
-	if (luaL_loadfile(vm, path) || lua_pcall(vm, 0, 0, 0))
+	if (luaL_loadfile(vm, file_name) || lua_pcall(vm, 0, 0, 0))
 	{
 		SDL_Log("Could not run .p8 script: %s", lua_tostring(vm, -1));
 		print_memory_usage(vm);
@@ -654,33 +642,39 @@ void handle_resize(SDL_Renderer *renderer) {
 	screen_rect.h = (float)(scale * 128);
 }
 
+static SDL_EnumerationResult dir_callback(void *userdata, const char *dirname, const char *fname) {
+	if (SDL_strstr(fname, ".png"))
+	{
+		available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
+		SDL_asprintf(&available_carts[num_carts], "%s%s", dirname, fname);
+		num_carts++;
+	}
+
+	return SDL_ENUM_CONTINUE;
+}
+
 bool init_core(SDL_Renderer* renderer)
 {
-	char path[256];
+	char *path;
 
 	num_carts = 0;
 	selection = 0;
 	prev_selection = !selection;
 
-	SDL_snprintf(path, sizeof(path), "%scarts", SDL_GetBasePath());
-
-	DIR* dir = opendir(path);
-	if (!dir)
+	if (SDL_asprintf(&path, "%scarts", SDL_GetBasePath()) < 0)
 	{
-		SDL_Log("Couldn't open directory: %s", path);
+		SDL_Log("Out of memory");
 		return false;
 	}
-	struct dirent* entry;
-	while ((entry = readdir(dir)))
+
+	if (!SDL_EnumerateDirectory(path, dir_callback, NULL))
 	{
-		if (SDL_strstr(entry->d_name, ".png"))
-		{
-			available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
-			available_carts[num_carts] = SDL_strdup(entry->d_name);
-			num_carts++;
-		}
+		SDL_Log("Couldn't open directory: %s", path);
+		SDL_free(path);
+		return false;
 	}
-	closedir(dir);
+
+	SDL_free(path);
 
 	if (!num_carts)
 	{
