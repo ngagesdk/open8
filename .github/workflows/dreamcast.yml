@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     container:
       image: kazade/dreamcast-sdk:latest
 
@@ -18,59 +17,70 @@ jobs:
       KOS_BASE: /opt/toolchains/dc/kos
 
     steps:
-      # IMPORTANT: Use v3 checkout for older GLIBC compatibility.
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Debug toolchain
+    
+      - name: Verify KOS installation
+        shell: bash
         run: |
           echo "KOS_BASE=$KOS_BASE"
+    
+          test -f "$KOS_BASE/environ.sh"
+    
+          source "$KOS_BASE/environ.sh"
+    
           echo "PATH=$PATH"
-          which sh-elf-gcc || true
-          which kos-cc || true
-          sh-elf-gcc --version || true
-
-      - name: Inspect KOS installation
-        run: |
-          ls -la /opt/toolchains
-          ls -la /opt/toolchains/dc || true
-          ls -la /opt/toolchains/dc/kos || true
-          find /opt/toolchains -name sh-elf-gcc 2>/dev/null || true
-          find /opt/toolchains -name kos-cc 2>/dev/null || true
-
-      - name: Verify KOS toolchain
-        run: |
-          echo "KOS_BASE=$KOS_BASE"
-          sh-elf-gcc --version || true
-          kos-cc --version || true
-
+    
+          which sh-elf-gcc
+          which kos-cc
+    
+          sh-elf-gcc -dumpmachine
+    
       - name: Clone SDL (Dreamcast SDL3 fork)
         run: |
-          git clone --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
-
+          git clone --depth 1 --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
+    
       - name: Build SDL
+        shell: bash
         run: |
-          cd SDL
-          mkdir build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
-
+          source "$KOS_BASE/environ.sh"
+    
+          mkdir -p SDL/build
+          cd SDL/build
+    
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_C_COMPILER=kos-cc
+    
+          make -j"$(nproc)"
+    
       - name: Configure project
+        shell: bash
         run: |
-          mkdir -p build
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-
+          source "$KOS_BASE/environ.sh"
+    
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_C_COMPILER=kos-cc
+    
       - name: Build project
+        shell: bash
         run: |
-          cmake --build build -j$(nproc)
-
+          source "$KOS_BASE/environ.sh"
+    
+          cmake --build build -- -j"$(nproc)"
+    
       - name: Prepare output
+        shell: bash
         run: |
           mkdir -p export
-          find build -type f \( -name "*.elf" -o -name "*.bin" \) -exec cp {} export/ \;
-
+    
+          find build -type f \
+            \( -name "*.elf" -o -name "*.bin" -o -name "*.srec" \) \
+            -exec cp {} export/ \;
+    
       - name: Upload Dreamcast build
         uses: actions/upload-artifact@v4
         with:
           name: dreamcast-build
-          path: export/**
+          path: export/
