@@ -1,0 +1,89 @@
+name: SEGA Dreamcast
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+  KOS_BASE: ${{ github.workspace }}/kos
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git build-essential cmake make bison flex texinfo wget \
+            libgmp-dev libmpfr-dev libmpc-dev \
+            zlib1g-dev libpng-dev
+
+      - name: Clone KallistiOS
+        run: |
+          git clone https://github.com/KallistiOS/KallistiOS.git $KOS_BASE
+
+      - name: Setup KOS environment
+        run: |
+          echo "KOS_BASE=$KOS_BASE" >> $GITHUB_ENV
+          echo "KOS_ARCH=dreamcast" >> $GITHUB_ENV
+          echo "$KOS_BASE/utils/dc-chain/bin" >> $GITHUB_PATH
+
+      - name: Build dc-chain toolchain
+        run: |
+          cd $KOS_BASE/utils/dc-chain
+          ./download.sh
+          ./build.sh
+
+      - name: Build KOS
+        run: |
+          cd $KOS_BASE
+          make
+
+      - name: Clone SDL (Dreamcast branch)
+        run: |
+          git clone --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
+
+      - name: Build SDL
+        run: |
+          cd SDL
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=$KOS_BASE/utils/dc-chain/dc-toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Configure project
+        run: |
+          mkdir build
+
+      - name: Configure with CMake
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=$KOS_BASE/utils/dc-chain/dc-toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: |
+          cmake --build build --config Release --verbose -j$(nproc)
+
+      - name: Prepare Dreamcast output
+        run: |
+          mkdir -p export
+          
+          # Adjust these depending on your project output.
+          find build -type f \( -name "*.elf" -o -name "*.bin" -o -name "*.iso" \) -exec cp {} export/ \;
+
+      - name: Archive Dreamcast build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dreamcast-build.zip
+          path: |
+            export/**

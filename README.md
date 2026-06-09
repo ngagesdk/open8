@@ -16,6 +16,7 @@
 [![PSP](https://github.com/ngagesdk/open8/actions/workflows/psp.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)
 [![PS Vita](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml)
 [![RISC OS](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)
+[![SEGA Dreamcast](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml)
 [![Windows](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 
 ## About the Project

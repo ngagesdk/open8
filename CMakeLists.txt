@@ -114,6 +114,45 @@ if (NINTENDO_3DS)
     ROMFS "${ROMFS_DIR}"
     SMDH "${SMDH_FILE}")
 
+elseif(DREAMCAST)
+
+  if(NOT DEFINED ENV{KOS_BASE})
+    message(FATAL_ERROR "KOS_BASE not set (KallistiOS required)")
+  endif()
+
+  set(KOS_BASE $ENV{KOS_BASE})
+
+  message(STATUS "Building for Dreamcast (KallistiOS)")
+  message(STATUS "KOS_BASE = ${KOS_BASE}")
+
+  include_directories(
+    ${KOS_BASE}/include
+    ${KOS_BASE}/kernel/arch/dreamcast/include)
+
+  target_link_libraries(open8 PRIVATE SDL3::SDL3)
+
+  # KOS runtime libraries (typical minimum set)
+  target_link_libraries(open8 PRIVATE
+    -L${KOS_BASE}/lib
+    -lkallisti
+    -lm)
+
+  set_target_properties(open8 PROPERTIES
+    SUFFIX ".elf")
+
+  set_target_properties(open8 PROPERTIES
+    WIN32_EXECUTABLE OFF)
+
+  target_compile_options(open8 PRIVATE
+    $<$<CONFIG:Release>:-O3>
+    $<$<CONFIG:Release>:-ffast-math>
+    $<$<CONFIG:Release>:-funroll-loops>
+    $<$<CONFIG:Release>:-fomit-frame-pointer>)
+
+  target_compile_options(open8 PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
+
 elseif(PSP)
   create_pbp_file(
 	TARGET open8
