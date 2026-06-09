@@ -16,6 +16,7 @@
 #define RAM_SIZE 0x8000
 
 extern uint8_t pico8_ram[RAM_SIZE];
+extern SDL_FRect screen_rect;
 
 bool init_memory(SDL_Renderer* renderer);
 void reset_memory(void);

@@ -37,7 +37,20 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 		SDL_Log("Couldn't initialize gamepad subsystem: %s", SDL_GetError());
 	}
 
-	window = SDL_CreateWindow("open8", 160 * 2, 205 * 2, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
+	int window_w, window_h;
+
+#ifdef __DJGPP__
+	window_w = 320;
+	window_h = 200;
+#elif __SYMBIAN__
+	window_w = 176;
+	window_h = 208;
+#else
+	window_w = 160 * 2;
+	window_h = 205 * 2;
+#endif
+
+	window = SDL_CreateWindow("open8", window_w, window_h, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
 	if (!window)
 	{
 		SDL_Log("Couldn't create window: %s", SDL_GetError());

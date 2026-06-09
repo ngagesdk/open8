@@ -597,22 +597,20 @@ static void render_cartridge(SDL_Renderer* renderer)
 
 	if (!SDL_GetWindowSize(window, &w, &h))
 	{
-		SDL_FRect dest;
-
-		dest.x = (w - cart_rect.w) * 0.5f;
-		dest.y = (h - cart_rect.h) * 0.5f;
-		dest.w = cart_rect.w;
-		dest.h = cart_rect.h;
-
-		SDL_RenderTexture(renderer, cart.image, &dest, &cart_rect);
+		SDL_Log("Unable to get window size: %s", SDL_GetError());
 	}
-	else
-	{
-		SDL_RenderTexture(renderer, cart.image, NULL, &cart_rect);
-	}
+
+	SDL_FRect dest;
+
+	dest.x = 0;
+	dest.y = 0;
+	dest.w = cart_rect.w;
+	dest.h = cart_rect.h;
+
+	SDL_RenderTexture(renderer, cart.image, &dest, &cart_rect);
 }
 
-void handle_resize(SDL_Renderer *renderer) {
+void handle_resize(SDL_Renderer* renderer) {
 	int native_w, native_h;
 	SDL_GetRenderOutputSize(renderer, &native_w, &native_h);
 
@@ -640,9 +638,13 @@ void handle_resize(SDL_Renderer *renderer) {
 	screen_rect.y = cart_rect.y + (scale * 24);
 	screen_rect.w = (float)(scale * 128);
 	screen_rect.h = (float)(scale * 128);
+
+#ifdef __DJGPP__
+	screen_rect.y += 1;
+#endif
 }
 
-static SDL_EnumerationResult dir_callback(void *userdata, const char *dirname, const char *fname) {
+static SDL_EnumerationResult dir_callback(void* userdata, const char* dirname, const char* fname) {
 	if (SDL_strstr(fname, ".png"))
 	{
 		available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
@@ -655,7 +657,7 @@ static SDL_EnumerationResult dir_callback(void *userdata, const char *dirname, c
 
 bool init_core(SDL_Renderer* renderer)
 {
-	char *path;
+	char* path;
 
 	num_carts = 0;
 	selection = 0;
