@@ -30,6 +30,10 @@ jobs:
         run: |
           git clone https://github.com/KallistiOS/KallistiOS.git $KOS_BASE
 
+      - name: Check toolchain folder
+        run: |
+          ls -R $KOS_BASE/utils || true
+
       - name: Setup KOS environment
         run: |
           echo "KOS_BASE=$KOS_BASE" >> $GITHUB_ENV
