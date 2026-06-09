@@ -50,7 +50,8 @@ jobs:
     
           cmake .. \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_C_COMPILER=kos-cc
+            -DCMAKE_C_COMPILER=kos-cc \
+            -DPLATFORM_DREAMCAST
     
           make -j"$(nproc)"
     

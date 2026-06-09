@@ -122,7 +122,6 @@ elseif(DREAMCAST)
     message(FATAL_ERROR "KOS_BASE not set (KallistiOS required)")
   endif()
 
-  set(PLATFORM_DREAMCAST)
   set(KOS_BASE $ENV{KOS_BASE})
 
   message(STATUS "Building for Dreamcast (KallistiOS)")
