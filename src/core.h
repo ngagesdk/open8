@@ -38,6 +38,8 @@ typedef enum state
 
 } state_t;
 
+void handle_resize(SDL_Renderer *renderer);
+
 bool init_core(SDL_Renderer* renderer);
 void destroy_core(void);
 bool handle_events(SDL_Renderer* renderer, SDL_Event* event);

@@ -10,6 +10,7 @@
 #include "SDL3/SDL.h"
 
 #include "app.h"
+#include "core.h"
 
 static SDL_AudioDeviceID audio_device;
 
@@ -36,7 +37,7 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 		SDL_Log("Couldn't initialize gamepad subsystem: %s", SDL_GetError());
 	}
 
-	window = SDL_CreateWindow("open8", 160 * 2, 205 * 2, SDL_WINDOW_HIGH_PIXEL_DENSITY);
+	window = SDL_CreateWindow("open8", 160 * 2, 205 * 2, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
 	if (!window)
 	{
 		SDL_Log("Couldn't create window: %s", SDL_GetError());
@@ -51,33 +52,7 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 		return false;
 	}
 
-	int native_w, native_h;
-	SDL_GetRenderOutputSize(*renderer, &native_w, &native_h);
-
-	int base_w = 160;
-	int base_h = 205;
-
-	int scale_x = native_w / base_w;
-	int scale_y = native_h / base_h;
-
-	int scale = (scale_x < scale_y) ? scale_x : scale_y;
-	if (scale < 1)
-	{
-		scale = 1;
-	}
-
-	int window_w = base_w * scale;
-	int window_h = base_h * scale;
-
-	cart_rect.x = (float)(native_w - window_w) / 2.f;
-	cart_rect.y = (float)(native_h - window_h) / 2.f;
-	cart_rect.w = (float)window_w;
-	cart_rect.h = (float)window_h;
-
-	screen_rect.x = cart_rect.x + (scale * 16);
-	screen_rect.y = cart_rect.y + (scale * 24);
-	screen_rect.w = (float)(scale * 128);
-	screen_rect.h = (float)(scale * 128);
+	handle_resize(*renderer);
 
 	SDL_AudioSpec spec;
 	spec.channels = 1;
