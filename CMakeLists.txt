@@ -6,6 +6,8 @@ project(open8 C CXX)
 
 if (NGAGESDK)
   find_package(SDL3 REQUIRED)
+elseif(VITA)
+  find_package(SDL3 REQUIRED)
 else()
   set(EXPORT_DIR ${PROJECT_SOURCE_DIR}/export)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXPORT_DIR})
@@ -119,6 +121,37 @@ elseif(PSP)
     BACKGROUND_PATH NULL
     PREVIEW_PATH NULL
 	TITLE open8)
+
+elseif(VITA)
+  if(NOT DEFINED ENV{VITASDK})
+    message(FATAL_ERROR "VITASDK not set")
+  endif()
+
+  include("$ENV{VITASDK}/share/vita.toolchain.cmake")
+
+  target_link_libraries(open8 PRIVATE
+    SDL3::SDL3
+    SceDisplay_stub
+    SceGxm_stub
+    SceCtrl_stub
+    SceAudio_stub
+    SceCommonDialog_stub
+    SceAppMgr_stub
+  )
+
+  # Vita executable name
+  set_target_properties(open8 PROPERTIES OUTPUT_NAME "eboot")
+
+  # Install structure for VPK build
+  set(VITA_APP_NAME "open8")
+  set(VITA_TITLE_ID "OPEN00001")
+
+  vita_create_self(${PROJECT_NAME}.self open8 UNSAFE)
+
+  vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLE_ID} ${PROJECT_NAME}.self
+    VERSION "01.00"
+    NAME ${VITA_APP_NAME}
+  )
 
 elseif(EMSCRIPTEN)
   target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})

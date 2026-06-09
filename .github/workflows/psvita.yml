@@ -1,0 +1,46 @@
+name: PS Vita
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  vita:
+    name: Build (PS Vita)
+    runs-on: ubuntu-latest
+    container: vitasdk/vitasdk:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apk update
+          apk add cmake ninja git
+
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -B build \
+                -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake \
+                -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build project
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Package VPK
+        run: |
+          mkdir -p output
+
+          # If you use vita-make-fself / vita-mksfoex / vita-pack-vpk
+          # adjust paths depending on your build system
+
+          find . -name "*.vpk" -exec cp {} output/ \;
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open8-PSVITA
+          path: output
+          if-no-files-found: error

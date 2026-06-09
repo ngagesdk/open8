@@ -1,0 +1,27 @@
+name: Haiku OS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run on Haiku VM
+        uses: vmactions/haiku-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkgman update
+            pkgman install -y git cmake ninja pkgconfig
+            pkgman install -y sdl3_devel
+
+          run: |
+            git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY .
+            mkdir build
+            cmake -S . -B build -G Ninja
+            cmake --build build

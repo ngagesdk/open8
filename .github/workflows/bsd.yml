@@ -1,0 +1,27 @@
+name: BSD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run on FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg update -f
+            pkg install -y git cmake ninja pkgconf
+            pkg install -y sdl3
+
+          run: |
+            git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY .
+            mkdir build
+            cmake -S . -B build -G Ninja
+            cmake --build build

@@ -6,12 +6,15 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/a1d30d31ef0f4cd7ab26304b6031a0e5)](https://app.codacy.com/gh/ngagesdk/open8/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f)](https://ngagesdk.de/open8)
 
+[![BSD](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml)
 [![DOS](https://github.com/ngagesdk/open8/actions/workflows/dos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/dos.yml)
 [![Emscripten](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml)
+[![Haiku OS](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml)
 [![Linux](https://github.com/ngagesdk/open8/actions/workflows/linux.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)
 [![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
 [![PSP](https://github.com/ngagesdk/open8/actions/workflows/psp.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)
+[![PS Vita](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml)
 [![RISC OS](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)
 [![Windows](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 
