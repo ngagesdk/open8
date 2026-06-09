@@ -18,7 +18,12 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 	SDL_SetHint("SDL_RENDER_VSYNC", "1");
 	SDL_SetHint("SDL_RENDER_NGAGE_SHOW_FPS", "1");
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
-	SDL_SetAppMetadata("Pico-8", "1.0", "com.open8.ngagesdk");
+	SDL_SetAppMetadata("open8", "1.0", "de.ngagesdk.open8");
+
+	SDL_SetAppMetadataProperty(
+		SDL_PROP_APP_METADATA_URL_STRING,
+		"https://ngagesdk.de/open8"
+	);
 
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 	{
@@ -64,15 +69,15 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 	int window_w = base_w * scale;
 	int window_h = base_h * scale;
 
-	cart_rect.x = (native_w - window_w) / 2;
-	cart_rect.y = (native_h - window_h) / 2;
-	cart_rect.w = window_w;
-	cart_rect.h = window_h;
+	cart_rect.x = (float)(native_w - window_w) / 2.f;
+	cart_rect.y = (float)(native_h - window_h) / 2.f;
+	cart_rect.w = (float)window_w;
+	cart_rect.h = (float)window_h;
 
 	screen_rect.x = cart_rect.x + (scale * 16);
 	screen_rect.y = cart_rect.y + (scale * 24);
-	screen_rect.w = (scale * 128);
-	screen_rect.h = (scale * 128);
+	screen_rect.w = (float)(scale * 128);
+	screen_rect.h = (float)(scale * 128);
 
 	SDL_AudioSpec spec;
 	spec.channels = 1;

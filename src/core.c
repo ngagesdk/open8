@@ -601,9 +601,27 @@ static void select_prev_cartridge(SDL_Renderer* renderer)
 
 static void render_cartridge(SDL_Renderer* renderer)
 {
+	SDL_Window* window = SDL_GetRenderWindow(renderer);
+	int w, h;
+
 	SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
 	SDL_RenderClear(renderer);
-	SDL_RenderTexture(renderer, cart.image, NULL, &cart_rect);
+
+	if (!SDL_GetWindowSize(window, &w, &h))
+	{
+		SDL_FRect dest;
+
+		dest.x = (w - cart_rect.w) * 0.5f;
+		dest.y = (h - cart_rect.h) * 0.5f;
+		dest.w = cart_rect.w;
+		dest.h = cart_rect.h;
+
+		SDL_RenderTexture(renderer, cart.image, &dest, &cart_rect);
+	}
+	else
+	{
+		SDL_RenderTexture(renderer, cart.image, NULL, &cart_rect);
+	}
 }
 
 bool init_core(SDL_Renderer* renderer)
