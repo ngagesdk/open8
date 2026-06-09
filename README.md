@@ -12,6 +12,7 @@
 [![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
 [![PSP](https://github.com/ngagesdk/open8/actions/workflows/psp.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)
+[![RISC OS](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)
 [![Windows](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
 
 ## About the Project

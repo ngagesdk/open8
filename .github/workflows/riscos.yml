@@ -1,0 +1,40 @@
+name: RISC OS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-riscos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            git
+
+      - name: Install GCCSDK
+        run: |
+          git clone --depth 1 https://github.com/roolz/gccsdk.git
+          echo "$PWD/gccsdk/bin" >> $GITHUB_PATH
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-riscos \
+            -DCMAKE_SYSTEM_NAME=RISCOS \
+            -DCMAKE_C_COMPILER=arm-riscos-gnueabi-gcc \
+            -DCMAKE_CXX_COMPILER=arm-riscos-gnueabi-g++
+
+      - name: Build
+        run: |
+          cmake --build build-riscos --parallel
