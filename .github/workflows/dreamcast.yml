@@ -1,4 +1,4 @@
-name: Dreamcast
+name: SEGA Dreamcast
 
 on:
   push:
@@ -11,20 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: nold360/kallistios-sdk:latest
+      image: kazade/dreamcast-sdk:latest
 
     env:
       BUILD_TYPE: Release
       KOS_BASE: /opt/toolchains/dc/kos
 
     steps:
+      # IMPORTANT: Use v3 checkout for older GLIBC compatibility.
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Check KallistiOS environment
+      - name: Verify KOS toolchain
         run: |
           echo "KOS_BASE=$KOS_BASE"
           sh-elf-gcc --version || true
+          kos-cc --version || true
 
       - name: Clone SDL (Dreamcast SDL3 fork)
         run: |
@@ -34,28 +36,25 @@ jobs:
         run: |
           cd SDL
           mkdir build && cd build
-          cmake .. \
-            -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
 
       - name: Configure project
         run: |
           mkdir -p build
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
         run: |
-          cmake --build build --config Release --verbose -j$(nproc)
+          cmake --build build -j$(nproc)
 
       - name: Prepare output
         run: |
           mkdir -p export
-          find build -type f \( -name "*.elf" -o -name "*.bin" -o -name "*.iso" \) -exec cp {} export/ \;
+          find build -type f \( -name "*.elf" -o -name "*.bin" \) -exec cp {} export/ \;
 
       - name: Upload Dreamcast build
         uses: actions/upload-artifact@v4
         with:
           name: dreamcast-build
-          path: |
-            export/**
+          path: export/**
