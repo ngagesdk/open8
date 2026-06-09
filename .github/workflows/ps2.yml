@@ -19,14 +19,6 @@ jobs:
           apk update
           apk add cmake make git bash curl
 
-      - name: Inspect PS2 libs
-        run: |
-          echo "PS2DEV=$PS2DEV"
-          echo "PS2SDK=$PS2SDK"
-
-          find $PS2SDK -name "libSDL3.a"
-          find $PS2SDK -name "libps2sdk.a"
-      
       - name: Configure project
         run: |
           cmake -S . \
