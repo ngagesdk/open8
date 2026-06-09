@@ -45,6 +45,16 @@ macro(get_SDL3 version)
       URL https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL3-devel-${version}-mingw.zip
       URL_HASH
         SHA256=5b2bc8589974391e7b3fa4d1bca6c4e09657254afeea57bb4dbe239932188695)
+  elseif(PLATFORM_DREAMCAST)
+    find_package(SDL3 QUIET)
+    if(NOT SDL3_FOUND)
+      FetchContent_Declare(
+        SDL3
+        GIT_REPOSITORY https://github.com/GPF/SDL.git
+        GIT_TAG "dreamcastSDL3")
+      FetchContent_MakeAvailable(SDL3)
+      set(SDL3_LIBRARIES SDL3::SDL3)
+    endif()
   else()
     find_package(SDL3 QUIET)
     if(NOT SDL3_FOUND)
