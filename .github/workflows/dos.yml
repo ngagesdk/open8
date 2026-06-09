@@ -65,7 +65,6 @@ jobs:
         shell: pwsh
         run: |
           echo "${{ runner.temp }}/djgpp/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          # Also set DJGPP environment variable for the toolchain
           $djgpp_env = "${{ runner.temp }}/djgpp/djgpp.env"
           if (Test-Path $djgpp_env) {
             echo "DJGPP=$djgpp_env" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -76,8 +75,25 @@ jobs:
         run: |
           gcc --version
           g++ --version
-          # Verify djgpp.env exists
           Get-Item "${{ runner.temp }}/djgpp/djgpp.env" -ErrorAction SilentlyContinue
+
+      - name: Download CWSDPMI
+        shell: pwsh
+        run: |
+          Invoke-WebRequest `
+            "https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/repositories/1.4/tools/cwsdpmi.zip" `
+            -OutFile "${{ runner.temp }}/cwsdpmi.zip"
+
+      - name: Extract CWSDPMI
+        shell: pwsh
+        run: |
+          7z x "${{ runner.temp }}/cwsdpmi.zip" -o"${{ runner.temp }}/cwsdpmi"
+
+      - name: Install CWSDPMI into export folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force export | Out-Null
+          Copy-Item "${{ runner.temp }}/cwsdpmi/BIN/CWSDPMI.EXE" "export/CWSDPMI.EXE"
 
       - name: Create build directory
         run: mkdir build
@@ -97,3 +113,4 @@ jobs:
           path: |
             export/carts/*.png
             export/open8.exe
+            export/CWSDPMI.EXE
