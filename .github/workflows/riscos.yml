@@ -6,35 +6,33 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  BUILD_TYPE: Release
+
 jobs:
-  build-riscos:
+  build:
     runs-on: ubuntu-latest
 
+    container:
+      image: riscosdotinfo/riscos-gccsdk-4.7:latest
+
     steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install -y cmake ninja-build
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            ninja-build \
-            git
-
-      - name: Install GCCSDK
-        run: |
-          git clone --depth 1 https://github.com/roolz/gccsdk.git
-          echo "$PWD/gccsdk/bin" >> $GITHUB_PATH
-
       - name: Configure
         run: |
-          cmake -S . -B build-riscos \
-            -DCMAKE_SYSTEM_NAME=RISCOS \
-            -DCMAKE_C_COMPILER=arm-riscos-gnueabi-gcc \
-            -DCMAKE_CXX_COMPILER=arm-riscos-gnueabi-g++
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=/home/riscos/env/toolchain-riscos.cmake \
+            -DRISCOS=ON \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: |
-          cmake --build build-riscos --parallel
+          cmake --build build --parallel
