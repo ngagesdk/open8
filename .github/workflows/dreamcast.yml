@@ -30,6 +30,14 @@ jobs:
           which kos-cc || true
           sh-elf-gcc --version || true
 
+      - name: Inspect KOS installation
+        run: |
+          ls -la /opt/toolchains
+          ls -la /opt/toolchains/dc || true
+          ls -la /opt/toolchains/dc/kos || true
+          find /opt/toolchains -name sh-elf-gcc 2>/dev/null || true
+          find /opt/toolchains -name kos-cc 2>/dev/null || true
+
       - name: Verify KOS toolchain
         run: |
           echo "KOS_BASE=$KOS_BASE"
