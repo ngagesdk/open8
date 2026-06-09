@@ -20,49 +20,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
     
-      - name: Verify KOS installation
-        shell: bash
-        run: |
-          echo "KOS_BASE=$KOS_BASE"
-    
-          test -f "$KOS_BASE/environ.sh"
-    
-          source "$KOS_BASE/environ.sh"
-    
-          echo "PATH=$PATH"
-    
-          which sh-elf-gcc
-          which kos-cc
-    
-          sh-elf-gcc -dumpmachine
-    
-      - name: Clone SDL3
-        run: |
-          git clone --depth 1 --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
-    
-      - name: Build SDL
-        shell: bash
-        run: |
-          source "$KOS_BASE/environ.sh"
-    
-          mkdir -p SDL/build
-          cd SDL/build
-    
-          cmake .. \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_C_COMPILER=kos-cc \
-            -DPLATFORM_DREAMCAST=ON
-    
-          make -j"$(nproc)"
-    
       - name: Configure project
         shell: bash
         run: |
           source "$KOS_BASE/environ.sh"
     
-          cmake -S . -B build \
+          kos-cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_C_COMPILER=kos-cc
+            -DSDL_OPENGL=OFF
     
       - name: Build project
         shell: bash

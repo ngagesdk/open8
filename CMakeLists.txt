@@ -4,9 +4,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(open8 C CXX)
 
-if(DREAMCAST)
-  find_package(SDL3 REQUIRED)
-elseif (NGAGESDK)
+if (NGAGESDK)
   find_package(SDL3 REQUIRED)
 elseif(VITA)
   find_package(SDL3 REQUIRED)
@@ -115,32 +113,9 @@ if (NINTENDO_3DS)
     ROMFS "${ROMFS_DIR}"
     SMDH "${SMDH_FILE}")
 
-elseif(DREAMCAST)
-
-  if(NOT DEFINED ENV{KOS_BASE})
-    message(FATAL_ERROR "KOS_BASE not set (KallistiOS required)")
-  endif()
-
-  set(KOS_BASE $ENV{KOS_BASE})
-
-  message(STATUS "Building for Dreamcast (KallistiOS)")
-  message(STATUS "KOS_BASE = ${KOS_BASE}")
-
-  include_directories(
-    ${KOS_BASE}/include
-    ${KOS_BASE}/kernel/arch/dreamcast/include)
-
-  # KOS runtime libraries (typical minimum set)
-  target_link_libraries(open8 PRIVATE
-    -L${KOS_BASE}/lib
-    -lkallisti
-    -lm)
-
-  set_target_properties(open8 PROPERTIES
-    SUFFIX ".elf")
-
-  set_target_properties(open8 PROPERTIES
-    WIN32_EXECUTABLE OFF)
+elseif(PLATFORM_DREAMCAST)
+  # FIXME: This should be inherited from the SDL3::SDL3 target
+  target_link_libraries(open8 PRIVATE pthread)
 
   target_compile_options(open8 PRIVATE
     $<$<CONFIG:Release>:-O3>
