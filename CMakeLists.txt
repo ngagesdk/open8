@@ -31,6 +31,12 @@ add_executable(open8 WIN32 ${open8_sources})
 
 set_property(TARGET open8 PROPERTY C_STANDARD 99)
 
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+target_link_libraries(open8 PRIVATE SDL3::SDL3)
+
 if (NGAGESDK)
   set(open8_app_sources
     src/ngage/ngage.cpp
@@ -66,7 +72,6 @@ if (NGAGESDK)
   build_aif(${PROJECT_SOURCE_DIR}/res open8 0x100051c0)
   build_resource(${PROJECT_SOURCE_DIR}/res open8 "")
 
-  target_link_libraries(open8 PRIVATE SDL3::SDL3)
   target_link_libraries(open8 PRIVATE ${PROJECT_SOURCE_DIR}/lib/armi/urel/z8lua.lib)
 
   # Common optimizations for both C and C++
@@ -91,14 +96,8 @@ if (NGAGESDK)
   target_link_options(open8 PRIVATE "SHELL:-s UID3=0x1000c37e") # open8.exe UID
 else()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/z8lua)
-  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} z8lua)
+  target_link_libraries(open8 PRIVATE z8lua)
 endif()
-
-add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-
-include_directories(
-  "${CMAKE_CURRENT_SOURCE_DIR}/src"
-  "${sdl3_SOURCE_DIR}/include")
 
 if (NINTENDO_3DS)
   set(ROMFS_DIR "${CMAKE_CURRENT_BINARY_DIR}/romfs")
@@ -131,13 +130,6 @@ elseif(PLATFORM_DREAMCAST)
 elseif(PS2)
   set_target_properties(open8 PROPERTIES SUFFIX ".elf")
 
-  target_link_libraries(open8 PRIVATE
-    -lSDL3
-    -lps2sdk
-    -lpatches
-    -ldebug
-    -lm)
-
   target_compile_options(open8 PRIVATE
     $<$<CONFIG:Release>:-O2>
     $<$<CONFIG:Release>:-ffast-math>)
@@ -159,17 +151,6 @@ elseif(VITA)
   # Vita SDK helper macros.
   include("$ENV{VITASDK}/share/vita.cmake")
 
-  # Libraries.
-  target_link_libraries(open8 PRIVATE
-    SDL3::SDL3
-    SceDisplay_stub
-    SceGxm_stub
-    SceCtrl_stub
-    SceAudio_stub
-    SceCommonDialog_stub
-    SceAppMgr_stub
-  )
-
   # Vita metadata.
   set(VITA_APP_NAME "open8")
   set(VITA_TITLE_ID "OPEN00001")
@@ -183,7 +164,6 @@ elseif(VITA)
   )
 
 elseif(EMSCRIPTEN)
-  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES})
   target_link_options(open8 PRIVATE
     "SHELL:--preload-file ${EXPORT_DIR}/carts/celeste.png@carts/celeste.png"
   )
@@ -211,5 +191,5 @@ elseif(RISCOS)
   )
 
 elseif(UNIX)
-  target_link_libraries(open8 PRIVATE ${SDL3_LIBRARIES} m)
+  target_link_libraries(open8 PRIVATE m)
 endif()
