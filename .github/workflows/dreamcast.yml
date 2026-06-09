@@ -36,7 +36,7 @@ jobs:
     
           sh-elf-gcc -dumpmachine
     
-      - name: Clone SDL (Dreamcast SDL3 fork)
+      - name: Clone SDL3
         run: |
           git clone --depth 1 --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
     
@@ -50,7 +50,8 @@ jobs:
     
           cmake .. \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_C_COMPILER=kos-cc
+            -DCMAKE_C_COMPILER=kos-cc \
+            -DPLATFORM_DREAMCAST=TRUE
     
           make -j"$(nproc)"
     
