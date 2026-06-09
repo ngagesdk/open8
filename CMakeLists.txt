@@ -146,9 +146,6 @@ elseif(VITA)
   set(VITA_APP_NAME "open8")
   set(VITA_TITLE_ID "OPEN00001")
 
-  # Keep output consistent.
-  set_target_properties(open8 PROPERTIES OUTPUT_NAME "eboot")
-
   # Build SELF + VPK.
   vita_create_self(eboot.self open8 UNSAFE)
 
