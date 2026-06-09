@@ -13,6 +13,7 @@
 [![Linux](https://github.com/ngagesdk/open8/actions/workflows/linux.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)
 [![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)
 [![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
+[![PS2](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml)
 [![PSP](https://github.com/ngagesdk/open8/actions/workflows/psp.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)
 [![PS Vita](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml)
 [![RISC OS](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)

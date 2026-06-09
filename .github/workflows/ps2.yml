@@ -1,0 +1,54 @@
+name: PS2
+
+on: [push, pull_request]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  ps2:
+    name: Build (PS2)
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apk update
+          apk add cmake make
+
+      - name: Configure project
+        run: |
+          cmake -S . \
+                -B build \
+                -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/ps2dev.cmake \
+                -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build project
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Prepare output
+        run: |
+          mkdir -p output
+
+          # Typical PS2 ELF output
+          find build -name "*.elf" -exec cp {} output/BOOT.ELF \;
+
+          # Optional: ISO or artifact folder (if your build produces it)
+          if [ -d iso ]; then
+            cp -r iso output/
+          fi
+
+          # Optional: additional assets
+          if [ -d export ]; then
+            cp -r export/* output/
+          fi
+
+      - name: Archive PS2 build
+        uses: actions/upload-artifact@v4
+        with:
+          name: open8-PS2
+          path: output
+          if-no-files-found: error

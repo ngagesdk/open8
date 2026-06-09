@@ -155,6 +155,20 @@ elseif(DREAMCAST)
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 
+elseif(PS2)
+  set_target_properties(open8 PROPERTIES SUFFIX ".elf")
+
+  target_link_libraries(open8 PRIVATE
+    -lSDL3
+    -lps2sdk
+    -lpatches
+    -ldebug
+    -lm)
+
+  target_compile_options(open8 PRIVATE
+    $<$<CONFIG:Release>:-O2>
+    $<$<CONFIG:Release>:-ffast-math>)
+
 elseif(PSP)
   create_pbp_file(
 	TARGET open8
