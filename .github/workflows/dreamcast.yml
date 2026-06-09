@@ -30,21 +30,16 @@ jobs:
         run: |
           git clone https://github.com/KallistiOS/KallistiOS.git $KOS_BASE
 
-      - name: Check toolchain folder
-        run: |
-          ls -R $KOS_BASE/utils || true
-
       - name: Setup KOS environment
         run: |
           echo "KOS_BASE=$KOS_BASE" >> $GITHUB_ENV
           echo "KOS_ARCH=dreamcast" >> $GITHUB_ENV
           echo "$KOS_BASE/utils/dc-chain/bin" >> $GITHUB_PATH
 
-      - name: Build dc-chain toolchain
+      - name: Build toolchain (stable profile)
         run: |
-          cd $KOS_BASE/utils/dc-chain
-          ./download.sh
-          ./build.sh
+          cd $KOS_BASE/utils/kos-chain
+          make profile=dreamcast/stable
 
       - name: Build KOS
         run: |
