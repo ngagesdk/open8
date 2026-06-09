@@ -1,4 +1,4 @@
-name: SEGA Dreamcast
+name: Dreamcast
 
 on:
   push:
@@ -6,53 +6,27 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  BUILD_TYPE: Release
-  KOS_BASE: ${{ github.workspace }}/kos
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    container:
+      image: nold360/kallistios-sdk:latest
+
+    env:
+      BUILD_TYPE: Release
+      KOS_BASE: /opt/toolchains/dc/kos
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Dreamcast build dependencies
+      - name: Check KallistiOS environment
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential git make cmake \
-            libgmp-dev libmpfr-dev libmpc-dev \
-            zlib1g-dev libpng-dev \
-            libjpeg-dev
+          echo "KOS_BASE=$KOS_BASE"
+          sh-elf-gcc --version || true
 
-      - name: Clone KallistiOS
-        run: |
-          git clone https://github.com/KallistiOS/KallistiOS.git $KOS_BASE
-
-      - name: Setup KOS environment
-        run: |
-          echo "KOS_BASE=$KOS_BASE" >> $GITHUB_ENV
-          echo "KOS_ARCH=dreamcast" >> $GITHUB_ENV
-          echo "$KOS_BASE/utils/dc-chain/bin" >> $GITHUB_PATH
-
-      - name: Configure kos-chain
-        run: |
-          cd $KOS_BASE/utils/kos-chain
-          cp Makefile.dreamcast.cfg Makefile.cfg
-
-      - name: Build Dreamcast toolchain
-        run: |
-          cd $KOS_BASE/utils/kos-chain
-          make
-
-      - name: Build KOS
-        run: |
-          cd $KOS_BASE
-          make
-
-      - name: Clone SDL (Dreamcast branch)
+      - name: Clone SDL (Dreamcast SDL3 fork)
         run: |
           git clone --branch dreamcastSDL3 https://github.com/GPF/SDL.git SDL
 
@@ -61,34 +35,27 @@ jobs:
           cd SDL
           mkdir build && cd build
           cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE=$KOS_BASE/utils/dc-chain/dc-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
 
       - name: Configure project
         run: |
-          mkdir build
-
-      - name: Configure with CMake
-        run: |
+          mkdir -p build
           cmake -S . -B build \
-            -DCMAKE_TOOLCHAIN_FILE=$KOS_BASE/utils/dc-chain/dc-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
         run: |
           cmake --build build --config Release --verbose -j$(nproc)
 
-      - name: Prepare Dreamcast output
+      - name: Prepare output
         run: |
           mkdir -p export
-          
-          # Adjust these depending on your project output.
           find build -type f \( -name "*.elf" -o -name "*.bin" -o -name "*.iso" \) -exec cp {} export/ \;
 
-      - name: Archive Dreamcast build
+      - name: Upload Dreamcast build
         uses: actions/upload-artifact@v4
         with:
-          name: dreamcast-build.zip
+          name: dreamcast-build
           path: |
             export/**
