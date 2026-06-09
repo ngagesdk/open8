@@ -23,7 +23,6 @@ jobs:
             pkgman install -y cmake
             pkgman install -y ninja
             pkgman install -y pkgconfig
-            pkgman install -y sdl3_devel
 
           run: |
             set -e
