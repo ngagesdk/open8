@@ -22,6 +22,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug toolchain
+        run: |
+          echo "KOS_BASE=$KOS_BASE"
+          echo "PATH=$PATH"
+          which sh-elf-gcc || true
+          which kos-cc || true
+          sh-elf-gcc --version || true
+
       - name: Verify KOS toolchain
         run: |
           echo "KOS_BASE=$KOS_BASE"
