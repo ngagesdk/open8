@@ -4,7 +4,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(open8 C CXX)
 
-if (NGAGESDK)
+if(DREAMCAST)
+  find_package(SDL3 REQUIRED)
+elseif (NGAGESDK)
   find_package(SDL3 REQUIRED)
 elseif(VITA)
   find_package(SDL3 REQUIRED)
