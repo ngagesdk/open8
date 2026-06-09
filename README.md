@@ -55,9 +55,6 @@ resource-constrained platforms.
 - Pico-8 is a fantasy console by Lexaloffle.  It is not affiliated with this project.
   For more information, visit the [Pico-8 website](https://www.lexaloffle.com/pico-8.php).
 
-- Dirent by Toni Ronkko .  It is licensed under the
-  "[The MIT License](https://github.com/tronkko/dirent/blob/master/LICENSE)".
-
 - stb by Sean Barrett is licensed under "The MIT License".  See the file
   [LICENSE](https://github.com/nothings/stb/blob/master/LICENSE) for
   details.
