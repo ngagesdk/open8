@@ -123,12 +123,15 @@ elseif(PSP)
 	TITLE open8)
 
 elseif(VITA)
+
   if(NOT DEFINED ENV{VITASDK})
     message(FATAL_ERROR "VITASDK not set")
   endif()
 
-  include("$ENV{VITASDK}/share/vita.toolchain.cmake")
+  # Vita SDK helper macros.
+  include("$ENV{VITASDK}/share/vita.cmake")
 
+  # Libraries.
   target_link_libraries(open8 PRIVATE
     SDL3::SDL3
     SceDisplay_stub
@@ -139,16 +142,17 @@ elseif(VITA)
     SceAppMgr_stub
   )
 
-  # Vita executable name
-  set_target_properties(open8 PROPERTIES OUTPUT_NAME "eboot")
-
-  # Install structure for VPK build
+  # Vita metadata.
   set(VITA_APP_NAME "open8")
   set(VITA_TITLE_ID "OPEN00001")
 
-  vita_create_self(${PROJECT_NAME}.self open8 UNSAFE)
+  # Keep output consistent.
+  set_target_properties(open8 PROPERTIES OUTPUT_NAME "eboot")
 
-  vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLE_ID} ${PROJECT_NAME}.self
+  # Build SELF + VPK.
+  vita_create_self(eboot.self open8 UNSAFE)
+
+  vita_create_vpk(open8.vpk ${VITA_TITLE_ID} eboot.self
     VERSION "01.00"
     NAME ${VITA_APP_NAME}
   )
