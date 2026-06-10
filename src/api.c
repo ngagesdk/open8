@@ -1923,21 +1923,22 @@ static int pico8_inext(lua_State* L)
 	/* Get the table length */
 	int len = (int)lua_rawlen(L, 1);
 
-	/* Find the next non-nil value */
-	for (int i = index + 1; i <= len; i++)
+	/* Standard ipairs behavior: proceed to next index, stop at first nil */
+	int next_index = index + 1;
+	if (next_index <= len)
 	{
-		lua_rawgeti(L, 1, i); /* Push value at index i */
+		lua_rawgeti(L, 1, next_index); /* Push value at next_index */
 		if (!lua_isnil(L, -1))
 		{
-			/* Found a value - return (i, value) */
-			lua_pushnumber(L, fix32_from_int(i));
+			/* Found a non-nil value - return (next_index, value) */
+			lua_pushnumber(L, fix32_from_int(next_index));
 			lua_insert(L, -2); /* Move index before value on stack */
 			return 2;
 		}
-		lua_pop(L, 1); /* Value was nil, pop it and continue */
+		lua_pop(L, 1); /* We hit a nil, stop iteration */
 	}
 
-	/* No more values - return nothing */
+	/* No more values or hit a nil - return nothing */
 	return 0;
 }
 

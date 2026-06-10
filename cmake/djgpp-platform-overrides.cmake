@@ -3,7 +3,7 @@
 # CMake's built-in Platform/DOS.cmake assumes OpenWatcom naming conventions
 # (no prefix, .lib suffix, CMAKE_LINK_LIBRARY_SUFFIX=".lib").  DJGPP uses
 # standard Unix/GCC conventions for its system libraries (lib prefix, .a
-# suffix — e.g. libm.a).
+# suffix - e.g. libm.a).
 #
 # This file is loaded via CMAKE_USER_MAKE_RULES_OVERRIDE in the toolchain
 # file, which runs *after* the platform module has set its defaults, giving

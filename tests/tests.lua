@@ -496,19 +496,13 @@ function test_tables()
     -- inext skips nil values in sparse table.
     tbl = {1, nil, 3, nil, 5}
     i, v = inext(tbl, 0)
-    assert_equal(i, 1, "inext sparse: first non-nil index == 1")
+    assert_equal(i, 1, "inext sparse: first index == 1")
     assert_equal(v, 1, "inext sparse: first value == 1")
 
+    -- inext stops at first nil, does not continue searching.
     i, v = inext(tbl, i)
-    assert_equal(i, 3, "inext sparse: skip nil, next index == 3")
-    assert_equal(v, 3, "inext sparse: skip nil, next value == 3")
-
-    i, v = inext(tbl, i)
-    assert_equal(i, 5, "inext sparse: skip another nil, index == 5")
-    assert_equal(v, 5, "inext sparse: skip another nil, value == 5")
-
-    i, v = inext(tbl, i)
-    assert_equal(i, nil, "inext sparse: exhausted after last value")
+    assert_equal(i, nil, "inext sparse: stops at first nil, returns nil index")
+    assert_equal(v, nil, "inext sparse: stops at first nil, returns nil value")
 
     -- ipairs and inext produce same iteration order.
     tbl = {7, 8, 9, 10}

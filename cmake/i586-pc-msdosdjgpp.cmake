@@ -5,7 +5,7 @@ set(DOS TRUE)
 
 # CMake's Platform/DOS.cmake assumes OpenWatcom naming conventions (no prefix,
 # .lib suffix).  DJGPP uses standard Unix/GCC conventions for its system
-# libraries (lib prefix, .a suffix — e.g. libm.a), so we override the platform
+# libraries (lib prefix, .a suffix - e.g. libm.a), so we override the platform
 # defaults via CMAKE_USER_MAKE_RULES_OVERRIDE, which runs *after* the platform
 # module has set its defaults, giving us the final say on these variables.
 # The path must be cached because CMake re-parses the toolchain file during
