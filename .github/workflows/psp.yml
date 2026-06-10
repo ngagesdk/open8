@@ -12,7 +12,7 @@ jobs:
     container: pspdev/pspdev:latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install build dependencies
         run: |
@@ -38,7 +38,7 @@ jobs:
             cp -r export/carts output/
 
       - name: Archive open8
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: open8-PSP
           path: output

@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Calculate DJGPP variables
         id: calc
@@ -107,7 +107,7 @@ jobs:
         run: cmake --build build --config Release --verbose -- -j1
 
       - name: Archive open8
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: open8-DOS.zip
           path: |

@@ -23,7 +23,7 @@ jobs:
           apt-get install -y cmake ninja-build
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure
         run: |

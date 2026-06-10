@@ -12,7 +12,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: TheMrMilchmann/setup-msvc-dev@v3
         with:
           arch: x86
@@ -23,7 +23,7 @@ jobs:
           cmake --build build
 
       - name: Archive open8
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: open8-Windows-x86.zip
           path: export
