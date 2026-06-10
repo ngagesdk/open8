@@ -38,6 +38,25 @@ jobs:
       - name: Build with CMake (Emscripten)
         run: cmake --build build --config ${{ env.BUILD_TYPE }}
 
+      - name: Push build to ngagesdk.github.io
+        env:
+          OPEN8_TOKEN: ${{ secrets.OPEN8_REPO_TOKEN }}
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git clone https://x-access-token:${OPEN8_TOKEN}@github.com/ngagesdk/ngagesdk.github.io.git deploy-repo
+
+          rm -rf deploy-repo/open8/*
+
+          cp -r export/* deploy-repo/open8/
+
+          cd deploy-repo
+
+          git add ./open8/*
+          git commit -m "Update build from CI" || echo "No changes to commit"
+          git push origin main
+
       - name: Archive open8
         uses: actions/upload-artifact@v4
         with:
