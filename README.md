@@ -2,21 +2,111 @@
 
 ![open8 logo](media/logo.png)
 
-[![API Tests](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/api-tests.yml?style=for-the-badge&label=API%20Tests)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
-[![Codacy](https://img.shields.io/codacy/grade/a1d30d31ef0f4cd7ab26304b6031a0e5?style=for-the-badge&label=Code%20Quality)](https://app.codacy.com/gh/ngagesdk/open8/dashboard)
-[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f?style=for-the-badge)](https://ngagesdk.de/open8)
+<div style="display: grid; grid-template-columns: repeat(auto-fit, 120px); gap: 10px; justify-content: start;">
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/api-tests.yml?style=for-the-badge&label=API%20Tests" />
+</a>
+</div>
+
+<div>
+<a href="https://app.codacy.com/gh/ngagesdk/open8/dashboard">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/codacy/grade/a1d30d31ef0f4cd7ab26304b6031a0e5?style=for-the-badge&label=Code%20Quality" />
+</a>
+</div>
+
+<div>
+<a href="https://ngagesdk.de/open8">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/badge/Demo-Live-2ebc4f?style=for-the-badge" />
+</a>
+</div>
+
+</div>
 
 ## Build Status
 
-| Platform | Status | Platform | Status |
-|----------|--------|----------|--------|
-| BSD      | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/bsd.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml)               | DOS       | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dos.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/dos.yml)             |
-| WASM     | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/emscripten.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml) | Haiku OS  | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/haikuos.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml)     |
-| Linux    | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/linux.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)           | N-Gage    | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ngage.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)         |
-| 3DS      | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/n3ds.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)             | PS2       | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ps2.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml)             |
-| PSP      | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psp.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)               | PS Vita   | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psvita.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml)       |
-| RISC OS  | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/riscos.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)         | Dreamcast | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dreamcast.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml) |
-| Windows  | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/windows.yml?style=for-the-badge&label=)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)       | | |
+<div style="display: grid; grid-template-columns: repeat(auto-fit, 120px); gap: 10px; justify-content: start;">
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/bsd.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/bsd.yml?style=for-the-badge&label=BSD" />
+</a>
+</div>
+    
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/dos.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dos.yml?style=for-the-badge&label=DOS" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/emscripten.yml?style=for-the-badge&label=WASM" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/haikuos.yml?style=for-the-badge&label=Haiku%20OS" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/linux.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/linux.yml?style=for-the-badge&label=Linux" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/ngage.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ngage.yml?style=for-the-badge&label=N-Gage" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/n3ds.yml?style=for-the-badge&label=3DS" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/ps2.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ps2.yml?style=for-the-badge&label=PS2" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/psp.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psp.yml?style=for-the-badge&label=PSP" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/psvita.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psvita.yml?style=for-the-badge&label=PS%20Vita" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/riscos.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/riscos.yml?style=for-the-badge&label=RISC%20OS" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dreamcast.yml?style=for-the-badge&label=Dreamcast" />
+</a>
+</div>
+
+<div>
+<a href="https://github.com/ngagesdk/open8/actions/workflows/windows.yml">
+<img style="height: 2em; width: auto; display: block;" src="https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/windows.yml?style=for-the-badge&label=Windows" />
+</a>
+</div>
+
+</div>
 
 ## About the Project
 
