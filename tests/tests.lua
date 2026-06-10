@@ -433,6 +433,105 @@ function test_tables()
     end
 
     tbl = {}
+
+    -- inext and ipairs tests.
+    log("Testing inext() and ipairs()...")
+
+    -- Basic ipairs iteration over simple table.
+    tbl = {10, 20, 30}
+    local sum = 0
+    local count = 0
+    for i, v in ipairs(tbl) do
+        sum += v
+        count += 1
+        assert_equal(tbl[i], v, "ipairs: tbl[" .. i .. "] == " .. v)
+    end
+    assert_equal(sum, 60, "ipairs: sum of {10, 20, 30} == 60")
+    assert_equal(count, 3, "ipairs: iterated 3 times")
+
+    -- ipairs with sparse table (skips nil values in iteration).
+    tbl = {1, 2, nil, 4, 5}
+    local values = {}
+    for i, v in ipairs(tbl) do
+        add(values, v)
+    end
+    -- ipairs stops at first nil, so only {1, 2} are iterated.
+    assert_equal(#values, 2, "ipairs: sparse table stops at first nil")
+    assert_equal(values[1], 1, "ipairs: sparse table first value")
+    assert_equal(values[2], 2, "ipairs: sparse table second value")
+
+    -- ipairs with empty table.
+    tbl = {}
+    count = 0
+    for i, v in ipairs(tbl) do
+        count += 1
+    end
+    assert_equal(count, 0, "ipairs: empty table iteration count == 0")
+
+    -- Direct inext usage: manual iteration.
+    tbl = {100, 200, 300}
+    local i, v = inext(tbl, nil)
+    assert_equal(i, 1, "inext(tbl, nil): first index == 1")
+    assert_equal(v, 100, "inext(tbl, nil): first value == 100")
+
+    i, v = inext(tbl, i)
+    assert_equal(i, 2, "inext(tbl, 1): second index == 2")
+    assert_equal(v, 200, "inext(tbl, 1): second value == 200")
+
+    i, v = inext(tbl, i)
+    assert_equal(i, 3, "inext(tbl, 2): third index == 3")
+    assert_equal(v, 300, "inext(tbl, 2): third value == 300")
+
+    -- inext returns nothing when exhausted.
+    local next_i, next_v = inext(tbl, i)
+    assert_equal(next_i, nil, "inext(tbl, 3): exhausted returns nil index")
+    assert_equal(next_v, nil, "inext(tbl, 3): exhausted returns nil value")
+
+    -- inext with default index (starting from 0).
+    tbl = {5}
+    i, v = inext(tbl)
+    assert_equal(i, 1, "inext(tbl): default index starts from 0, finds index 1")
+    assert_equal(v, 5, "inext(tbl): default index finds first value")
+
+    -- inext skips nil values in sparse table.
+    tbl = {1, nil, 3, nil, 5}
+    i, v = inext(tbl, 0)
+    assert_equal(i, 1, "inext sparse: first non-nil index == 1")
+    assert_equal(v, 1, "inext sparse: first value == 1")
+
+    i, v = inext(tbl, i)
+    assert_equal(i, 3, "inext sparse: skip nil, next index == 3")
+    assert_equal(v, 3, "inext sparse: skip nil, next value == 3")
+
+    i, v = inext(tbl, i)
+    assert_equal(i, 5, "inext sparse: skip another nil, index == 5")
+    assert_equal(v, 5, "inext sparse: skip another nil, value == 5")
+
+    i, v = inext(tbl, i)
+    assert_equal(i, nil, "inext sparse: exhausted after last value")
+
+    -- ipairs and inext produce same iteration order.
+    tbl = {7, 8, 9, 10}
+    local ipairs_values = {}
+    for i, v in ipairs(tbl) do
+        add(ipairs_values, v)
+    end
+
+    local inext_values = {}
+    i = 0
+    while true do
+        i, v = inext(tbl, i)
+        if i == nil then break end
+        add(inext_values, v)
+    end
+
+    assert_equal(#ipairs_values, #inext_values, "ipairs vs inext: same iteration count")
+    for idx = 1, #ipairs_values do
+        assert_equal(ipairs_values[idx], inext_values[idx], 
+            "ipairs vs inext: value at position " .. idx .. " matches")
+    end
+
+    log("inext() and ipairs() tests passed")
 end
 
 -- Palette transparency (palt).

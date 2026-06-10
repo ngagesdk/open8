@@ -1909,9 +1909,50 @@ static int pico8_foreach(lua_State* L)
 	return 0;
 }
 
+static int pico8_inext(lua_State* L)
+{
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	/* Get the current index (default to 0 if not provided or nil) */
+	int index = 0;
+	if (lua_gettop(L) >= 2 && !lua_isnoneornil(L, 2))
+	{
+		index = fix32_to_int(luaL_checkinteger(L, 2));
+	}
+
+	/* Get the table length */
+	int len = (int)lua_rawlen(L, 1);
+
+	/* Find the next non-nil value */
+	for (int i = index + 1; i <= len; i++)
+	{
+		lua_rawgeti(L, 1, i); /* Push value at index i */
+		if (!lua_isnil(L, -1))
+		{
+			/* Found a value - return (i, value) */
+			lua_pushnumber(L, fix32_from_int(i));
+			lua_insert(L, -2); /* Move index before value on stack */
+			return 2;
+		}
+		lua_pop(L, 1); /* Value was nil, pop it and continue */
+	}
+
+	/* No more values - return nothing */
+	return 0;
+}
+
 static int pico8_ipairs(lua_State* L)
 {
-	TO_BE_DONE;
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	/* Push the inext iterator function */
+	lua_pushcfunction(L, pico8_inext);
+	/* Push the table */
+	lua_pushvalue(L, 1);
+	/* Push initial index 0 */
+	lua_pushinteger(L, 0);
+
+	return 3;
 }
 
 static int pico8_pairs(lua_State* L)
@@ -2143,6 +2184,8 @@ void init_api(lua_State* L)
 	lua_setglobal(L, "del");
 	lua_pushcfunction(L, pico8_foreach);
 	lua_setglobal(L, "foreach");
+	lua_pushcfunction(L, pico8_inext);
+	lua_setglobal(L, "inext");
 	lua_pushcfunction(L, pico8_ipairs);
 	lua_setglobal(L, "ipairs");
 	lua_pushcfunction(L, pico8_pairs);
