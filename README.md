@@ -2,23 +2,19 @@
 
 ![open8 logo](media/logo.png)
 
-[![API Tests](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a1d30d31ef0f4cd7ab26304b6031a0e5)](https://app.codacy.com/gh/ngagesdk/open8/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f)](https://ngagesdk.de/open8)
+[![API Tests](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/api-tests.yml?style=for-the-badge&label=API%20Tests)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
+[![Codacy](https://img.shields.io/codacy/grade/a1d30d31ef0f4cd7ab26304b6031a0e5?style=for-the-badge&label=Code%20Quality)](https://app.codacy.com/gh/ngagesdk/open8/dashboard)
+[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f?style=for-the-badge)](https://ngagesdk.de/open8)
 
-[![BSD](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml)
-[![DOS](https://github.com/ngagesdk/open8/actions/workflows/dos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/dos.yml)
-[![Emscripten](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml)
-[![Haiku OS](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml)
-[![Linux](https://github.com/ngagesdk/open8/actions/workflows/linux.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml)
-[![N-Gage](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml)
-[![Nintendo 3DS](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml)
-[![PS2](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml)
-[![PSP](https://github.com/ngagesdk/open8/actions/workflows/psp.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml)
-[![PS Vita](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml)
-[![RISC OS](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml)
-[![SEGA Dreamcast](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml)
-[![Windows](https://github.com/ngagesdk/open8/actions/workflows/windows.yml/badge.svg)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml)
+## Supported Platforms
+
+| Platform | Build | Platform | Build | Platform | Build |
+|----------|-------|----------|-------|----------|-------|
+| BSD | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/bsd.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/bsd.yml) | DOS | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dos.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/dos.yml) | Emscripten | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/emscripten.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/emscripten.yml) |
+| Haiku OS | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/haikuos.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/haikuos.yml) | Linux | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/linux.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/linux.yml) | N-Gage | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ngage.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/ngage.yml) |
+| Nintendo 3DS | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/n3ds.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/n3ds.yml) | PS2 | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/ps2.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/ps2.yml) | PSP | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psp.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/psp.yml) |
+| PS Vita | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/psvita.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/psvita.yml) | RISC OS | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/riscos.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/riscos.yml) | SEGA Dreamcast | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/dreamcast.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/dreamcast.yml) |
+| Windows | [![](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/windows.yml?style=for-the-badge&label=build)](https://github.com/ngagesdk/open8/actions/workflows/windows.yml) |  |  |  |  |
 
 ## About the Project
 
