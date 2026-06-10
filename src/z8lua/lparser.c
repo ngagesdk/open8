@@ -55,6 +55,7 @@ typedef struct BlockCnt {
 */
 static void statement (LexState *ls);
 static void expr (LexState *ls, expdesc *v);
+static void shortprint_expr (LexState *ls, expdesc *v);
 
 
 static void anchor_token (LexState *ls) {
@@ -976,6 +977,10 @@ static void simpleexp (LexState *ls, expdesc *v) {
       body(ls, v, 0, ls->linenumber);
       return;
     }
+    case TK_PRINT: {  /* shorthand print as expression: ?expr, expr, ... */
+      shortprint_expr(ls, v);
+      return;
+    }
     default: {
       suffixedexp(ls, v);
       return;
@@ -1611,6 +1616,48 @@ static void retstat (LexState *ls) {
 }
 
 
+static void shortprint_expr (LexState *ls, expdesc *v) {
+  int line = ls->linenumber;
+  int base, nparams;
+  expdesc args;
+  FuncState *fs = ls->fs;
+
+  /* same as shortprint but handles the result as an expression */
+  expdesc f;
+  TString *n = luaS_new(ls->L, "print");
+  ls->t.seminfo.ts = n;
+  ls->t.token = TK_NAME;
+  singlevar(ls, &f);  /* this calls str_checkname which advances the lexer */
+  luaK_exp2nextreg(fs, &f);
+
+  /* now we do the same as funcargs() */
+  if (ls->t.token == TK_EOL || ls->t.token == TK_EOS)  /* arg list is empty? */
+    args.k = VVOID;
+  else {
+    explist(ls, &args);
+    luaK_setmultret(fs, &args);
+  }
+
+  lua_assert(f.k == VNONRELOC);
+  base = f.u.info;  /* base register for call */
+  if (hasmultret(args.k))
+    nparams = LUA_MULTRET;  /* open call */
+  else {
+    if (args.k != VVOID)
+      luaK_exp2nextreg(fs, &args);  /* close last argument */
+    nparams = fs->freereg - (base+1);
+  }
+
+  init_exp(v, VCALL, luaK_codeABC(fs, OP_CALL, base, nparams+1, 2));
+  luaK_fixline(fs, line);
+
+  /* In expression context (like return statements), consume EOL if present */
+  /* This allows proper statement termination */
+  if (ls->t.token == TK_EOL)
+    luaX_next(ls);
+}
+
+
 static void shortprint (LexState *ls) {
   int line = ls->linenumber;
   int base, nparams;
@@ -1622,7 +1669,7 @@ static void shortprint (LexState *ls) {
   TString *n = luaS_new(ls->L, "print");
   ls->t.seminfo.ts = n;
   ls->t.token = TK_NAME;
-  singlevar(ls, &f);
+  singlevar(ls, &f);  /* this calls str_checkname which advances the lexer */
   luaK_exp2nextreg(fs, &f);
 
   /* now we do the same as funcargs() */
