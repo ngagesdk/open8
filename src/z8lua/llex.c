@@ -463,8 +463,8 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         break;
       }
       case '+': case '*': case '%': case '&':
-      case '|': case '~': case '!': case '\\': {
-        /* '+', '*', '%', '\', '&', '|', '!', '~', and
+      case '|': case '!': case '\\': {
+        /* '+', '*', '%', '\', '&', '|', '!', and
            the '+=' etc. counterparts */
         int c = ls->current;
         next(ls);
@@ -477,11 +477,15 @@ static int llex (LexState *ls, SemInfo *seminfo) {
             case '%': return TK_MODE;
             case '&': return TK_BANDE;
             case '|': return TK_BORE;
-            case '~': return TK_NE;
             case '!': return TK_NE2;
             case '\\': default: return TK_IDIVE;
           }
         }
+      }
+      case '~': {  /* '~=', '~', or bitwise XOR */
+        next(ls);
+        if (ls->current == '=') { next(ls); return TK_NE; }
+        else return TK_BXOR;
       }
       case '[': {  /* long string or simply '[' */
         int sep = skip_sep(ls);
