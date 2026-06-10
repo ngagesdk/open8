@@ -808,6 +808,37 @@ static int pico8_pal(lua_State* L)
 			pico8_ram[0x5f10 + i] = (uint8_t)i;
 		}
 	}
+	else if (lua_istable(L, 1))
+	{
+		/* First argument is a table: iterate through key-value pairs and apply palette mappings.
+		 * Keys are c0 values (source colors), values are c1 values (target colors).
+		 * Keys outside 0-15 range have modulo 16 applied.
+		 * p parameter determines which palette: 0 = draw palette, 1 = display palette. */
+		int p = (argc >= 2) ? fix32_to_int(luaL_optnumber(L, 2, 0)) : 0;
+
+		lua_pushnil(L);  /* First key */
+		while (lua_next(L, 1))  /* Iterate through all key-value pairs */
+		{
+			/* Stack: key at -2, value at -1 */
+			if (lua_isnumber(L, -2) && lua_isnumber(L, -1))
+			{
+				int c0 = (fix32_to_int(lua_tonumber(L, -2)) & 0xFF) % 16;  /* Apply modulo 16 to key */
+				int c1 = fix32_to_int(lua_tonumber(L, -1)) & 0x0F;
+
+				if (p == 1)
+				{
+					// Display palette remap (0x5f10).
+					pico8_ram[0x5f10 + c0] = (pico8_ram[0x5f10 + c0] & 0xF0) | (uint8_t)c1;
+				}
+				else
+				{
+					// Draw palette remap (0x5f00), preserve transparency bit.
+					pico8_ram[0x5f00 + c0] = (pico8_ram[0x5f00 + c0] & 0xF0) | (uint8_t)c1;
+				}
+			}
+			lua_pop(L, 1);  /* Remove value, keep key for next iteration */
+		}
+	}
 	else if (argc >= 2)
 	{
 		/* Some carts compute indices that can occasionally be out-of-range
