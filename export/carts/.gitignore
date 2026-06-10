@@ -1,3 +1,4 @@
 *
 !.gitignore
+!*.p8
 !*.png
