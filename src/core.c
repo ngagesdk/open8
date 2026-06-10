@@ -537,12 +537,43 @@ static bool run_cartridge(SDL_Renderer* renderer)
 	{
 		state = STATE_EMULATOR;
 
+		/* Try to load the (possibly patched) code buffer first. If that fails,
+		   fall back to the original raw code bytes embedded in the cart data
+		   (starting at 0x4300). Some carts rely on subtle encoding/escaping that
+		   can be altered by our patcher; attempt the original on failure so
+		   carts that work on real PICO-8 still run. */
 		if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
 		{
-			SDL_Log("Could not run cartridge: %s", lua_tostring(vm, -1));
+			/* Preserve the error message from the failed attempt. */
+			const char* err = lua_tostring(vm, -1);
 			print_memory_usage(vm);
-			lua_pop(vm, 1);
-			return false;
+
+			/* Try loading original code bytes from cart.cart_data (offset 0x4300)
+			   up to the first null terminator. */
+			size_t orig_size = 0;
+			while (orig_size < MAX_CODE_SIZE && cart.cart_data[0x4300 + orig_size] != 0)
+				orig_size++;
+
+			if (orig_size > 0)
+			{
+				if (luaL_loadbuffer(vm, (const char*)&cart.cart_data[0x4300], orig_size, "cart") || lua_pcall(vm, 0, 0, 0))
+				{
+					SDL_Log("Could not run cartridge (patched or original): %s", lua_tostring(vm, -1));
+					lua_pop(vm, 1);
+					return false;
+				}
+				else
+				{
+					SDL_Log("Loaded cartridge using original embedded code after patched load failed: %s", err ? err : "(no message)");
+				}
+			}
+			else
+			{
+				SDL_Log("Could not run cartridge: %s", err ? err : "(no message)");
+				lua_pop(vm, 1);
+				return false;
+			}
+			lua_pop(vm, 1); /* pop original error message */
 		}
 
 		print_memory_usage(vm);
