@@ -17,22 +17,6 @@ macro(get_SDL3 version)
       FetchContent_MakeAvailable(SDL3)
       set(SDL3_LIBRARIES SDL3::SDL3)
     endif()
-  elseif(HAIKU OR CMAKE_SYSTEM_NAME STREQUAL "PS2")
-    FetchContent_Declare(
-      SDL3
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-      GIT_TAG release-${version}
-    )
-    FetchContent_MakeAvailable(SDL3)
-    set(SDL3_LIBRARIES SDL3::SDL3)
-  elseif(HAIKU OR CMAKE_SYSTEM_NAME STREQUAL "Haiku")
-    FetchContent_Declare(
-      SDL3
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-      GIT_TAG release-${version}
-    )
-    FetchContent_MakeAvailable(SDL3)
-    set(SDL3_LIBRARIES SDL3::SDL3)
   elseif(MSVC OR (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang"))
     FetchContent_Declare(
       SDL3
