@@ -111,6 +111,6 @@ jobs:
         with:
           name: open8-DOS.zip
           path: |
-            export/carts/*.png
+            export/carts/*.PNG
             export/open8.exe
             export/CWSDPMI.EXE
