@@ -65,3 +65,42 @@ canvas.emscripten {
 .emscripten_controls {
     display: none;
 }
+
+.cart-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    color: #ffd76a;
+    font-size: 28px;
+    font-weight: bold;
+    box-shadow: 0 0 0 2px #111, 0 0 16px rgba(255,204,0,0.2), 0 0 28px rgba(123,97,255,0.2);
+    pointer-events: none;
+    animation: navPulse 2.5s ease-in-out infinite;
+}
+
+.cart-nav-left {
+    left: -80px;
+}
+
+.cart-nav-right {
+    right: -80px;
+}
+
+@keyframes navPulse {
+    0%, 100% {
+        opacity: 0.55;
+        transform: translateY(-50%) scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.08);
+    }
+}
