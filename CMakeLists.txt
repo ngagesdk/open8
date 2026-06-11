@@ -174,7 +174,7 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/5SWTBUNS.PNG@carts/5SWTBUNS.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/6HGHSTAK.PNG@carts/6HGHSTAK.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/7ONEBOSS.PNG@carts/7ONEBOSS.PNG"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/8AALPACA.PNG@carts/8AALPACA.PNG"
+    #"SHELL:--preload-file ${EXPORT_DIR}/carts/8AALPACA.PNG@carts/8AALPACA.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/9POOM.PNG@carts/9POOM.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/AFUZ.PNG@carts/AFUZ.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/BSLPWAYS.PNG@carts/BSLPWAYS.PNG"
