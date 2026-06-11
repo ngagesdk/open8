@@ -1707,7 +1707,45 @@ static int pico8_poke4(lua_State* L)
 // String functions.
 static int pico8_sub(lua_State* L)
 {
-	TO_BE_DONE;
+    size_t len;
+    const char* str = luaL_checklstring(L, 1, &len);
+
+    int32_t start = fix32_to_int32(luaL_checkinteger(L, 2));
+    int32_t end   = (int32_t)(lua_isnoneornil(L, 3) ? -1 : fix32_to_int32(luaL_checkinteger(L, 3)));
+    int32_t slen = (int32_t)len;
+
+    /* Convert negative indices */
+    if (start < 0)
+	{
+        start = slen + start + 1;
+	}
+    if (end < 0)
+	{
+        end = slen + end + 1;
+	}
+
+    /* Clamp to valid range */
+    if (start < 1)
+	{
+        start = 1;
+	}
+    if (end > slen)
+	{
+        end = slen;
+	}
+
+    /* Empty result */
+    if (start > end || start > slen || end < 1) {
+        lua_pushliteral(L, "");
+        return 1;
+    }
+
+    /* Convert from 1-based inclusive indices to C offsets */
+    size_t offset = (size_t)(start - 1);
+    size_t count  = (size_t)(end - start + 1);
+
+    lua_pushlstring(L, str + offset, count);
+    return 1;
 }
 
 // System functions.

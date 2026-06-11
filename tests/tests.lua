@@ -28,6 +28,15 @@ function assert_true(expression, test_name)
     end
 end
 
+function assert_string_equal(actual, expected, test_name)
+    if actual == expected then
+        log(test_name .. " passed")
+    else
+        log(test_name .. " failed: expected '" .. expected .. "' but got '" .. actual .. "'")
+        failed_tests += 1
+    end
+end
+
 -- Arithmetic operations.
 function test_arithmetic_operations()
     assert_equal(1 + 2, 3, "1 + 2")
@@ -356,6 +365,18 @@ function test_p8scii()
     end
     local crc = crc32(0x6000, 0x2000);
     assert_equal(0x561d4500, crc, "P8SCII, (16-255) CRC")
+end
+
+-- Strings.
+function test_strings()
+    s="something"
+
+    test = sub(s,-5) -- Get the string from the 5th-to-last char onwards.
+    assert_string_equal(test, "thing", "sub(s,-5)")
+    test = sub(s,-4,-3)  -- Get "hi" since we know s ends with "thing".
+    assert_string_equal(test, "hi", "sub(s,-4,-3)")
+    test = sub(s,-2,nil) -- Get the last two characters.
+    assert_string_equal(test, "ng", "sub(s,-2,nil)")
 end
 
 -- Tables.
@@ -1066,6 +1087,7 @@ function run_tests()
     test_memory()
     test_operators()
     test_p8scii()
+    test_strings()
     test_tables()
     test_palt()
     test_map()

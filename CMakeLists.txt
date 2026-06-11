@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
+option (BUILD_TESTS "Build Unit Tests" OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(open8 C CXX)
@@ -204,4 +206,8 @@ elseif(RISCOS)
 
 elseif(UNIX)
   target_link_libraries(open8 PRIVATE m)
+endif()
+
+if (BUILD_TESTS)
+  add_subdirectory(tests)
 endif()
