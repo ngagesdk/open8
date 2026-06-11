@@ -676,7 +676,7 @@ void handle_resize(SDL_Renderer* renderer) {
 }
 
 static SDL_EnumerationResult dir_callback(void* userdata, const char* dirname, const char* fname) {
-	if (SDL_strstr(fname, ".png"))
+	if (SDL_strstr(fname, ".PNG") || (SDL_strstr(fname, ".png")))
 	{
 		available_carts = SDL_realloc(available_carts, (num_carts + 1) * sizeof(char*));
 		SDL_asprintf(&available_carts[num_carts], "%s%s", dirname, fname);
