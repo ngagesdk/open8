@@ -798,9 +798,17 @@ bool init_core(SDL_Renderer* renderer)
         return false;
     }
 
-    if (!load_overlay(renderer))
+    int count = 0;
+    SDL_TouchID* devices = SDL_GetTouchDevices(&count);
+
+    if (devices != NULL && count > 0)
     {
-        SDL_Log("Failed to load overlay.");
+        SDL_free(devices);
+
+        if (!load_overlay(renderer))
+        {
+            SDL_Log("Failed to load overlay.");
+        }
     }
 
     if (!load_cart(renderer, (const char*)available_carts[0], &cart))
@@ -963,6 +971,71 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                 }
                 break;
             }
+        }
+        case SDL_EVENT_FINGER_DOWN:
+        {
+            if (state == STATE_MENU)
+            {
+                SDL_Window* window = SDL_GetRenderWindow(renderer);
+                int window_w, window_h;
+
+                if (!SDL_GetWindowSize(window, &window_w, &window_h))
+                {
+                    SDL_Log("Unable to get window size: %s", SDL_GetError());
+                    break;
+                }
+
+                // Get scale factor from current cart_rect.
+                int scale = (int)(cart_rect.w / 160.0f);
+                if (scale < 1) scale = 1;
+
+                // Convert normalized touch coordinates to pixel coordinates
+                // within the scaled display area.
+                float touch_x = event->tfinger.x * window_w;
+                float touch_y = event->tfinger.y * window_h;
+
+                // Translate to coordinates relative to the cart rendering area.
+                float local_x = touch_x - cart_rect.x;
+                float local_y = touch_y - cart_rect.y;
+
+                // Scale back to the virtual 160x205 coordinate system.
+                float virt_x = local_x / scale;
+                float virt_y = local_y / scale;
+
+                // Check against touch regions.
+                int touch_count = 0;
+                const touch_region* regions = get_touch_regions(&touch_count);
+
+                for (int i = 0; i < touch_count; i++)
+                {
+                    if (point_in_touch_region(virt_x, virt_y, &regions[i]))
+                    {
+                        uint8_t bit = regions[i].bit;
+
+                        // Bit 0 = Left, Bit 1 = Right
+                        if (bit == 0)
+                        {
+                            select_prev_cartridge(renderer);
+                            render_cartridge(renderer);
+                            return true;
+                        }
+                        else if (bit == 1)
+                        {
+                            select_next_cartridge(renderer);
+                            render_cartridge(renderer);
+                            return true;
+                        }
+                        // Bits 2-5 are Up/Down/Button O/Button X which map to "run".
+                        else if (bit == 2 || bit == 3 || bit == 4 || bit == 5)
+                        {
+                            run_cartridge(renderer);
+                            return true;
+                        }
+                        break;
+                    }
+                }
+            }
+            break;
         }
     }
     return true;

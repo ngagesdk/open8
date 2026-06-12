@@ -2280,6 +2280,17 @@ static bool point_in_region(float x, float y, const touch_region* r)
         y < r->y + r->h;
 }
 
+bool point_in_touch_region(float x, float y, const touch_region* r)
+{
+    return point_in_region(x, y, r);
+}
+
+const touch_region* get_touch_regions(int* count)
+{
+    *count = SDL_arraysize(touch_regions);
+    return touch_regions;
+}
+
 void update_input(void)
 {
     for (int p = 0; p < 2; p++)
