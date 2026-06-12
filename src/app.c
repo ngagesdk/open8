@@ -18,7 +18,9 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
 {
     SDL_SetHint("SDL_RENDER_VSYNC", "1");
     SDL_SetHint("SDL_RENDER_NGAGE_SHOW_FPS", "1");
+#ifndef __EMSCRIPTEN__
     SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+#endif
     SDL_SetLogPriorities(SDL_LOG_PRIORITY_INFO);
     SDL_SetAppMetadata("open8", "1.0", "de.ngagesdk.open8");
 
