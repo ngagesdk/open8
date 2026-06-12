@@ -2305,7 +2305,7 @@ void update_input(void)
         if (p == 0)
         {
             // Touch input.
-            SDL_TouchID num_fingers = 0;
+            int num_fingers = 0;
             SDL_Finger** fingers = SDL_GetTouchFingers(0, &num_fingers);
 
             if (num_fingers > 0 && fingers)
