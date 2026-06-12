@@ -167,6 +167,7 @@ elseif(VITA)
 
 elseif(EMSCRIPTEN)
   target_link_options(open8 PRIVATE
+    "SHELL:--preload-file ${EXPORT_DIR}/overlay.png@overlay.png"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/1CELESTE.PNG@carts/1CELESTE.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/2API.PNG@carts/2API.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/3JELPI.PNG@carts/3JELPI.PNG"

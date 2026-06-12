@@ -11,6 +11,7 @@
 #define CORE_H
 
 #include <SDL3/SDL.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #define CART_WIDTH 160
