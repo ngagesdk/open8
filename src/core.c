@@ -798,17 +798,9 @@ bool init_core(SDL_Renderer* renderer)
         return false;
     }
 
-    int count = 0;
-    SDL_TouchID* devices = SDL_GetTouchDevices(&count);
-
-    if (devices != NULL && count > 0)
+    if (!load_overlay(renderer))
     {
-        SDL_free(devices);
-
-        if (!load_overlay(renderer))
-        {
-            SDL_Log("Failed to load overlay.");
-        }
+        SDL_Log("Failed to load overlay.");
     }
 
     if (!load_cart(renderer, (const char*)available_carts[0], &cart))

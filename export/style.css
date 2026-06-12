@@ -39,7 +39,9 @@ body {
         pointer-events: none;
     }
 
+
 /* CANVAS SCREEN */
+
 canvas.emscripten {
     display: block;
     border-radius: 6px;
@@ -49,6 +51,7 @@ canvas.emscripten {
     /* subtle “game glow” */
     box-shadow: 0 0 0 2px #000, 0 0 18px rgba(255, 107, 107, 0.15), 0 0 30px rgba(123, 97, 255, 0.12);
     filter: contrast(1.1) saturate(1.25);
+    touch-action: none;
 }
 
 /* subtle breathing animation */
