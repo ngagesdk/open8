@@ -16,6 +16,8 @@
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
 #include "auxiliary.h"
+#include "app.h"
+#include "core.h"
 #include "memory.h"
 #include "p8scii.h"
 
@@ -35,6 +37,9 @@ static fix32_t seconds_since_start;
 // These are declared in api.h and set inside core.c each frame.
 uint32_t pico8_frame_start = 0;
 uint32_t pico8_frame_ms = 0;
+
+// Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used).
+uint8_t touch_button_state = 0;
 
 // Input state: tracks how many consecutive frames each button has been held.
 // Index [player][button], players 0-1, buttons 0-5.
@@ -2300,24 +2305,58 @@ void update_input(void)
         if (p == 0)
         {
             // Touch input.
-            SDL_TouchID num_fingers = 0;
-            SDL_Finger** fingers = SDL_GetTouchFingers(num_fingers, NULL);
+            int num_fingers = 0;
+            SDL_Finger** fingers = SDL_GetTouchFingers(0, &num_fingers);
 
-            for (int i = 0; i < num_fingers; i++)
+            if (num_fingers > 0 && fingers)
             {
-                float tx = fingers[i]->x * 160;
-                float ty = fingers[i]->y * 205;
-
-                for (int r = 0; r < SDL_arraysize(touch_regions); r++)
+                // Get SDL window to determine actual dimensions
+                SDL_Window* window = SDL_GetKeyboardFocus();
+                if (window && screen_rect.w > 0)
                 {
-                    if (point_in_region(tx, ty, &touch_regions[r]))
+                    int window_w, window_h;
+                    if (SDL_GetWindowSize(window, &window_w, &window_h))
                     {
-                        state |= (1 << touch_regions[r].bit);
+                        // Calculate scale based on screen_rect dimensions:
+                        // - screen_rect represents the scaled 128x128 game area.
+                        // - cart_rect represents the full scaled 160x205 display area.
+                        int scale = (int)(screen_rect.w / 128.0f);
+                        if (scale < 1) scale = 1;
+
+                        for (int i = 0; i < num_fingers; i++)
+                        {
+                            if (!fingers[i]) continue;
+
+                            // Convert normalized touch coordinates (0.0-1.0) to window pixels.
+                            float touch_x = fingers[i]->x * window_w;
+                            float touch_y = fingers[i]->y * window_h;
+
+                            // Translate to coordinates relative to the game rendering area (screen_rect).
+                            float local_x = touch_x - screen_rect.x;
+                            float local_y = touch_y - screen_rect.y;
+
+                            // Scale back to virtual 128x128 game coordinate system.
+                            float virt_x = local_x / scale;
+                            float virt_y = local_y / scale;
+
+                            // Map to the touch regions (which are in the 160x205 space)
+                            // but offset to the game area (which starts at 16, 24 in that space).
+                            float region_x = virt_x + 16.0f;  // Game area X offset
+                            float region_y = virt_y + 24.0f;  // Game area Y offset
+
+                            for (int r = 0; r < SDL_arraysize(touch_regions); r++)
+                            {
+                                if (point_in_region(region_x, region_y, &touch_regions[r]))
+                                {
+                                    state |= (1 << touch_regions[r].bit);
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            SDL_free(fingers);
+            if (fingers) SDL_free(fingers);
 
             // Keyboard input for player 0.
             int num_keys = 0;
@@ -2387,6 +2426,13 @@ void update_input(void)
             {
                 state |= (1 << 5);
             }
+        }
+
+        // Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used)
+        // Only applied to player 0.
+        if (p == 0)
+        {
+            state |= touch_button_state;
         }
 
         pico8_ram[0x5f4c + p] = state;

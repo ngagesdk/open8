@@ -39,6 +39,9 @@ typedef enum state
 
 } state_t;
 
+// Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used)
+extern uint8_t touch_button_state;
+
 void handle_resize(SDL_Renderer *renderer);
 
 bool init_core(SDL_Renderer* renderer);

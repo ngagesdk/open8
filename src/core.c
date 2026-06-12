@@ -1029,6 +1029,115 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             }
             break;
         }
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        {
+            // When SDL_HINT_MOUSE_TOUCH_EVENTS is enabled, touch input comes as mouse events.
+            if (event->button.button == SDL_BUTTON_LEFT)
+            {
+                SDL_Window* window = SDL_GetRenderWindow(renderer);
+                int window_w, window_h;
+
+                if (!SDL_GetWindowSize(window, &window_w, &window_h))
+                {
+                    SDL_Log("Unable to get window size: %s", SDL_GetError());
+                    break;
+                }
+
+                // Get mouse position (which is touch position when using MOUSE_TOUCH_EVENTS).
+                float mouse_x = event->button.x;
+                float mouse_y = event->button.y;
+
+                if (state == STATE_MENU)
+                {
+                    // Translate to coordinates relative to the cart rendering area.
+                    float local_x = mouse_x - cart_rect.x;
+                    float local_y = mouse_y - cart_rect.y;
+
+                    // Calculate scale from cart_rect
+                    int scale = (int)(cart_rect.w / 160.0f);
+                    if (scale < 1) scale = 1;
+
+                    // Scale to virtual 160x205 coordinate system.
+                    float virt_x = local_x / scale;
+                    float virt_y = local_y / scale;
+
+                    // Map to touch regions
+                    int touch_count = 0;
+                    const touch_region* regions = get_touch_regions(&touch_count);
+
+                    for (int i = 0; i < touch_count; i++)
+                    {
+                        if (point_in_touch_region(virt_x, virt_y, &regions[i]))
+                        {
+                            uint8_t bit = regions[i].bit;
+
+                            // Bit 0 = Left, Bit 1 = Right
+                            if (bit == 0)
+                            {
+                                select_prev_cartridge(renderer);
+                                render_cartridge(renderer);
+                                return true;
+                            }
+                            else if (bit == 1)
+                            {
+                                select_next_cartridge(renderer);
+                                render_cartridge(renderer);
+                                return true;
+                            }
+                            // Bits 2-5 are Up/Down/Button O/Button X which map to "run"
+                            else if (bit == 2 || bit == 3 || bit == 4 || bit == 5)
+                            {
+                                run_cartridge(renderer);
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                }
+                else if (state == STATE_EMULATOR && screen_rect.w > 0)
+                {
+                    // During emulation, detect touch on game buttons and update button state
+                    // Translate to coordinates relative to the game rendering area (screen_rect).
+                    float local_x = mouse_x - screen_rect.x;
+                    float local_y = mouse_y - screen_rect.y;
+
+                    // Calculate scale from screen_rect.
+                    int scale = (int)(screen_rect.w / 128.0f);
+                    if (scale < 1) scale = 1;
+
+                    // Scale to virtual 128x128 game coordinate system.
+                    float virt_x = local_x / scale;
+                    float virt_y = local_y / scale;
+
+                    // Map to the touch regions (which are in the 160x205 space)
+                    // but offset to the game area (which starts at 16, 24 in that space).
+                    float region_x = virt_x + 16.0f;  // Game area X offset
+                    float region_y = virt_y + 24.0f;  // Game area Y offset
+
+                    int touch_count = 0;
+                    const touch_region* regions = get_touch_regions(&touch_count);
+
+                    for (int i = 0; i < touch_count; i++)
+                    {
+                        if (point_in_touch_region(region_x, region_y, &regions[i]))
+                        {
+                            touch_button_state |= (1 << regions[i].bit);
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        {
+            // Clear touch button state when touch is released.
+            if (event->button.button == SDL_BUTTON_LEFT && state == STATE_EMULATOR)
+            {
+                touch_button_state = 0;
+            }
+            break;
+        }
     }
     return true;
 }
