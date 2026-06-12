@@ -2009,9 +2009,31 @@ static int pico8_ipairs(lua_State* L)
     return 3;
 }
 
+static int pico8_next(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    /* Second argument is current key or nil. */
+    lua_settop(L, 2);
+
+    if (lua_next(L, 1))
+    {
+        // Stack: table key value.
+        return 2; // Return next_key, value .
+    }
+
+    return 0;
+}
+
 static int pico8_pairs(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    lua_pushcfunction(L, pico8_next);
+    lua_pushvalue(L, 1); // State.
+    lua_pushnil(L);      // Initial key.
+
+    return 3;
 }
 
 static int pico8_pack(lua_State* L)
@@ -2242,6 +2264,8 @@ void init_api(lua_State* L)
     lua_setglobal(L, "inext");
     lua_pushcfunction(L, pico8_ipairs);
     lua_setglobal(L, "ipairs");
+    lua_pushcfunction(L, pico8_next);
+    lua_setglobal(L, "next");
     lua_pushcfunction(L, pico8_pairs);
     lua_setglobal(L, "pairs");
     lua_pushcfunction(L, pico8_pack);

@@ -547,6 +547,38 @@ function test_tables()
     end
 
     log("inext() and ipairs() tests passed")
+
+    local t = {a=1, b=2, c=3}
+
+    local seen = {}
+    local count = 0
+
+    local k, v = next(t, nil)
+    while k do
+        seen[k] = v
+        count += 1
+        k, v = next(t, k)
+    end
+
+    -- check all keys exist
+    assert(seen.a == 1, "missing or wrong value for a")
+    assert(seen.b == 2, "missing or wrong value for b")
+    assert(seen.c == 3, "missing or wrong value for c")
+
+    -- check no extras / duplicates
+    assert(count == 3, "wrong number of iterations: "..count)
+
+    print("test_next passed")
+
+    t = {a=10, b=20, c=30}
+    local n = 0
+    
+    for k,v in pairs(t) do
+        n += v
+    end
+
+    assert_equal(n, 60, "pairs basic")
+
 end
 
 -- Palette transparency (palt).
