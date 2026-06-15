@@ -1,109 +1,225 @@
 html, body {
     margin: 0;
-    height: 100%;
     width: 100%;
-    overflow: hidden; /* prevents scroll gaps */
-    background: radial-gradient(circle at center, #1a1033 0%, #05040a 70%, #000 100%);
+    height: 100%;
+    overflow: hidden;
 }
 
-/* make body the centering container */
+html {
+    background:
+        radial-gradient(circle at center,
+        #fffdf4 0%,
+        #f5efdc 60%,
+        #e9dec0 100%);
+}
+
 body {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* OUTER CONSOLE BODY */
+/* Console Shell. */
 .emscripten_border {
     position: relative;
-    padding: 22px;
-    border-radius: 18px;
-    /* colorful PICO-ish plastic shell */
-    background: linear-gradient(145deg, #ffcc00, #ff6b6b 40%, #7b61ff 100%);
-    /* soft neon-ish glow */
-    box-shadow: 0 0 0 4px #0a0a0a, 0 0 0 8px #2a2a2a, 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(123, 97, 255, 0.25);
+
+    padding: 24px;
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f8e8b0 0%,
+            #f2d17c 45%,
+            #e6b35f 100%
+        );
+
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: consoleGlow 6s ease-in-out infinite alternate;
+
+    box-shadow:
+        0 0 0 3px #fff8e7,
+        0 0 0 5px rgba(90,60,20,0.12),
+        0 18px 40px rgba(70,50,20,0.18),
+        inset 0 2px 0 rgba(255,255,255,0.75),
+        inset 0 -2px 0 rgba(120,80,20,0.12);
+
+    animation: consoleFloat 5s ease-in-out infinite alternate;
 }
 
-    /* INNER SCREEN BEZEL */
-    .emscripten_border::before {
-        content: "";
-        position: absolute;
-        inset: 14px;
-        border-radius: 12px;
-        background: linear-gradient(145deg, #111, #000);
-        box-shadow: inset 0 0 0 2px #000, inset 0 0 25px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(255, 204, 0, 0.08);
-        pointer-events: none;
-    }
+/* Screen Bezel. */
+.emscripten_border::before {
+    content: "";
 
+    position: absolute;
+    inset: 14px;
 
-/* CANVAS SCREEN */
+    border-radius: 12px;
 
+    background:
+        linear-gradient(
+            145deg,
+            #52493f,
+            #2f2924
+        );
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.08),
+        inset 0 0 18px rgba(0,0,0,0.35);
+
+    pointer-events: none;
+}
+
+/* Screen. */
 canvas.emscripten {
     display: block;
+
     border-radius: 6px;
-    /* makes pixel art pop */
+
     image-rendering: pixelated;
+    image-rendering: crisp-edges;
+
     background: #000;
-    /* subtle “game glow” */
-    box-shadow: 0 0 0 2px #000, 0 0 18px rgba(255, 107, 107, 0.15), 0 0 30px rgba(123, 97, 255, 0.12);
-    filter: contrast(1.1) saturate(1.25);
+
+    box-shadow:
+        0 0 0 2px #1b1b1b,
+        0 4px 12px rgba(0,0,0,0.18),
+        0 0 16px rgba(255,180,80,0.12);
+
+    filter:
+        contrast(1.08)
+        saturate(1.12);
+
     touch-action: none;
 }
 
-/* subtle breathing animation */
-@keyframes consoleGlow {
-    0% {
-        box-shadow: 0 0 0 4px #0a0a0a, 0 0 0 8px #2a2a2a, 0 20px 50px rgba(0,0,0,0.6), 0 0 25px rgba(255, 107, 107, 0.15);
-    }
-
-    100% {
-        box-shadow: 0 0 0 4px #0a0a0a, 0 0 0 8px #2a2a2a, 0 25px 60px rgba(0,0,0,0.7), 0 0 45px rgba(123, 97, 255, 0.28);
-    }
-}
-
-.emscripten_controls {
-    display: none;
-}
-
+/* Cartridge navigation. */
 .cart-nav {
     position: absolute;
+
     top: 50%;
     transform: translateY(-50%);
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+
+    width: 54px;
+    height: 54px;
+
     border-radius: 50%;
-    background: rgba(0,0,0,0.75);
-    color: #ffd76a;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            #fff7de,
+            #f0dfb0
+        );
+
+    color: #a3482a;
+
     font-size: 28px;
     font-weight: bold;
-    box-shadow: 0 0 0 2px #111, 0 0 16px rgba(255,204,0,0.2), 0 0 28px rgba(123,97,255,0.2);
+
+    box-shadow:
+        0 0 0 2px rgba(110,70,20,0.12),
+        0 4px 10px rgba(90,60,20,0.12);
+
     pointer-events: none;
+
     animation: navPulse 2.5s ease-in-out infinite;
 }
 
 .cart-nav-left {
-    left: -80px;
+    left: -82px;
 }
 
 .cart-nav-right {
-    right: -80px;
+    right: -82px;
 }
 
 @keyframes navPulse {
     0%, 100% {
-        opacity: 0.55;
+        opacity: .6;
         transform: translateY(-50%) scale(1);
     }
 
     50% {
         opacity: 1;
-        transform: translateY(-50%) scale(1.08);
+        transform: translateY(-50%) scale(1.06);
     }
+}
+
+/* GitHub Corner. */
+.github-corner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.github-corner svg {
+    display: block;
+
+    filter:
+        drop-shadow(0 3px 8px rgba(0,0,0,0.12));
+}
+
+.github-corner .corner-bg {
+    fill: #d97a3a;
+}
+
+.github-corner .octo-body,
+.github-corner .octo-arm {
+    fill: #fffef6;
+    transform-origin: 130px 106px;
+}
+
+.github-corner:hover .corner-bg {
+    fill: #c96a2b;
+}
+
+.github-corner:hover .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+    0%,100% {
+        transform: rotate(0);
+    }
+
+    20%,60% {
+        transform: rotate(-25deg);
+    }
+
+    40%,80% {
+        transform: rotate(10deg);
+    }
+}
+
+@media (max-width:500px) {
+    .github-corner:hover .octo-arm {
+        animation: none;
+    }
+
+    .github-corner .octo-arm {
+        animation: octocat-wave 560ms ease-in-out infinite;
+        animation-delay: 2s;
+    }
+}
+
+/* Console Float. */
+@keyframes consoleFloat {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-4px);
+    }
+}
+
+.emscripten_controls {
+    display: none;
 }
