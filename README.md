@@ -4,7 +4,7 @@
 
 [![API Tests](https://img.shields.io/github/actions/workflow/status/ngagesdk/open8/api-tests.yml?style=for-the-badge&label=API%20Tests)](https://github.com/ngagesdk/open8/actions/workflows/api-tests.yml)
 [![Codacy](https://img.shields.io/codacy/grade/a1d30d31ef0f4cd7ab26304b6031a0e5?style=for-the-badge&label=Code%20Quality)](https://app.codacy.com/gh/ngagesdk/open8/dashboard)
-[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f?style=for-the-badge)](https://ngagesdk.de/open8)
+[![Demo](https://img.shields.io/badge/Demo-Live-2ebc4f?style=for-the-badge)](https://opn8.de)
 
 ## Build Status
 
