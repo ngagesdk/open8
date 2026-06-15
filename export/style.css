@@ -94,63 +94,6 @@ canvas.emscripten {
     touch-action: none;
 }
 
-/* Cartridge navigation. */
-.cart-nav {
-    position: absolute;
-
-    top: 50%;
-    transform: translateY(-50%);
-
-    width: 54px;
-    height: 54px;
-
-    border-radius: 50%;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7de,
-            #f0dfb0
-        );
-
-    color: #a3482a;
-
-    font-size: 28px;
-    font-weight: bold;
-
-    box-shadow:
-        0 0 0 2px rgba(110,70,20,0.12),
-        0 4px 10px rgba(90,60,20,0.12);
-
-    pointer-events: none;
-
-    animation: navPulse 2.5s ease-in-out infinite;
-}
-
-.cart-nav-left {
-    left: -82px;
-}
-
-.cart-nav-right {
-    right: -82px;
-}
-
-@keyframes navPulse {
-    0%, 100% {
-        opacity: .6;
-        transform: translateY(-50%) scale(1);
-    }
-
-    50% {
-        opacity: 1;
-        transform: translateY(-50%) scale(1.06);
-    }
-}
-
 /* GitHub Corner. */
 .github-corner {
     position: absolute;
