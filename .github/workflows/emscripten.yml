@@ -38,29 +38,10 @@ jobs:
       - name: Build with CMake (Emscripten)
         run: cmake --build build --config ${{ env.BUILD_TYPE }}
 
-      - name: Push build to ngagesdk.github.io
-        env:
-          OPEN8_TOKEN: ${{ secrets.OPEN8_REPO_TOKEN }}
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-          git clone https://x-access-token:${OPEN8_TOKEN}@github.com/ngagesdk/ngagesdk.github.io.git deploy-repo
-
-          rm -rf deploy-repo/open8/*
-
-          cp export/index.html export/ogp-1200x1200.png export/open8.data export/open8.js export/open8.wasm export/style.css deploy-repo/open8/
-
-          cd deploy-repo
-
-          git add ./open8/*
-          git commit -m "Update build from CI" || echo "No changes to commit"
-          git push origin main
-
-      - name: Archive open8
-        uses: actions/upload-artifact@v7
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: open8-Emscripten
           path: |
             export/index.html
             export/ogp-1200x1200.png
@@ -68,3 +49,18 @@ jobs:
             export/open8.js
             export/open8.wasm
             export/style.css
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
