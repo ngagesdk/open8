@@ -38,17 +38,20 @@ jobs:
       - name: Build with CMake (Emscripten)
         run: cmake --build build --config ${{ env.BUILD_TYPE }}
 
+      - name: Prepare Pages artifact
+        run: |
+          mkdir pages
+          cp export/index.html pages/
+          cp export/ogp-1200x1200.png pages/
+          cp export/open8.data pages/
+          cp export/open8.js pages/
+          cp export/open8.wasm pages/
+          cp export/style.css pages/
+      
       - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
         with:
-          path: |
-            export/index.html
-            export/ogp-1200x1200.png
-            export/open8.data
-            export/open8.js
-            export/open8.wasm
-            export/style.css
+          path: pages
 
   deploy:
     needs: build
