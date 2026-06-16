@@ -51,6 +51,12 @@ body {
     animation: arcadeFloat 4s ease-in-out infinite alternate;
 }
 
+#fullscreen-btn {
+    position: absolute;
+    bottom: -18px;
+    right: 20px;
+}
+
 /* Inner Bezel */
 .emscripten_border::before {
     content: "";
@@ -147,4 +153,91 @@ canvas.emscripten {
 
 .emscripten_controls {
     display: none;
+}
+
+/* Legal Information */
+.legal {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+}
+
+.legal details {
+    width: min(90vw, 700px);
+    border-radius: 16px;
+    background: linear-gradient( 135deg, #ff77c8 0%, #ffd166 35%, #7efcff 70%, #a78bfa 100% );
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 0 18px rgba(255,119,200,0.35), 0 0 28px rgba(126,252,255,0.25);
+    overflow: hidden;
+}
+
+.legal summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 18px;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(255,255,255,.5);
+}
+
+.legal summary::-webkit-details-marker {
+    display: none;
+}
+
+.legal summary::before {
+    content: "▶ ";
+}
+
+.legal details[open] summary::before {
+    content: "▼ ";
+}
+
+.legal details[open] {
+    background: linear-gradient( 145deg, #46335f, #2d2342 );
+}
+
+.legal details[open] summary {
+    border-bottom: 1px solid rgba(255,255,255,.15);
+}
+
+.legal h1 {
+    visibility:hidden;
+}
+
+.legal details h2,
+.legal details p {
+    margin: 0;
+}
+
+.legal details h2 {
+    color: #7efcff;
+    margin: 16px 20px 8px;
+    text-shadow: 0 0 8px rgba(126,252,255,.4);
+}
+
+.legal details p {
+    color: rgba(255,255,255,.9);
+    margin: 0 20px 20px;
+    line-height: 1.6;
+}
+
+.legal a {
+    color: #7efcff;
+    text-decoration: none;
+    text-shadow: 0 0 6px rgba(126,252,255,0.5);
+    transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.legal a:hover,
+.legal a:focus {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(126,252,255,0.8), 0 0 16px rgba(126,252,255,0.5);
+}
+
+.legal a:active {
+    color: #ffd166;
+    text-shadow: 0 0 8px rgba(255,209,102,0.8);
 }

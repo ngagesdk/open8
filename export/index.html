@@ -12,26 +12,37 @@
 
     <title>open8</title>
     <link rel="stylesheet" href="style.css">
+
+    <script>
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                Module.requestFullscreen(true, false);
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    </script>
+
 </head>
-    <body>
-        <a href="https://github.com/ngagesdk/open8"
-        class="github-corner"
-        aria-label="View source on GitHub">
-        
+<body>
+    <a href="https://github.com/ngagesdk/open8"
+       class="github-corner"
+       aria-label="View source on GitHub">
+
         <svg width="80"
-            height="80"
-            viewBox="0 0 250 250"
-            aria-hidden="true">
+             height="80"
+             viewBox="0 0 250 250"
+             aria-hidden="true">
             <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"
-                class="corner-bg"/>
-        
+                  class="corner-bg" />
+
             <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6
                     C122.0,82.7 120.5,78.6 120.5,78.6
                     C119.2,72.0 123.4,76.3 123.4,76.3
                     C127.3,80.9 125.5,87.3 125.5,87.3
                     C122.9,97.6 130.6,101.9 134.4,103.2"
-                class="octo-arm"/>
-        
+                  class="octo-arm" />
+
             <path d="M115.0,115.0
                     C114.9,115.1 118.7,116.5 119.8,115.4
                     L133.7,101.6
@@ -49,19 +60,78 @@
                     C157.9,116.9 156.7,120.9 152.7,124.9
                     L141.0,136.5
                     C139.8,137.7 141.6,141.9 141.8,141.8 Z"
-                class="octo-body"/>
+                  class="octo-body" />
         </svg>
 
-        </a>
-        <div class="emscripten_border">
-            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
-        </div>
-        <div class="emscripten_controls">
-            <input type="checkbox" id="resize">Resize canvas
-            <input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer
-            <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
-        </div>
+    </a>
+    <div class="emscripten_border">
+        <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+        <button id="fullscreen-btn"
+                onclick="toggleFullscreen()">
+            ⛶
+        </button>
+    </div>
+    <div class="emscripten_controls">
+        <input type="checkbox" id="resize">Resize canvas
+        <input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer
+        <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
+    </div>
 
-        <script async src="open8.js"></script>
-    </body>
+    <script async src="open8.js"></script>
+
+    <div class="legal">
+        <details>
+            <summary>Legal Information</summary>
+            <h1>Legal Information</h1>
+
+            <h2>Impressum</h2>
+
+            <p>
+                Verantwortlich für den Inhalt dieser Website ist (gemäß § 5 TMG):
+            </p>
+
+            <p>
+                Michael Fitzmayer<br>
+                Ruitstr. 25<br>
+                71691 Freiberg am Neckar<br>
+                Tel.: +49 (0) 176 / 926 30 451<br>
+                E-Mail: mail @ michael - fitzmayer . de (<a href="https://pgp.mit.edu/pks/lookup?op=get&search=0x2D6159AF6F65F9E1">PGP Public Key</a>)
+            </p>
+
+            <p>
+                Die Nutzung obiger Daten zum Zwecke der Werbung, statistischer Erhebung oder generell
+                gewerbsmäßig ausgerichteter Tätigkeit ist untersagt.
+            </p>
+
+            <h2>Hosting</h2>
+
+            <p>
+                Diese Website wird über GitHub Pages bereitgestellt.
+            </p>
+
+            <p>
+                Beim Aufruf der Website werden durch GitHub technisch notwendige Server-Logdaten
+                (z. B. IP-Adresse, Datum und Uhrzeit des Zugriffs, Browserinformationen) verarbeitet,
+                um den Betrieb, die Sicherheit und die Stabilität der Website zu gewährleisten.
+            </p>
+
+            <p>
+                Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes
+                Interesse an einer sicheren und zuverlässigen Bereitstellung der Website).
+            </p>
+
+            <p>
+                Ich selbst habe keinen Zugriff auf diese Logdaten und nutze keine Analyse-,
+                Tracking- oder Werbedienste.
+            </p>
+
+            <p>
+                Weitere Informationen finden Sie in der Datenschutzerklärung von GitHub:
+                <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">
+                    GitHub General Privacy Statement
+                </a>
+            </p>
+        </details>
+    </div>
+</body>
 </html>
