@@ -241,3 +241,40 @@ canvas.emscripten {
     color: #ffd166;
     text-shadow: 0 0 8px rgba(255,209,102,0.8);
 }
+
+@media (max-width: 768px) {
+    .legal {
+        top: 8px;
+        left: 8px;
+        right: auto;
+        bottom: auto;
+        transform: none;
+    }
+
+    .legal details {
+        width: auto;
+        max-width: 140px;
+    }
+
+    .legal summary {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .legal details[open] {
+        position: fixed;
+
+        top: 5vh;
+        left: 5vw;
+
+        width: 90vw;
+        max-width: none;
+
+        max-height: 80vh;
+
+        overflow-y: auto;
+
+        z-index: 1000;
+    }
+}
