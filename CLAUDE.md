@@ -17,5 +17,4 @@ please make sure you understand what it is saying and have independently
 confirmed that the issue exists before submitting a bug report or pull request.
 
 Any pull request to this project will ask you to confirm that you are the
-author and that you are contributing your changes under the 
-[MIT](LICENSE.md) license.
+author and that you are contributing your changes under the MIT license.
