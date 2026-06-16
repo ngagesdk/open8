@@ -59,7 +59,7 @@ bool init_app(SDL_Renderer** renderer, SDL_Window* window)
         SDL_Log("Couldn't create window: %s", SDL_GetError());
         return false;
     }
-    //SDL_HideCursor();
+    SDL_HideCursor();
 
     *renderer = SDL_CreateRenderer(window, 0);
     if (!*renderer)
