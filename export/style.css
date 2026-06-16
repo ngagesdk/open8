@@ -4,7 +4,6 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    touch-action: none;
     user-select: none;
     -webkit-user-select: none;
     -webkit-user-drag: none;
@@ -13,21 +12,14 @@ body {
     -webkit-text-size-adjust: 100%;
 }
 
-/* Disable text selection highlighting */
-::selection {
-    background: transparent;
-}
-
-::-moz-selection {
-    background: transparent;
-}
-
-*::selection {
-    background: transparent;
-}
-
-*::-moz-selection {
-    background: transparent;
+html,
+body,
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 html {
@@ -223,6 +215,8 @@ canvas.emscripten {
     text-transform: uppercase;
     letter-spacing: 1px;
     text-shadow: 0 0 6px rgba(255,255,255,.5);
+    touch-action: auto;
+    -webkit-touch-callout: auto;
 }
 
 .legal summary::-webkit-details-marker {

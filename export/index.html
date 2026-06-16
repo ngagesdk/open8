@@ -13,74 +13,93 @@
     <title>open8</title>
     <link rel="stylesheet" href="style.css">
 
-    <script>function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            Module.requestFullscreen(true, false);
-        } else {
-            document.exitFullscreen();
+    <script>
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                Module.requestFullscreen(true, false);
+            } else {
+                document.exitFullscreen();
+            }
         }
-    }
 
-    // Disable context menu globally.
-    document.addEventListener(
-        'contextmenu',
-        (e) => e.preventDefault(),
-        { passive: false }
-    );
+        // Block context menus.
+        const blockContextMenu = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        };
 
-    // Disable text selection globally.
-    document.addEventListener(
-        'selectstart',
-        (e) => e.preventDefault(),
-        { passive: false }
-    );
+        // Prevent context menu event
+        [document, window, document.documentElement, document.body].forEach(target => {
+            target.addEventListener('contextmenu', blockContextMenu, { passive: false, capture: true });
+        });
 
-    // Only suppress browser touch behavior on the game cabinet.
-    const gameArea = document.querySelector('.emscripten_border');
+        // Prevent right-click from triggering context menu
+        [document, window, document.documentElement, document.body].forEach(target => {
+            target.addEventListener('mousedown', (e) => {
+                if (e.button === 2) blockContextMenu(e);
+            }, { passive: false, capture: true });
 
-    if (gameArea) {
-        gameArea.addEventListener(
-            'touchstart',
-            (e) => {
-                // Allow normal behavior for interactive controls.
-                if (
-                    e.target.closest(
-                        'button, a, summary, details, input, select, textarea'
-                    )
-                ) {
-                    return;
-                }
+            target.addEventListener('pointerdown', (e) => {
+                if (e.button === 2) blockContextMenu(e);
+            }, { passive: false, capture: true });
+        });
 
-                e.preventDefault();
-            },
+        // Disable text selection globally.
+        document.addEventListener(
+            'selectstart',
+            (e) => e.preventDefault(),
             { passive: false }
         );
 
-        // Prevent double-tap selection/zoom inside the game area only.
-        let lastTap = 0;
+        // Only suppress browser touch behavior on the game cabinet.
+        const gameArea = document.querySelector('.emscripten_border');
 
-        gameArea.addEventListener(
-            'touchend',
-            (e) => {
-                if (
-                    e.target.closest(
-                        'button, a, summary, details, input, select, textarea'
-                    )
-                ) {
-                    return;
-                }
+        if (gameArea) {
+            gameArea.addEventListener(
+                'touchstart',
+                (e) => {
+                    // Allow normal behavior for interactive controls.
+                    if (
+                        e.target.closest(
+                            'button, a, summary, details, input, select, textarea'
+                        )
+                    ) {
+                        return;
+                    }
 
-                const currentTime = Date.now();
-
-                if (currentTime - lastTap < 300) {
                     e.preventDefault();
-                }
+                },
+                { passive: false }
+            );
 
-                lastTap = currentTime;
-            },
-            { passive: false }
-        );
-    }</script>
+            // Prevent double-tap selection/zoom inside the game area only.
+            let lastTap = 0;
+
+            gameArea.addEventListener(
+                'touchend',
+                (e) => {
+                    if (
+                        e.target.closest(
+                            'button, a, summary, details, input, select, textarea'
+                        )
+                    ) {
+                        return;
+                    }
+
+                    const currentTime = Date.now();
+
+                    if (currentTime - lastTap < 300) {
+                        e.preventDefault();
+                    }
+
+                    lastTap = currentTime;
+                },
+                { passive: false }
+            );
+        }
+    </script>
 
 </head>
 <body>

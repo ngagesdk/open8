@@ -1289,6 +1289,13 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                         if (point_in_touch_region(region_x, region_y, &regions[i]))
                         {
                             touch_button_state |= (1 << regions[i].bit);
+
+                            uint8_t bit = regions[i].bit;
+                            if (bit == 99)
+                            {
+                                state = STATE_MENU;
+                                continue;
+                            }
                             break;
                         }
                     }
