@@ -188,11 +188,11 @@ canvas.emscripten {
 }
 
 .legal summary::before {
-    content: "▶ ";
+    content: "§ ";
 }
 
 .legal details[open] summary::before {
-    content: "▼ ";
+    content: "§ ";
 }
 
 .legal details[open] {
