@@ -2299,6 +2299,7 @@ static touch_region touch_regions[] =
     { 28, 185, 14, 14, 3 }, // Down.
     { 97, 175, 18, 18, 4 }, // Button O.
     {127, 163, 18, 18, 5 }, // Button X.
+    {145, 0, 160, 23, 99}
 };
 
 static bool point_in_region(float x, float y, const touch_region* r)
@@ -2320,7 +2321,7 @@ const touch_region* get_touch_regions(int* count)
     return touch_regions;
 }
 
-void update_input(void)
+void update_input(SDL_Renderer* renderer)
 {
     for (int p = 0; p < 2; p++)
     {
@@ -2332,48 +2333,46 @@ void update_input(void)
             int num_fingers = 0;
             SDL_Finger** fingers = SDL_GetTouchFingers(0, &num_fingers);
 
-            if (num_fingers > 0 && fingers)
+            if (num_fingers > 0 && fingers && renderer)
             {
-                // Get SDL window to determine actual dimensions
-                SDL_Window* window = SDL_GetKeyboardFocus();
-                if (window && screen_rect.w > 0)
+                // Use drawable size (physical pixels) for high-DPI displays/
+                int drawable_w, drawable_h;
+                SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
+
+                if (drawable_w > 0 && drawable_h > 0 && screen_rect.w > 0)
                 {
-                    int window_w, window_h;
-                    if (SDL_GetWindowSize(window, &window_w, &window_h))
+                    // Calculate scale based on screen_rect dimensions:
+                    // - screen_rect represents the scaled 128x128 game area.
+                    // - cart_rect represents the full scaled 160x205 display area.
+                    int scale = (int)(screen_rect.w / 128.0f);
+                    if (scale < 1) scale = 1;
+
+                    for (int i = 0; i < num_fingers; i++)
                     {
-                        // Calculate scale based on screen_rect dimensions:
-                        // - screen_rect represents the scaled 128x128 game area.
-                        // - cart_rect represents the full scaled 160x205 display area.
-                        int scale = (int)(screen_rect.w / 128.0f);
-                        if (scale < 1) scale = 1;
+                        if (!fingers[i]) continue;
 
-                        for (int i = 0; i < num_fingers; i++)
+                        // Convert normalized touch coordinates (0.0-1.0) to physical pixel coordinates.
+                        float touch_x = fingers[i]->x * drawable_w;
+                        float touch_y = fingers[i]->y * drawable_h;
+
+                        // Translate to coordinates relative to the game rendering area (screen_rect).
+                        float local_x = touch_x - screen_rect.x;
+                        float local_y = touch_y - screen_rect.y;
+
+                        // Scale back to virtual 128x128 game coordinate system.
+                        float virt_x = local_x / scale;
+                        float virt_y = local_y / scale;
+
+                        // Map to the touch regions (which are in the 160x205 space)
+                        // but offset to the game area (which starts at 16, 24 in that space).
+                        float region_x = virt_x + 16.0f;  // Game area X offset
+                        float region_y = virt_y + 24.0f;  // Game area Y offset
+
+                        for (int r = 0; r < SDL_arraysize(touch_regions); r++)
                         {
-                            if (!fingers[i]) continue;
-
-                            // Convert normalized touch coordinates (0.0-1.0) to window pixels.
-                            float touch_x = fingers[i]->x * window_w;
-                            float touch_y = fingers[i]->y * window_h;
-
-                            // Translate to coordinates relative to the game rendering area (screen_rect).
-                            float local_x = touch_x - screen_rect.x;
-                            float local_y = touch_y - screen_rect.y;
-
-                            // Scale back to virtual 128x128 game coordinate system.
-                            float virt_x = local_x / scale;
-                            float virt_y = local_y / scale;
-
-                            // Map to the touch regions (which are in the 160x205 space)
-                            // but offset to the game area (which starts at 16, 24 in that space).
-                            float region_x = virt_x + 16.0f;  // Game area X offset
-                            float region_y = virt_y + 24.0f;  // Game area Y offset
-
-                            for (int r = 0; r < SDL_arraysize(touch_regions); r++)
+                            if (point_in_region(region_x, region_y, &touch_regions[r]))
                             {
-                                if (point_in_region(region_x, region_y, &touch_regions[r]))
-                                {
-                                    state |= (1 << touch_regions[r].bit);
-                                }
+                                state |= (1 << touch_regions[r].bit);
                             }
                         }
                     }

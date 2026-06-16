@@ -21,6 +21,27 @@
                 document.exitFullscreen();
             }
         }
+
+        // Disable context menu, find-in-page, and other browser touch interactions.
+        document.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('selectstart', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('touchstart', (e) => {
+            // Allow touch on specific elements like buttons
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('a')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Disable text selection on double-tap.
+        let lastTap = 0;
+        document.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300) {
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        }, { passive: false });
     </script>
 
 </head>

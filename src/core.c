@@ -59,6 +59,81 @@ static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
     }
 }
 
+static void update_touch_input(SDL_Renderer* renderer)
+{
+    // Poll all active fingers for simultaneous multi-touch input in emulator mode.
+    if (state != STATE_EMULATOR || screen_rect.w <= 0)
+    {
+        return;
+    }
+
+    int num_fingers = 0;
+    SDL_Finger** fingers = SDL_GetTouchFingers(0, &num_fingers);
+
+    if (!fingers || !renderer)
+    {
+        return;
+    }
+
+    // If no fingers detected, keep the state as-is (let events handle clearing).
+    if (num_fingers <= 0)
+    {
+        return;
+    }
+
+    // Get drawable size (physical pixels) for high-DPI displays.
+    int drawable_w, drawable_h;
+    SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
+
+    if (drawable_w <= 0 || drawable_h <= 0)
+    {
+        return;
+    }
+
+    // Reset button state and accumulate from all active fingers.
+    touch_button_state = 0;
+
+    // Get touch regions for button detection.
+    int touch_count = 0;
+    const touch_region* regions = get_touch_regions(&touch_count);
+
+    // Calculate scale based on screen_rect.
+    int scale = (int)(screen_rect.w / 128.0f);
+    if (scale < 1) scale = 1;
+
+    // Check all active fingers.
+    for (int i = 0; i < num_fingers; i++)
+    {
+        if (!fingers[i]) continue;
+
+        // Convert normalized touch coordinates (0.0-1.0) to physical pixel coordinates.
+        float touch_x = fingers[i]->x * drawable_w;
+        float touch_y = fingers[i]->y * drawable_h;
+
+        // Translate to coordinates relative to the game rendering area (screen_rect).
+        float local_x = touch_x - screen_rect.x;
+        float local_y = touch_y - screen_rect.y;
+
+        // Scale back to virtual 128x128 game coordinate system.
+        float virt_x = local_x / scale;
+        float virt_y = local_y / scale;
+
+        // Map to the touch regions (which are in the 160x205 space)
+        // but offset to the game area (which starts at 16, 24 in that space).
+        float region_x = virt_x + 16.0f;  // Game area X offset
+        float region_y = virt_y + 24.0f;  // Game area Y offset
+
+        // Check against touch regions and accumulate button bits.
+        for (int r = 0; r < touch_count; r++)
+        {
+            if (point_in_touch_region(region_x, region_y, &regions[r]))
+            {
+                touch_button_state |= (1 << regions[r].bit);
+            }
+        }
+    }
+}
+
 static bool init_vm(SDL_Renderer* renderer)
 {
     vm = lua_newstate(mem_allocator, NULL);
@@ -968,14 +1043,9 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
         {
             if (state == STATE_MENU)
             {
-                SDL_Window* window = SDL_GetRenderWindow(renderer);
-                int window_w, window_h;
-
-                if (!SDL_GetWindowSize(window, &window_w, &window_h))
-                {
-                    SDL_Log("Unable to get window size: %s", SDL_GetError());
-                    break;
-                }
+                // Use drawable size (physical pixels) for high-DPI displays
+                int drawable_w, drawable_h;
+                SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
 
                 // Get scale factor from current cart_rect.
                 int scale = (int)(cart_rect.w / 160.0f);
@@ -983,8 +1053,8 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
 
                 // Convert normalized touch coordinates to pixel coordinates
                 // within the scaled display area.
-                float touch_x = event->tfinger.x * window_w;
-                float touch_y = event->tfinger.y * window_h;
+                float touch_x = event->tfinger.x * drawable_w;
+                float touch_y = event->tfinger.y * drawable_h;
 
                 // Translate to coordinates relative to the cart rendering area.
                 float local_x = touch_x - cart_rect.x;
@@ -1024,6 +1094,103 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                             return true;
                         }
                         break;
+                    }
+                }
+            }
+            else if (state == STATE_EMULATOR && screen_rect.w > 0)
+            {
+                // Fallback event-based touch handling for emulator mode
+                // Combined with polling-based approach for better reliability.
+                int drawable_w, drawable_h;
+                SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
+
+                if (drawable_w > 0 && drawable_h > 0)
+                {
+                    // Get scale factor from screen_rect.
+                    int scale = (int)(screen_rect.w / 128.0f);
+                    if (scale < 1) scale = 1;
+
+                    // Convert normalized touch coordinates to physical pixel coordinates.
+                    float touch_x = event->tfinger.x * drawable_w;
+                    float touch_y = event->tfinger.y * drawable_h;
+
+                    // Translate to coordinates relative to the game rendering area (screen_rect).
+                    float local_x = touch_x - screen_rect.x;
+                    float local_y = touch_y - screen_rect.y;
+
+                    // Scale back to virtual 128x128 game coordinate system.
+                    float virt_x = local_x / scale;
+                    float virt_y = local_y / scale;
+
+                    // Map to the touch regions (which are in the 160x205 space)
+                    // but offset to the game area (which starts at 16, 24 in that space).
+                    float region_x = virt_x + 16.0f;  // Game area X offset
+                    float region_y = virt_y + 24.0f;  // Game area Y offset
+
+                    // Check against touch regions and set button state.
+                    int touch_count = 0;
+                    const touch_region* regions = get_touch_regions(&touch_count);
+
+                    for (int i = 0; i < touch_count; i++)
+                    {
+                        if (point_in_touch_region(region_x, region_y, &regions[i]))
+                        {
+                            touch_button_state |= (1 << regions[i].bit);
+
+                            uint8_t bit = regions[i].bit;
+                            if (bit == 99)
+                            {
+                                state = STATE_MENU;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case SDL_EVENT_FINGER_UP:
+        {
+            if (state == STATE_EMULATOR && screen_rect.w > 0)
+            {
+                // Fallback event-based touch handling for emulator mode
+                // Clear button state for released finger.
+                int drawable_w, drawable_h;
+                SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
+
+                if (drawable_w > 0 && drawable_h > 0)
+                {
+                    // Get scale factor from screen_rect.
+                    int scale = (int)(screen_rect.w / 128.0f);
+                    if (scale < 1) scale = 1;
+
+                    // Convert normalized touch coordinates to physical pixel coordinates.
+                    float touch_x = event->tfinger.x * drawable_w;
+                    float touch_y = event->tfinger.y * drawable_h;
+
+                    // Translate to coordinates relative to the game rendering area (screen_rect).
+                    float local_x = touch_x - screen_rect.x;
+                    float local_y = touch_y - screen_rect.y;
+
+                    // Scale back to virtual 128x128 game coordinate system.
+                    float virt_x = local_x / scale;
+                    float virt_y = local_y / scale;
+
+                    // Map to the touch regions (which are in the 160x205 space)
+                    // but offset to the game area (which starts at 16, 24 in that space).
+                    float region_x = virt_x + 16.0f;  // Game area X offset
+                    float region_y = virt_y + 24.0f;  // Game area Y offset
+
+                    // Check against touch regions and clear button state.
+                    int touch_count = 0;
+                    const touch_region* regions = get_touch_regions(&touch_count);
+
+                    for (int i = 0; i < touch_count; i++)
+                    {
+                        if (point_in_touch_region(region_x, region_y, &regions[i]))
+                        {
+                            touch_button_state &= ~(1 << regions[i].bit);
+                        }
                     }
                 }
             }
@@ -1149,6 +1316,7 @@ bool iterate_core(SDL_Renderer* renderer)
         if (selection != prev_selection)
         {
             render_cartridge(renderer);
+
             SDL_RenderPresent(renderer);
         }
     }
@@ -1162,12 +1330,14 @@ bool iterate_core(SDL_Renderer* renderer)
 
         if (has_update)
         {
-            update_input();
+            update_input(renderer);
+            update_touch_input(renderer);
             call_pico8_function(vm, "_update");
         }
         else if (has_update60)
         {
-            update_input();
+            update_input(renderer);
+            update_touch_input(renderer);
             call_pico8_function(vm, "_update60");
         }
 

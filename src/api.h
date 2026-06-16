@@ -10,6 +10,7 @@
 #ifndef API_H
 #define API_H
 
+#include <SDL3/SDL.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -31,7 +32,7 @@ extern uint64_t pico8_frame_start;
 extern uint32_t pico8_frame_ms;
 
 void init_api(lua_State* L);
-void update_input(void);
+void update_input(SDL_Renderer* renderer);
 void update_time(void);
 bool point_in_touch_region(float x, float y, const touch_region* r);
 const touch_region* get_touch_regions(int* count);
