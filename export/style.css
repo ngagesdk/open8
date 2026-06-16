@@ -98,27 +98,30 @@ canvas.emscripten {
 }
 
 /* Decorative Neon Stripes */
-.emscripten_border::after {
-    content: "";
+.emscripten_border {
+    position: relative;
 
-    position: absolute;
-    top: 10px;
-    left: 20px;
-    right: 20px;
-    height: 6px;
-
-    border-radius: 999px;
+    padding: 26px;
+    border-radius: 22px;
 
     background:
         linear-gradient(
-            90deg,
-            #ff4fa3,
-            #ffe066,
-            #00f5ff,
-            #a855f7
+            135deg,
+            #ff77c8 0%,
+            #ffd166 35%,
+            #7efcff 70%,
+            #a78bfa 100%
         );
 
-    opacity: 0.9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow:
+        0 0 0 4px rgba(255,255,255,0.9),
+        0 0 0 7px rgba(255,119,200,0.25),
+        0 20px 45px rgba(170,90,200,0.22),
+        0 0 30px rgba(126,252,255,0.35);
 }
 
 /* GitHub Corner */
@@ -140,17 +143,6 @@ canvas.emscripten {
 .github-corner .octo-body,
 .github-corner .octo-arm {
     fill: #fff;
-}
-
-/* Float Animation */
-@keyframes arcadeFloat {
-    from {
-        transform: translateY(0);
-    }
-
-    to {
-        transform: translateY(-6px);
-    }
 }
 
 .emscripten_controls {
