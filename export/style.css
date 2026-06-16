@@ -173,6 +173,8 @@ canvas.emscripten {
 }
 
 .legal summary {
+    display: flex;
+    align-items: center;
     list-style: none;
     cursor: pointer;
     padding: 12px 18px;
@@ -188,11 +190,16 @@ canvas.emscripten {
 }
 
 .legal summary::before {
-    content: "§ ";
+    content: "";
 }
 
 .legal details[open] summary::before {
-    content: "X ";
+    content: "";
+}
+
+.legal details[open] summary::after {
+    content: "X";
+    margin-left: auto;
 }
 
 .legal details[open] {
