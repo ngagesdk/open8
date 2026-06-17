@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
     
       - name: Configure project
         shell: bash
@@ -26,9 +26,31 @@ jobs:
           source "$KOS_BASE/environ.sh"
     
           kos-cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DSDL_OPENGL=OFF
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     
+      - name: Build and install GLdc
+        shell: bash
+        run: |
+          source "$KOS_BASE/environ.sh"
+
+          git clone --depth 1 https://github.com/Kazade/GLdc.git /tmp/GLdc
+
+          cmake -S /tmp/GLdc \
+                -B /tmp/GLdc/build \
+                -DCMAKE_TOOLCHAIN_FILE=/tmp/GLdc/toolchains/Dreamcast.cmake \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DBUILD_SAMPLES=OFF \
+                -DBUILD_TESTS=OFF
+
+          cmake --build /tmp/GLdc/build -- -j"$(nproc)"
+
+          # Install headers and libraries into KOS
+          cp -r /tmp/GLdc/include/GL \
+                "$KOS_BASE/addons/include/"
+
+          find /tmp/GLdc/build -name "libGL*.a" \
+                -exec cp {} "$KOS_BASE/addons/lib/dreamcast/" \;
+      
       - name: Build project
         shell: bash
         run: |
