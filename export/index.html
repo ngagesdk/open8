@@ -14,91 +14,132 @@
     <link rel="stylesheet" href="style.css">
 
     <script>
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                Module.requestFullscreen(true, false);
-            } else {
-                document.exitFullscreen();
-            }
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            Module.requestFullscreen(true, false);
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+
+        const gameArea = document.querySelector('.emscripten_border');
+
+        if (!gameArea) {
+            return;
         }
 
-        // Block context menus.
-        const blockContextMenu = (e) => {
+        function isInteractive(target) {
+            return target.closest(
+                '.legal, .legal *, .github-corner, .github-corner *, button, a, summary, details, input, select, textarea'
+            );
+        }
+
+        function block(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
             return false;
-        };
+        }
 
-        // Prevent context menu event
-        [document, window, document.documentElement, document.body].forEach(target => {
-            target.addEventListener('contextmenu', blockContextMenu, { passive: false, capture: true });
-        });
+        // Context menu prevention.
 
-        // Prevent right-click from triggering context menu
-        [document, window, document.documentElement, document.body].forEach(target => {
-            target.addEventListener('mousedown', (e) => {
-                if (e.button === 2) blockContextMenu(e);
-            }, { passive: false, capture: true });
+        document.addEventListener(
+            'contextmenu',
+            e => {
+                if (!isInteractive(e.target)) {
+                    block(e);
+                }
+            },
+            { passive: false, capture: true }
+        );
 
-            target.addEventListener('pointerdown', (e) => {
-                if (e.button === 2) blockContextMenu(e);
-            }, { passive: false, capture: true });
-        });
+        // Prevent text selection.
 
-        // Disable text selection globally.
         document.addEventListener(
             'selectstart',
-            (e) => e.preventDefault(),
+            e => {
+                if (!isInteractive(e.target)) {
+                    e.preventDefault();
+                }
+            },
+            { passive: false, capture: true }
+        );
+
+        document.addEventListener(
+            'dragstart',
+            e => {
+                if (!isInteractive(e.target)) {
+                    e.preventDefault();
+                }
+            },
+            { passive: false, capture: true }
+        );
+
+        // Long-press prevention.
+
+        gameArea.addEventListener(
+            'touchstart',
+            e => {
+                if (!isInteractive(e.target)) {
+                    e.preventDefault();
+                }
+            },
             { passive: false }
         );
 
-        // Only suppress browser touch behavior on the game cabinet.
-        const gameArea = document.querySelector('.emscripten_border');
-
-        if (gameArea) {
-            gameArea.addEventListener(
-                'touchstart',
-                (e) => {
-                    // Allow normal behavior for interactive controls.
-                    if (
-                        e.target.closest(
-                            'button, a, summary, details, input, select, textarea'
-                        )
-                    ) {
-                        return;
-                    }
-
+        gameArea.addEventListener(
+            'touchmove',
+            e => {
+                if (!isInteractive(e.target)) {
                     e.preventDefault();
-                },
-                { passive: false }
-            );
+                }
+            },
+            { passive: false }
+        );
 
-            // Prevent double-tap selection/zoom inside the game area only.
-            let lastTap = 0;
+        // Double-tap zoom prevention.
 
-            gameArea.addEventListener(
-                'touchend',
-                (e) => {
-                    if (
-                        e.target.closest(
-                            'button, a, summary, details, input, select, textarea'
-                        )
-                    ) {
-                        return;
-                    }
+        let lastTouchEnd = 0;
 
-                    const currentTime = Date.now();
+        gameArea.addEventListener(
+            'touchend',
+            e => {
+                const now = Date.now();
 
-                    if (currentTime - lastTap < 300) {
-                        e.preventDefault();
-                    }
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
 
-                    lastTap = currentTime;
-                },
-                { passive: false }
-            );
-        }
+                lastTouchEnd = now;
+            },
+            { passive: false }
+        );
+
+        // Gesture prevention (pinch zoom).
+
+        gameArea.addEventListener(
+            'gesturestart',
+            e => e.preventDefault(),
+            { passive: false }
+        );
+
+        gameArea.addEventListener(
+            'gesturechange',
+            e => e.preventDefault(),
+            { passive: false }
+        );
+
+        gameArea.addEventListener(
+            'gestureend',
+            e => e.preventDefault(),
+            { passive: false }
+        );
+    });
+
+    const gameArea = document.querySelector('.emscripten_border');
+    const canvas = document.querySelector('#canvas');
     </script>
 
 </head>
