@@ -129,84 +129,84 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
 	 */
 
 
-	 /* Sprite sheet / Map, row 32 - 63 (shared)
-	  * 0x1000  - 0x1fff
-	  *
-	  */
+	/* Sprite sheet / Map, row 32 - 63 (shared)
+	 * 0x1000  - 0x1fff
+	 *
+	 */
 
 
-	  /* Map, row 0 - 31.
-	   * 0x2000  - 0x2fff
-	   *
-	   */
+	/* Map, row 0 - 31.
+	 * 0x2000  - 0x2fff
+	 *
+	 */
 
 
-	   /* Sprite flags.
-		* 0x3000  - 0x30ff
-		*
-		*/
+	/* Sprite flags.
+	 * 0x3000  - 0x30ff
+	 *
+	 */
 
 
-		/* Music.
-		 * 0x3100  - 0x31ff
-		 *
-		 */
+	/* Music.
+	 * 0x3100  - 0x31ff
+	 *
+	 */
 
 
-		 /* Sound effects.
-		  * 0x3200  - 0x42ff
-		  *
-		  */
+	/* Sound effects.
+	 * 0x3200  - 0x42ff
+	 *
+	 */
 
 
-		  /* General use or work RAM.
-		   * 0x4300  - 0x55ff
-		   *
-		   */
+	/* General use or work RAM.
+	 * 0x4300  - 0x55ff
+	 *
+	 */
 
 
-		   /* General use / custom font.
-			* 0x5600  - 0x5dff
-			*
-			*/
+	/* General use / custom font.
+	 * 0x5600  - 0x5dff
+	 *
+	 */
 
 
-			/* Persistent cart data.
-			 * 0x5e00  - 0x5eff
-			 *
-			 */
+	/* Persistent cart data.
+	 * 0x5e00  - 0x5eff
+	 *
+	 */
 
 
-			 /* Draw state.
-			  * 0x5f00  - 0x5f3f
-			  *
-			  */
+	/* Draw state.
+	 * 0x5f00  - 0x5f3f
+	 *
+	 */
 
 
-			  /* Hardware state.
-			   * 0x5f40  - 0x5f7f
-			   *
-			   */
+	/* Hardware state.
+	 * 0x5f40  - 0x5f7f
+	 *
+	 */
 
 
-			   /* GPIO pins.
-				* 0x5f80  - 0x5FFF
-				*
-				*/
+	/* GPIO pins.
+	 * 0x5f80  - 0x5FFF
+	 *
+	 */
 
 
-				/* Screen data.
-				 * 0x6000 - 0x7FFF
-				 * All 128 rows of the screen, top to bottom. Each row contains 128 pixels in 64 bytes.
-				 * Each byte contains two adjacent pixels, with the low 4 bits being the left/even pixel
-				 * and the high 4 bits being the right/odd pixel.
-				 *
-				 * Each pixel can be one of 16 colors, and is represented by a 4 - bit value, also known
-				 * as a nybble. Thus, an 8 - bit byte represents two pixels, horizontally adjacent, where
-				 * the most - significant(left - most) 4 - bit nybble is the right pixel of the pair, and
-				 * the least - significant(right - most) 4 - bit nybble is the left pixel.
-				 *
-				 */
+	/* Screen data.
+	 * 0x6000 - 0x7FFF
+	 * All 128 rows of the screen, top to bottom. Each row contains 128 pixels in 64 bytes.
+	 * Each byte contains two adjacent pixels, with the low 4 bits being the left/even pixel
+	 * and the high 4 bits being the right/odd pixel.
+	 *
+	 * Each pixel can be one of 16 colors, and is represented by a 4 - bit value, also known
+	 * as a nybble. Thus, an 8 - bit byte represents two pixels, horizontally adjacent, where
+	 * the most - significant(left - most) 4 - bit nybble is the right pixel of the pair, and
+	 * the least - significant(right - most) 4 - bit nybble is the left pixel.
+	 *
+	 */
 	void* pixels;
 	int pitch;
 
