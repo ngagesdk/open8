@@ -117,7 +117,7 @@ if (NINTENDO_3DS)
 
 elseif(PLATFORM_DREAMCAST)
   # FIXME: This should be inherited from the SDL3::SDL3 target
-  target_link_libraries(open8 PRIVATE pthread)
+  target_link_libraries(open8 PRIVATE pthread GL)
 
   target_compile_options(open8 PRIVATE
     $<$<CONFIG:Release>:-O3>
