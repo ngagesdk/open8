@@ -1720,6 +1720,7 @@ static int pico8_poke4(lua_State* L)
 }
 
 // String functions.
+
 static int pico8_sub(lua_State* L)
 {
     size_t len;
@@ -1760,6 +1761,153 @@ static int pico8_sub(lua_State* L)
     size_t count = (size_t)(end - start + 1);
 
     lua_pushlstring(L, str + offset, count);
+    return 1;
+}
+
+static void pico8_split_push_token(lua_State* L, const char* s, size_t len, int convert_numbers)
+{
+    if (convert_numbers)
+    {
+        char buf[128];
+        const char* parse_str = NULL;
+
+        if (len < sizeof(buf))
+        {
+            SDL_memcpy(buf, s, len);
+            buf[len] = '\0';
+            parse_str = buf;
+        }
+
+        if (parse_str)
+        {
+            char* endptr;
+            double v = SDL_strtod(parse_str, &endptr);
+
+            if (*parse_str != '\0' && *endptr == '\0')
+            {
+                lua_pushnumber(L, fix32_from_double(v));
+                return;
+            }
+        }
+    }
+
+    lua_pushlstring(L, s, len);
+}
+
+static int pico8_split(lua_State* L)
+{
+    size_t str_len;
+    const char* str = luaL_checklstring(L, 1, &str_len);
+
+    int nargs = lua_gettop(L);
+
+    int has_sep = nargs >= 2;
+    int t2 = has_sep ? lua_type(L, 2) : LUA_TNIL;
+
+    int convert_numbers = 1;
+    if (nargs >= 3)
+    {
+        convert_numbers = lua_toboolean(L, 3);
+    }
+
+    lua_newtable(L);
+
+    int index = 1;
+    size_t start = 0;
+    size_t pos = 0;
+
+    // CASE 1: split(str) or nil.
+    if (t2 == LUA_TNIL)
+    {
+        const char* sep = ",";
+        size_t sep_len = 1;
+
+        while (pos + sep_len <= str_len)
+        {
+            if (SDL_memcmp(str + pos, sep, sep_len) == 0)
+            {
+                pico8_split_push_token(L, str + start, pos - start, convert_numbers);
+                lua_rawseti(L, -2, index++);
+                pos += sep_len;
+                start = pos;
+            }
+            else
+            {
+                pos++;
+            }
+        }
+
+        pico8_split_push_token(L, str + start, str_len - start, convert_numbers);
+        lua_rawseti(L, -2, index);
+
+        return 1;
+    }
+
+    // CASE 2: numeric separator.
+    if (t2 == LUA_TNUMBER)
+    {
+        int n = fix32_to_int(lua_tointeger(L, 2));
+
+        if (n <= 0)
+        {
+            pico8_split_push_token(L, str, str_len, convert_numbers);
+            lua_rawseti(L, -2, 1);
+            return 1;
+        }
+
+        for (pos = 0; pos < str_len; pos += (size_t)n)
+        {
+            size_t len = (pos + n > str_len) ? (str_len - pos) : (size_t)n;
+
+            pico8_split_push_token(L, str + pos, len, convert_numbers);
+            lua_rawseti(L, -2, index++);
+        }
+
+        return 1;
+    }
+
+    // CASE 3: string separator.
+    if (t2 != LUA_TSTRING)
+    {
+        return luaL_error(L,
+            "bad argument #2 to 'split' (string or number expected, got %s)",
+            lua_typename(L, t2));
+    }
+
+    size_t sep_len;
+    const char* sep = lua_tolstring(L, 2, &sep_len);
+
+    if (sep_len == 0)
+    {
+        for (pos = 0; pos < str_len; pos++)
+        {
+            pico8_split_push_token(L, str + pos, 1, convert_numbers);
+            lua_rawseti(L, -2, index++);
+        }
+        return 1;
+    }
+
+    start = 0;
+    pos = 0;
+
+    while (pos + sep_len <= str_len)
+    {
+        if (SDL_memcmp(str + pos, sep, sep_len) == 0)
+        {
+            pico8_split_push_token(L, str + start, pos - start, convert_numbers);
+            lua_rawseti(L, -2, index++);
+            pos += sep_len;
+            start = pos;
+        }
+        else
+        {
+            pos++;
+        }
+    }
+
+    pico8_split_push_token(L, str + start, str_len - start, convert_numbers);
+    lua_rawseti(L, -2, index++);
+
     return 1;
 }
 
@@ -2240,6 +2388,8 @@ void init_api(lua_State* L)
     // Strings.
     lua_pushcfunction(L, pico8_sub);
     lua_setglobal(L, "sub");
+    lua_pushcfunction(L, pico8_split);
+    lua_setglobal(L, "split");
 
     // System.
     lua_pushcfunction(L, pico8_menuitem);

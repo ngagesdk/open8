@@ -37,6 +37,46 @@ function assert_string_equal(actual, expected, test_name)
     end
 end
 
+function assert_table_equal(actual, expected, test_name)
+    -- nil safety
+    if actual == nil or expected == nil then
+        if actual == expected then
+            log(test_name .. " passed")
+        else
+            log(test_name .. " failed: one table is nil")
+            failed_tests += 1
+        end
+        return
+    end
+
+    -- length check
+    if #actual ~= #expected then
+        log(test_name .. " failed: length mismatch (expected " .. #expected .. ", got " .. #actual .. ")")
+        failed_tests += 1
+        return
+    end
+
+    -- element-wise compare
+    for i = 1, #expected do
+        local a = actual[i]
+        local e = expected[i]
+
+        if a ~= e then
+            local a_str = tostring(a)
+            local e_str = tostring(e)
+
+            log(test_name ..
+                " failed at [" .. i .. "]: expected '" ..
+                e_str .. "' but got '" .. a_str .. "'")
+
+            failed_tests += 1
+            return
+        end
+    end
+
+    log(test_name .. " passed")
+end
+
 -- Arithmetic operations.
 function test_arithmetic_operations()
     assert_equal(1 + 2, 3, "1 + 2")
@@ -369,7 +409,7 @@ end
 
 -- Strings.
 function test_strings()
-    s="something"
+    local s="something"
 
     test = sub(s,-5) -- Get the string from the 5th-to-last char onwards.
     assert_string_equal(test, "thing", "sub(s,-5)")
@@ -377,6 +417,35 @@ function test_strings()
     assert_string_equal(test, "hi", "sub(s,-4,-3)")
     test = sub(s,-2,nil) -- Get the last two characters.
     assert_string_equal(test, "ng", "sub(s,-2,nil)")
+
+    local str = "a,b,c"
+
+    local t = split(str)
+    assert_table_equal(t, { "a", "b", "c" }, "split(s)")
+
+    t = split("a,,c")
+    assert_table_equal(t, { "a", "", "c" }, "split empty fields")
+
+    t = split("abc", "")
+    assert_table_equal(t, { "a", "b", "c" }, "split char mode")
+
+    t = split("a|b|c", "|")
+    assert_table_equal(t, { "a", "b", "c" }, "split('|')")
+
+    t = split("a,b,c,", ",")
+    assert_table_equal(t, { "a", "b", "c", "" }, "split trailing empty")
+
+    t = split("a,b,c", ",", false)
+    assert_table_equal(t, { "a", "b", "c" }, "split no number conversion")
+
+    t = split("1,2,3")
+    assert_table_equal(t, { 1, 2, 3 }, "split number conversion")
+
+    t = split("1,,3")
+    assert_table_equal(t, { 1, "", 3 }, "split mixed empty + numbers")
+
+    t = split("ab", 1)
+    assert_table_equal(t, { "a", "b" }, "split by N=1")
 end
 
 -- Tables.

@@ -564,9 +564,17 @@ static bool is_function_present(lua_State* L, const char* func_name)
 static void call_pico8_function(lua_State* L, const char* func_name)
 {
     lua_getglobal(L, func_name);
+
+    if (!lua_isfunction(L, -1))
+    {
+        SDL_Log("%s is not a function (type=%s)", func_name, lua_typename(L, lua_type(L, -1)));
+        lua_pop(L, 1);
+        return;
+    }
+
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        SDL_Log("Error calling function %s: %s", func_name, lua_tostring(L, -1));
+        SDL_Log("Error calling %s: %s", func_name, lua_tostring(L, -1));
         lua_pop(L, 1);
     }
 }
@@ -618,22 +626,24 @@ static bool run_cartridge(SDL_Renderer* renderer)
     {
         state = STATE_EMULATOR;
 
-        /* Try to load the (possibly patched) code buffer first. If that fails,
-           fall back to the original raw code bytes embedded in the cart data
-           (starting at 0x4300). Some carts rely on subtle encoding/escaping that
-           can be altered by our patcher; attempt the original on failure so
-           carts that work on real PICO-8 still run. */
+        // Try to load the (possibly patched) code buffer first. If that fails,
+        // fall back to the original raw code bytes embedded in the cart data
+        // (starting at 0x4300). Some carts rely on subtle encoding/escaping that
+        // can be altered by our patcher; attempt the original on failure so
+        // carts that work on real PICO-8 still run.
         if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
         {
-            /* Preserve the error message from the failed attempt. */
+            // Preserve the error message from the failed attempt.
             const char* err = lua_tostring(vm, -1);
             print_memory_usage(vm);
 
-            /* Try loading original code bytes from cart.cart_data (offset 0x4300)
-               up to the first null terminator. */
+            // Try loading original code bytes from cart.cart_data (offset 0x4300)
+            // up to the first null terminator.
             size_t orig_size = 0;
             while (orig_size < MAX_CODE_SIZE && cart.cart_data[0x4300 + orig_size] != 0)
+            {
                 orig_size++;
+            }
 
             if (orig_size > 0)
             {
@@ -654,7 +664,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
                 lua_pop(vm, 1);
                 return false;
             }
-            lua_pop(vm, 1); /* pop original error message */
+            lua_pop(vm, 1); // Pop original error message.
         }
 
         print_memory_usage(vm);
