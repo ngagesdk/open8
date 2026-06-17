@@ -173,14 +173,14 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/2API.PNG@carts/2API.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/3JELPI.PNG@carts/3JELPI.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/4RACER.PNG@carts/4RACER.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/6HGHSTAK.PNG@carts/6HGHSTAK.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/7ONEBOSS.PNG@carts/7ONEBOSS.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/8AALPACA.PNG@carts/8AALPACA.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/9POOM.PNG@carts/9POOM.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/BSLPWAYS.PNG@carts/BSLPWAYS.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/CPICOHOT.PNG@carts/CPICOHOT.PNG"
-    #"SHELL:--preload-file ${EXPORT_DIR}/carts/DBECKNHS.PNG@carts/DBECKNHS.PNG"
-    )
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/5PICOPON.PNG@carts/5PICOPON.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/6PROVNCE.PNG@carts/6PROVNCE.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/7PICROSS.PNG@carts/7PICROSS.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/8CABRIDE.PNG@carts/8CABRIDE.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/9CARDSWP.PNG@carts/9CARDSWP.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/APICOFOX.PNG@carts/APICOFOX.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/BSMB.PNG@carts/BSMB.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/PICOPORT.PNG@carts/PICOPORT.PNG")
 
   set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
 
