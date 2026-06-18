@@ -197,7 +197,7 @@ canvas.emscripten {
 
 @media (max-width: 768px) {
     .github-corner {
-        transform: scale(0.6);
+        transform: scale(0.75);
         transform-origin: top right;
     }
 }
