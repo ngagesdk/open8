@@ -10,6 +10,24 @@ SPDX-License-Identifier: MIT
 local failed_tests = 0
 
 -- Test framework.
+function assert_true(expression, test_name)
+    if expression == true then
+        log(test_name .. " passed")
+    else
+        log(test_name .. " failed")
+        failed_tests += 1
+    end
+end
+
+function assert_false(expression, test_name)
+    if expression == false then
+        log(test_name .. " passed")
+    else
+        log(test_name .. " failed")
+        failed_tests += 1
+    end
+end
+
 function assert_equal(actual, expected, test_name)
     if actual == expected then
         log(test_name .. " passed")
@@ -19,13 +37,26 @@ function assert_equal(actual, expected, test_name)
     end
 end
 
-function assert_true(expression, test_name)
-    if expression == true then
-        log(test_name .. " passed")
-    else
-        log(test_name .. " failed")
+function assert_multi_equal(actual, expected, test_name)
+    if #actual ~= #expected then
+        log(test_name .. " failed: result count mismatch")
         failed_tests += 1
+        return
     end
+
+    for i=1,#expected do
+        if actual[i] ~= expected[i] then
+            log(test_name ..
+                " failed at ["..i.."]: expected '"..
+                tostring(expected[i])..
+                "' but got '"..
+                tostring(actual[i]).."'")
+            failed_tests += 1
+            return
+        end
+    end
+
+    log(test_name .. " passed")
 end
 
 function assert_string_equal(actual, expected, test_name)
@@ -148,6 +179,121 @@ function test_control_flow()
         sum = sum + i
     end
     assert_equal(sum, 6, "for loop")
+end
+
+-- Co-Routines.
+function test_coroutines()
+    -- cocreate / costatus(suspended).
+    local co = cocreate(function()
+    end)
+
+    assert_string_equal(
+        costatus(co),
+        "suspended",
+        "cocreate initial status"
+    )
+
+    -- running status.
+    local running_status
+
+    co = cocreate(function()
+        running_status = costatus(co)
+    end)
+
+    coresume(co)
+
+    assert_string_equal(
+        running_status,
+        "running",
+        "costatus running"
+    )
+
+    -- yield result.
+    co = cocreate(function()
+        yield(123, 456)
+    end)
+
+    local ok,a,b = coresume(co)
+
+    assert_true(ok, "yield resume success")
+    assert_equal(a, 123, "yield arg 1")
+    assert_equal(b, 456, "yield arg 2")
+
+    assert_string_equal(
+        costatus(co),
+        "suspended",
+        "yield leaves suspended"
+    )
+
+    -- resume values back into coroutine.
+    local received
+
+    co = cocreate(function()
+        received = yield("waiting")
+    end)
+
+    coresume(co)
+    coresume(co, 999)
+
+    assert_equal(
+        received,
+        999,
+        "resume passes values"
+    )
+
+    -- dead status after return.
+    co = cocreate(function()
+        return 42
+    end)
+
+    ok,a = coresume(co)
+
+    assert_true(ok, "return resume success")
+    assert_equal(a, 42, "return value")
+
+    assert_string_equal(
+        costatus(co),
+        "dead",
+        "status after return"
+    )
+
+    -- normal status.
+    local outer_status
+
+    local inner = cocreate(function()
+        outer_status = costatus(co)
+        yield()
+    end)
+
+    co = cocreate(function()
+        coresume(inner)
+    end)
+
+    coresume(co)
+
+    assert_string_equal(
+        outer_status,
+        "normal",
+        "costatus normal"
+    )
+
+    -- error handling.
+    co = cocreate(function()
+        error("boom")
+    end)
+
+    ok,msg = coresume(co)
+
+    assert_false(
+        ok,
+        "error resume fails"
+    )
+
+    assert_string_equal(
+        costatus(co),
+        "dead",
+        "status after error"
+    )
 end
 
 -- Graphics.
@@ -1180,6 +1326,7 @@ function run_tests()
     init_crc32()
 
     test_arithmetic_operations()
+    test_coroutines();
     test_relational_operations()
     test_logical_operations()
     test_control_flow()

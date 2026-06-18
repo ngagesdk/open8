@@ -437,6 +437,122 @@ static int pico8_dset(lua_State* L)
     TO_BE_DONE;
 }
 
+// Co-Routine functions.
+
+static int pico8_cocreate(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TFUNCTION);
+
+    lua_State* co = lua_newthread(L);
+
+    /* move function onto coroutine stack */
+    lua_pushvalue(L, 1);
+    lua_xmove(L, co, 1);
+
+    return 1;
+}
+
+static int pico8_coresume(lua_State* L)
+{
+    lua_State* co = lua_tothread(L, 1);
+
+    if (!co)
+    {
+        lua_pushboolean(L, 0);
+        lua_pushstring(L, "not a coroutine");
+        return 2;
+    }
+
+    int nargs = lua_gettop(L) - 1;
+
+    for (int i = 0; i < nargs; i++)
+    {
+        lua_pushvalue(L, i + 2);
+    }
+
+    lua_xmove(L, co, nargs);
+
+    int status = lua_resume(co, L, nargs);
+    int nresults = lua_gettop(co);
+
+    if (status != LUA_OK && status != LUA_YIELD)
+    {
+        lua_pushboolean(L, 0);
+
+        if (lua_gettop(co) > 0)
+        {
+            lua_xmove(co, L, 1);
+        }
+        else
+        {
+            lua_pushstring(L, "coroutine error");
+        }
+
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+
+    lua_xmove(co, L, nresults);
+
+    return 1 + nresults;
+}
+
+static int pico8_costatus(lua_State* L)
+{
+    lua_State* co = lua_tothread(L, 1);
+
+    if (!co)
+    {
+        lua_pushstring(L, "dead");
+        return 1;
+    }
+
+    if (co == L)
+    {
+        lua_pushstring(L, "running");
+        return 1;
+    }
+
+    switch (lua_status(co))
+    {
+        case LUA_YIELD:
+            lua_pushstring(L, "suspended");
+            break;
+
+        case LUA_OK:
+        {
+            lua_Debug ar;
+
+            if (lua_getstack(co, 0, &ar))
+            {
+                lua_pushstring(L, "normal");
+            }
+            else if (lua_gettop(co) == 0)
+            {
+                lua_pushstring(L, "dead");
+            }
+            else
+            {
+                lua_pushstring(L, "suspended");
+            }
+
+            break;
+        }
+
+        default:
+            lua_pushstring(L, "dead");
+            break;
+    }
+
+    return 1;
+}
+
+static int pico8_yield(lua_State* L)
+{
+    return lua_yield(L, lua_gettop(L));
+}
+
 // Debugging functions.
 
 static int pico8_assert(lua_State* L)
@@ -2261,6 +2377,16 @@ void init_api(lua_State* L)
     lua_setglobal(L, "dget");
     lua_pushcfunction(L, pico8_dset);
     lua_setglobal(L, "dset");
+
+    // Co-Routines.
+    lua_pushcfunction(L, pico8_cocreate);
+    lua_setglobal(L, "cocreate");
+    lua_pushcfunction(L, pico8_coresume);
+    lua_setglobal(L, "coresume");
+    lua_pushcfunction(L, pico8_costatus);
+    lua_setglobal(L, "costatus");
+    lua_pushcfunction(L, pico8_yield);
+    lua_setglobal(L, "yield");
 
     // Debugging.
     lua_pushcfunction(L, pico8_assert);
