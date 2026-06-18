@@ -79,6 +79,10 @@ body {
     touch-action: none;
 }
 
+.emscripten_controls {
+    display: none;
+}
+
 #fullscreen-btn {
     position: absolute;
     bottom: -18px;
@@ -191,8 +195,11 @@ canvas.emscripten {
     fill: #fff;
 }
 
-.emscripten_controls {
-    display: none;
+@media (max-width: 768px) {
+    .github-corner {
+        transform: scale(0.6);
+        transform-origin: top right;
+    }
 }
 
 /* Legal Information */
