@@ -714,7 +714,7 @@ static void render_cartridge(SDL_Renderer* renderer)
     SDL_Window* window = SDL_GetRenderWindow(renderer);
     int w, h;
 
-    SDL_SetRenderDrawColor(renderer, 0x31, 0x31, 0x31, 0xff);
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xf1, 0xd6, 0xff);
     SDL_RenderClear(renderer);
 
     if (!SDL_GetWindowSize(window, &w, &h))
