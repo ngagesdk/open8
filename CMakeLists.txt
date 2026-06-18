@@ -180,6 +180,7 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/9CARDSWP.PNG@carts/9CARDSWP.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/APICOFOX.PNG@carts/APICOFOX.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/BSMB.PNG@carts/BSMB.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/CMOTNREC.PNG@carts/CMOTNREC.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/PICOPORT.PNG@carts/PICOPORT.PNG")
 
   set_property(TARGET open8 APPEND_STRING PROPERTY LINK_FLAGS " ${EMSCRIPTEN_PRELOAD_FLAGS}")
