@@ -794,6 +794,106 @@ function test_tables()
 
     assert_equal(n, 60, "pairs basic")
 
+    -- pack()
+
+    local p = pack(10,20,30)
+
+    assert_equal(p[1], 10, "pack stores first value")
+    assert_equal(p[2], 20, "pack stores second value")
+    assert_equal(p[3], 30, "pack stores third value")
+    assert_equal(p.n, 3, "pack stores count")
+
+    -- pack with nils
+
+    local p2 = pack(11,nil,33)
+
+    assert_equal(p2[1], 11, "pack nils value 1")
+    assert_true(p2[2] == nil, "pack nils value 2")
+    assert_equal(p2[3], 33, "pack nils value 3")
+    assert_equal(p2.n, 3, "pack nils count")
+
+    -- unpack()
+
+    assert_multi_equal(
+        {unpack({1,2,3})},
+        {1,2,3},
+        "unpack full table"
+    )
+
+    -- unpack(start)
+
+    assert_multi_equal(
+        {unpack({1,2,3,4}, 2)},
+        {2,3,4},
+        "unpack start index"
+    )
+
+    -- unpack(start,end)
+
+    assert_multi_equal(
+        {unpack({1,2,3,4}, 2, 3)},
+        {2,3},
+        "unpack range"
+    )
+
+    -- unpack(pack(...))
+
+    assert_multi_equal(
+        {unpack(pack(5,nil,7))},
+        {5,nil,7},
+        "unpack preserves nils via pack"
+    )
+
+    -- unpack empty range
+
+    assert_multi_equal(
+        {unpack({1,2,3}, 3, 2)},
+        {},
+        "unpack empty range"
+    )
+
+    -- setmetatable()
+
+    local mt = {
+        __index = function(t, k)
+            if k == "missing" then
+                return 42
+            end
+        end
+    }
+
+    local t = {}
+    local ret = setmetatable(t, mt)
+
+    assert_true(ret == t, "setmetatable returns table")
+    assert_equal(t.missing, 42, "__index metamethod")
+
+    -- __newindex
+
+    local writes = {}
+
+    local mt2 = {
+        __newindex = function(tbl, key, value)
+            writes[key] = value
+        end
+    }
+
+    local t2 = setmetatable({}, mt2)
+
+    t2.foo = 123
+
+    assert_equal(writes.foo, 123, "__newindex metamethod")
+
+    -- remove metatable
+
+    local t3 = {}
+    setmetatable(t3, mt)
+
+    assert_equal(t3.missing, 42, "metatable active")
+
+    setmetatable(t3, nil)
+
+    assert_true(t3.missing == nil, "metatable removed")
 end
 
 -- Palette transparency (palt).

@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#include "auxiliary.h"
+
+static cart_t cart;
+
 void color_lookup(int col, uint8_t* r, uint8_t* g, uint8_t* b)
 {
     switch (col)
@@ -191,4 +195,9 @@ void color_lookup(int col, uint8_t* r, uint8_t* g, uint8_t* b)
             *b = 0x81;
             break;
     }
+}
+
+cart_t* get_cart(void)
+{
+    return &cart;
 }

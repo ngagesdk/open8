@@ -1648,6 +1648,60 @@ static int pico8_srand(lua_State* L)
 
 // Memory functions.
 
+static int pico8_reload(lua_State* L)
+{
+    int argc = lua_gettop(L);
+
+    // reload(destaddr, sourceaddr, len [, filename])
+    if (argc >= 4 && !lua_isnil(L, 4))
+    {
+        return luaL_error(L, "reload(): loading from external cartridges is not supported yet");
+    }
+
+    uint16_t dest_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
+    uint16_t source_addr = fix32_to_uint16(luaL_checkunsigned(L, 2));
+    uint32_t len = fix32_to_uint32(luaL_checkunsigned(L, 3));
+
+    // Cartridge data region size (0x4300 bytes).
+    const uint32_t CART_SIZE = 0x4300;
+
+    // Clamp source to ROM.
+    if (source_addr >= CART_SIZE)
+    {
+        return 0;
+    }
+
+    if (source_addr + len > CART_SIZE)
+    {
+        len = CART_SIZE - source_addr;
+    }
+
+    // Clamp destination to RAM
+    if (dest_addr >= RAM_SIZE)
+    {
+        return 0;
+    }
+
+    if (dest_addr + len > RAM_SIZE)
+    {
+        len = RAM_SIZE - dest_addr;
+    }
+
+    if (len == 0)
+    {
+        return 0;
+    }
+
+    // Copy from cartridge data to RAM.
+    SDL_memcpy(
+        &pico8_ram[dest_addr],
+        &get_cart()->cart_data[source_addr],
+        len
+    );
+
+    return 0;
+}
+
 static int pico8_memcpy(lua_State* L)
 {
     uint16_t dest_addr = fix32_to_uint16(luaL_checkunsigned(L, 1));
@@ -2302,17 +2356,86 @@ static int pico8_pairs(lua_State* L)
 
 static int pico8_pack(lua_State* L)
 {
-    TO_BE_DONE;
+    int n = lua_gettop(L);
+
+    lua_createtable(L, n, 1);
+
+    for (int i = 1; i <= n; i++)
+    {
+        lua_pushvalue(L, i);
+        lua_rawseti(L, -2, i);
+    }
+
+    lua_pushnumber(L, fix32_from_int(n));
+    lua_setfield(L, -2, "n");
+
+    return 1;
 }
 
 static int pico8_unpack(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    int start = 1;
+    int end;
+
+    if (!lua_isnoneornil(L, 2))
+    {
+        start = fix32_to_int(luaL_checkinteger(L, 2));
+    }
+
+    if (!lua_isnoneornil(L, 3))
+    {
+        end = fix32_to_int(luaL_checkinteger(L, 3));
+    }
+    else
+    {
+        lua_getfield(L, 1, "n");
+
+        if (!lua_isnil(L, -1))
+        {
+            end = fix32_to_int(luaL_checkinteger(L, -1));
+        }
+        else
+        {
+            end = (int)lua_rawlen(L, 1);
+        }
+
+        lua_pop(L, 1);
+    }
+
+    if (end < start)
+    {
+        return 0;
+    }
+
+    int count = end - start + 1;
+
+    luaL_checkstack(L, count, "too many results");
+
+    for (int i = start; i <= end; i++)
+    {
+        lua_rawgeti(L, 1, i);
+    }
+
+    return count;
 }
 
 static int pico8_setmetatable(lua_State* L)
 {
-    TO_BE_DONE;
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    if (!lua_isnoneornil(L, 2))
+    {
+        luaL_checktype(L, 2, LUA_TTABLE);
+    }
+
+    lua_settop(L, 2);
+
+    lua_setmetatable(L, 1);
+
+    lua_pushvalue(L, 1);
+    return 1;
 }
 
 // Debug functions.
@@ -2494,6 +2617,8 @@ void init_api(lua_State* L)
     lua_setglobal(L, "srand");
 
     // Memory.
+    lua_pushcfunction(L, pico8_reload);
+    lua_setglobal(L, "reload");
     lua_pushcfunction(L, pico8_memcpy);
     lua_setglobal(L, "memcpy");
     lua_pushcfunction(L, pico8_memset);

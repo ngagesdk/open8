@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "auxiliary.h"
 #include "lexaloffle/p8_compress.h"
 #include "z8lua/lua.h"
 #include "z8lua/lualib.h"
@@ -46,7 +47,6 @@ static touch_region touch_regions[] =
 static char** available_carts;
 static int num_carts;
 
-static cart_t cart;
 static state_t state;
 static lua_State* vm;
 
@@ -657,9 +657,9 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
     // Copy spritesheet, map, flags, music and sound effects data to memory.
     // 0x0000-0x42ff
-    SDL_memcpy(pico8_ram, cart.cart_data, 0x42ff * sizeof(uint8_t));
+    SDL_memcpy(pico8_ram, get_cart()->cart_data, 0x42ff * sizeof(uint8_t));
 
-    if (!cart.is_corrupt)
+    if (!get_cart()->is_corrupt)
     {
         state = STATE_EMULATOR;
 
@@ -668,7 +668,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
         // (starting at 0x4300). Some carts rely on subtle encoding/escaping that
         // can be altered by our patcher; attempt the original on failure so
         // carts that work on real PICO-8 still run.
-        if (luaL_loadbuffer(vm, (const char*)cart.code, cart.code_size, "cart") || lua_pcall(vm, 0, 0, 0))
+        if (luaL_loadbuffer(vm, (const char*)get_cart()->code, get_cart()->code_size, "cart") || lua_pcall(vm, 0, 0, 0))
         {
             // Preserve the error message from the failed attempt.
             const char* err = lua_tostring(vm, -1);
@@ -677,14 +677,14 @@ static bool run_cartridge(SDL_Renderer* renderer)
             // Try loading original code bytes from cart.cart_data (offset 0x4300)
             // up to the first null terminator.
             size_t orig_size = 0;
-            while (orig_size < MAX_CODE_SIZE && cart.cart_data[0x4300 + orig_size] != 0)
+            while (orig_size < MAX_CODE_SIZE && get_cart()->cart_data[0x4300 + orig_size] != 0)
             {
                 orig_size++;
             }
 
             if (orig_size > 0)
             {
-                if (luaL_loadbuffer(vm, (const char*)&cart.cart_data[0x4300], orig_size, "cart") || lua_pcall(vm, 0, 0, 0))
+                if (luaL_loadbuffer(vm, (const char*)&get_cart()->cart_data[0x4300], orig_size, "cart") || lua_pcall(vm, 0, 0, 0))
                 {
                     SDL_Log("Could not run cartridge (patched or original): %s", lua_tostring(vm, -1));
                     lua_pop(vm, 1);
@@ -724,26 +724,26 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
 static void select_next_cartridge(SDL_Renderer* renderer)
 {
-    destroy_cart(&cart);
+    destroy_cart(get_cart());
     prev_selection = selection;
     selection++;
     if (selection >= num_carts)
     {
         selection = 0;
     }
-    load_cart(renderer, available_carts[selection], &cart);
+    load_cart(renderer, available_carts[selection], get_cart());
 }
 
 static void select_prev_cartridge(SDL_Renderer* renderer)
 {
-    destroy_cart(&cart);
+    destroy_cart(get_cart());
     prev_selection = selection;
     selection--;
     if (selection < 0)
     {
         selection = num_carts - 1;
     }
-    load_cart(renderer, available_carts[selection], &cart);
+    load_cart(renderer, available_carts[selection], get_cart());
 }
 
 static void render_cartridge(SDL_Renderer* renderer)
@@ -766,7 +766,7 @@ static void render_cartridge(SDL_Renderer* renderer)
     dest.w = cart_rect.w;
     dest.h = cart_rect.h;
 
-    SDL_RenderTexture(renderer, cart.image, &dest, &cart_rect);
+    SDL_RenderTexture(renderer, get_cart()->image, &dest, &cart_rect);
     if (overlay)
     {
         SDL_RenderTexture(renderer, overlay, NULL, &cart_rect);
@@ -925,7 +925,7 @@ bool init_core(SDL_Renderer* renderer)
         SDL_Log("Failed to load overlay.");
     }
 
-    if (!load_cart(renderer, (const char*)available_carts[0], &cart))
+    if (!load_cart(renderer, (const char*)available_carts[0], get_cart()))
     {
         return false;
     }
@@ -942,7 +942,7 @@ void destroy_core(void)
 {
     destroy_memory();
     destroy_vm();
-    destroy_cart(&cart);
+    destroy_cart(get_cart());
     for (int i = 0; i < num_carts; i++)
     {
         SDL_free(available_carts[i]);

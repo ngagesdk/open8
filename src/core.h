@@ -20,18 +20,6 @@
 
 #define MAX_CODE_SIZE 65536
 
-typedef struct cart
-{
-    SDL_Texture* image;
-
-    uint8_t cart_data[0x8020];
-    uint8_t* code;
-    uint32_t code_size;
-
-    bool is_corrupt;
-
-} cart_t;
-
 typedef enum state
 {
     STATE_MENU,
@@ -42,7 +30,7 @@ typedef enum state
 // Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used)
 extern uint8_t touch_button_state;
 
-void handle_resize(SDL_Renderer *renderer);
+void handle_resize(SDL_Renderer* renderer);
 
 bool init_core(SDL_Renderer* renderer);
 void destroy_core(void);
