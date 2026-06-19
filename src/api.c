@@ -2569,13 +2569,13 @@ typedef struct
 
 static touch_region touch_regions[] =
 {
-    {  9, 166, 24, 24, 0 }, // Left.
-    { 37, 166, 24, 24, 1 }, // Right.
-    { 23, 152, 24, 24, 2 }, // Up.
-    { 23, 180, 24, 24, 3 }, // Down.
-    { 92, 170, 28, 28, 4 }, // Button O.
-    {122, 158, 28, 28, 5 }, // Button X.
-    {145, 0, 160, 23, 99}
+    {   0, 168,  28, 20,  0 }, // Left.
+    {  42, 168,  28, 20,  1 }, // Right.
+    {  24, 149,  22, 22,  2 }, // Up.
+    {  24, 185,  22, 20,  3 }, // Down.
+    {  92, 170,  28, 28,  4 }, // Button O.
+    { 122, 158,  28, 28,  5 }, // Button X.
+    { 145,   0, 160, 23, 99 }
 };
 
 static bool point_in_region(float x, float y, const touch_region* r)
