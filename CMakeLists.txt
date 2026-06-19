@@ -168,7 +168,7 @@ elseif(VITA)
 elseif(EMSCRIPTEN)
   target_link_options(open8 PRIVATE
     "SHELL:--preload-file ${EXPORT_DIR}/overlay.png@overlay.png"
-    "SHELL:--preload-file ${EXPORT_DIR}/carts/0FUZ.PNG@carts/0FUZ.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/0PTENNIS.PNG@carts/0PTENNIS.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/1CELESTE.PNG@carts/1CELESTE.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/2API.PNG@carts/2API.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/3JELPI.PNG@carts/3JELPI.PNG"
@@ -176,11 +176,13 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/5PICOPON.PNG@carts/5PICOPON.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/6PROVNCE.PNG@carts/6PROVNCE.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/7PICROSS.PNG@carts/7PICROSS.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/8BITANGL.PNG@carts/8BITANGL.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/8CABRIDE.PNG@carts/8CABRIDE.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/9CARDSWP.PNG@carts/9CARDSWP.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/APICOFOX.PNG@carts/APICOFOX.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/BSMB.PNG@carts/BSMB.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/CMOTNREC.PNG@carts/CMOTNREC.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/FUZ.PNG@carts/FUZ.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/PICOPORT.PNG@carts/PICOPORT.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/WOLFHUNT.PNG@carts/WOLFHUNT.PNG")
 

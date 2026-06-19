@@ -1299,10 +1299,12 @@ static int pico8_sspr(lua_State* L)
     }
 
     // Negative dw/dh: PICO-8 treats them as a flip + draw with abs size.
-    if (dw < 0) {
+    if (dw < 0)
+    {
         flip_x = !flip_x; dw = -dw; dx -= dw;
     }
-    if (dh < 0) {
+    if (dh < 0)
+    {
         flip_y = !flip_y; dh = -dh; dy -= dh;
     }
 
