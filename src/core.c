@@ -25,6 +25,24 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "misc/stb_image.h"
 
+typedef struct
+{
+    int x, y, w, h;
+    uint8_t bit;
+
+} touch_region;
+
+static touch_region touch_regions[] =
+{
+    {   7, 169,  22, 14,  0 }, // Left.
+    {  43, 169,  22, 14,  1 }, // Right.
+    {  29, 147,  14, 22,  2 }, // Up.
+    {  29, 183,  14, 22,  3 }, // Down.
+    {  92, 170,  28, 28,  4 }, // Button O.
+    { 122, 158,  28, 28,  5 }, // Button X.
+    { 145,   0, 160, 23, 99 } // Home.
+};
+
 static char** available_carts;
 static int num_carts;
 
@@ -42,6 +60,25 @@ static bool has_draw;
 static SDL_Texture* overlay;
 
 SDL_FRect cart_rect;
+
+static bool point_in_region(float x, float y, const touch_region* r)
+{
+    return x >= r->x &&
+        x < r->x + r->w &&
+        y >= r->y &&
+        y < r->y + r->h;
+}
+
+static bool point_in_touch_region(float x, float y, const touch_region* r)
+{
+    return point_in_region(x, y, r);
+}
+
+static const touch_region* get_touch_regions(int* count)
+{
+    *count = SDL_arraysize(touch_regions);
+    return touch_regions;
+}
 
 static void* mem_allocator(void* ud, void* ptr, size_t osize, size_t nsize)
 {
@@ -722,7 +759,7 @@ static void render_cartridge(SDL_Renderer* renderer)
         SDL_Log("Unable to get window size: %s", SDL_GetError());
     }
 
-    SDL_FRect dest;
+    SDL_FRect dest = { 0 };
 
     dest.x = 0;
     dest.y = 0;

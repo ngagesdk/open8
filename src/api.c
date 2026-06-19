@@ -1208,7 +1208,7 @@ static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h,
 
     // Build a local color map from the palette RAM once per sprite call.
     // Bit 4 = transparent flag, bits 0-3 = remapped color.
-    uint8_t color_map[16];
+    uint8_t color_map[16] = { 0 };
     for (int i = 0; i < 16; i++)
     {
         color_map[i] = pico8_ram[0x5f00 + i];
@@ -2560,43 +2560,6 @@ void init_api(lua_State* L)
     lua_setglobal(L, "log");
 }
 
-typedef struct
-{
-    int x, y, w, h;
-    uint8_t bit;
-
-} touch_region;
-
-static touch_region touch_regions[] =
-{
-    {   0, 168,  28, 20,  0 }, // Left.
-    {  42, 168,  28, 20,  1 }, // Right.
-    {  24, 149,  22, 22,  2 }, // Up.
-    {  24, 185,  22, 20,  3 }, // Down.
-    {  92, 170,  28, 28,  4 }, // Button O.
-    { 122, 158,  28, 28,  5 }, // Button X.
-    { 145,   0, 160, 23, 99 }
-};
-
-static bool point_in_region(float x, float y, const touch_region* r)
-{
-    return x >= r->x &&
-        x < r->x + r->w &&
-        y >= r->y &&
-        y < r->y + r->h;
-}
-
-bool point_in_touch_region(float x, float y, const touch_region* r)
-{
-    return point_in_region(x, y, r);
-}
-
-const touch_region* get_touch_regions(int* count)
-{
-    *count = SDL_arraysize(touch_regions);
-    return touch_regions;
-}
-
 void update_input(SDL_Renderer* renderer)
 {
     for (int p = 0; p < 2; p++)
@@ -2605,58 +2568,6 @@ void update_input(SDL_Renderer* renderer)
 
         if (p == 0)
         {
-            // Touch input.
-            int num_fingers = 0;
-            SDL_Finger** fingers = SDL_GetTouchFingers(0, &num_fingers);
-
-            if (num_fingers > 0 && fingers && renderer)
-            {
-                // Use drawable size (physical pixels) for high-DPI displays/
-                int drawable_w, drawable_h;
-                SDL_GetRenderOutputSize(renderer, &drawable_w, &drawable_h);
-
-                if (drawable_w > 0 && drawable_h > 0 && screen_rect.w > 0)
-                {
-                    // Calculate scale based on screen_rect dimensions:
-                    // - screen_rect represents the scaled 128x128 game area.
-                    // - cart_rect represents the full scaled 160x205 display area.
-                    int scale = (int)(screen_rect.w / 128.0f);
-                    if (scale < 1) scale = 1;
-
-                    for (int i = 0; i < num_fingers; i++)
-                    {
-                        if (!fingers[i]) continue;
-
-                        // Convert normalized touch coordinates (0.0-1.0) to physical pixel coordinates.
-                        float touch_x = fingers[i]->x * drawable_w;
-                        float touch_y = fingers[i]->y * drawable_h;
-
-                        // Translate to coordinates relative to the game rendering area (screen_rect).
-                        float local_x = touch_x - screen_rect.x;
-                        float local_y = touch_y - screen_rect.y;
-
-                        // Scale back to virtual 128x128 game coordinate system.
-                        float virt_x = local_x / scale;
-                        float virt_y = local_y / scale;
-
-                        // Map to the touch regions (which are in the 160x205 space)
-                        // but offset to the game area (which starts at 16, 24 in that space).
-                        float region_x = virt_x + 16.0f;  // Game area X offset
-                        float region_y = virt_y + 24.0f;  // Game area Y offset
-
-                        for (int r = 0; r < SDL_arraysize(touch_regions); r++)
-                        {
-                            if (point_in_region(region_x, region_y, &touch_regions[r]))
-                            {
-                                state |= (1 << touch_regions[r].bit);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (fingers) SDL_free(fingers);
-
             // Keyboard input for player 0.
             int num_keys = 0;
             const bool* keys = SDL_GetKeyboardState(&num_keys);

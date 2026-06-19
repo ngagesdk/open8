@@ -18,13 +18,6 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 
-typedef struct
-{
-    int x, y, w, h;
-    uint8_t bit;
-
-} touch_region;
-
 extern fix32_t seconds_since_start;
 
 // Frame timing information (set by core.c each frame) used by stat(1).
@@ -34,7 +27,5 @@ extern uint32_t pico8_frame_ms;
 void init_api(lua_State* L);
 void update_input(SDL_Renderer* renderer);
 void update_time(void);
-bool point_in_touch_region(float x, float y, const touch_region* r);
-const touch_region* get_touch_regions(int* count);
 
 #endif // API_H
