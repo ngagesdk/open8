@@ -183,6 +183,7 @@ elseif(EMSCRIPTEN)
     "SHELL:--preload-file ${EXPORT_DIR}/carts/BSMB.PNG@carts/BSMB.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/CMOTNREC.PNG@carts/CMOTNREC.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/FUZ.PNG@carts/FUZ.PNG"
+    "SHELL:--preload-file ${EXPORT_DIR}/carts/LIONKING.PNG@carts/LIONKING.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/PICOPORT.PNG@carts/PICOPORT.PNG"
     "SHELL:--preload-file ${EXPORT_DIR}/carts/WOLFHUNT.PNG@carts/WOLFHUNT.PNG")
 
