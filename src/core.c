@@ -1397,7 +1397,7 @@ bool iterate_core(SDL_Renderer* renderer)
 
         if (has_draw)
         {
-            reset_draw_state();
+            // Do not reset_draw_state() every frame, do that only when switching carts
             call_pico8_function(vm, "_draw");
         }
 
