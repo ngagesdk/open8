@@ -19,8 +19,7 @@
 
 uint8_t pico8_ram[RAM_SIZE];
 static uint32_t crc32_table[256];
-static uint32_t palette_map[16];
-static uint32_t expanded_map[256];
+static uint32_t palette_map[256]; // 0-15 normal, 128-143 secret colors
 
 static SDL_Texture* screen;
 static SDL_PixelFormat screen_format;
@@ -74,19 +73,9 @@ bool init_memory(SDL_Renderer* renderer)
 	uint8_t r, g, b;
 	const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(screen_format);
 
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < 256; i++) {
 		color_lookup(i, &r, &g, &b);
 		palette_map[i] = SDL_MapRGB(details, NULL, r, g, b);
-	}
-
-	for (int i = 0; i < 256; i++) {
-		uint32_t lo = palette_map[i & 0xF];
-		uint32_t hi = palette_map[i >> 4];
-		switch (SDL_BYTESPERPIXEL(screen_format)) {
-		case 1:  expanded_map[i] = (uint8_t)lo | ((uint8_t)hi << 8);  break;
-		case 2:  expanded_map[i] = (uint16_t)lo | ((uint32_t)(uint16_t)hi << 16); break;
-		default: expanded_map[i] = 0; break;
-		}
 	}
 
 	init_crc32();
@@ -218,26 +207,24 @@ void update_from_virtual_memory(SDL_Renderer* renderer)
 		case 1:
 			for (int y = 0; y < 128; y++, row += pitch)
 			{
-				uint16_t* pixel = (uint16_t*)row;
+				uint8_t* pixel = (uint8_t*)row;
 				const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-				for (int x = 0; x < 64; x++, src++, pixel++)
+				for (int x = 0; x < 64; x++, src++, pixel += 2)
 				{
-					uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
-					uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
-					*pixel = (uint16_t)expanded_map[(hi << 4) | lo];
+					pixel[0] = (uint8_t)palette_map[pico8_ram[0x5f10 + (*src & 0x0F)]];
+					pixel[1] = (uint8_t)palette_map[pico8_ram[0x5f10 + (*src >> 4)]];
 				}
 			}
 			break;
 		case 2:
 			for (int y = 0; y < 128; y++, row += pitch)
 			{
-				uint32_t* pixel = (uint32_t*)row;
+				uint16_t* pixel = (uint16_t*)row;
 				const uint8_t* src = &pico8_ram[0x6000 + (y << 6)];
-				for (int x = 0; x < 64; x++, src++, pixel++)
+				for (int x = 0; x < 64; x++, src++, pixel += 2)
 				{
-					uint8_t lo = pico8_ram[0x5f10 + (*src & 0x0F)];
-					uint8_t hi = pico8_ram[0x5f10 + (*src >> 4)];
-					*pixel = expanded_map[(hi << 4) | lo];
+					pixel[0] = (uint16_t)palette_map[pico8_ram[0x5f10 + (*src & 0x0F)]];
+					pixel[1] = (uint16_t)palette_map[pico8_ram[0x5f10 + (*src >> 4)]];
 				}
 			}
 			break;
