@@ -386,6 +386,10 @@ static void draw_oval(int x0, int y0, int x1, int y1, int* color, bool fill)
 
 static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
 {
+    // Normalize, callers may pass y0 > y1 (LIONKING does that)
+    if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
+    if (y0 > y1) { int t = y0; y0 = y1; y1 = t; }
+
     if (fill)
     {
         for (int y = y0; y <= y1; y++)
@@ -690,7 +694,8 @@ static int pico8_circ(lua_State* L)
     int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
     int color;
 
-    if (lua_gettop(L) == 4)
+    // Can be nil (out-of-range table lookup)
+    if (!lua_isnoneornil(L, 4))
     {
         color = fix32_to_int(luaL_checkinteger(L, 4));
         draw_circle(cx, cy, radius, &color, false);
@@ -713,7 +718,7 @@ static int pico8_circfill(lua_State* L)
     int radius = fix32_to_int(luaL_optnumber(L, 3, fix32_value(4, 0)));
     int color;
 
-    if (lua_gettop(L) >= 4)
+    if (!lua_isnoneornil(L, 4))
     {
         color = fix32_to_int(luaL_checkinteger(L, 4));
         draw_circle(cx, cy, radius, &color, true);
@@ -864,7 +869,7 @@ static int pico8_line(lua_State* L)
     apply_camera_offset((int*)&x1, (int*)&y1);
 
     int color;
-    if (lua_gettop(L) == 5)
+    if (!lua_isnoneornil(L, 5))
     {
         color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_line(x0, y0, x1, y1, &color);
@@ -887,7 +892,7 @@ static int pico8_oval(lua_State* L)
     apply_camera_offset((int*)&x0, (int*)&y0);
     apply_camera_offset((int*)&x1, (int*)&y1);
 
-    if (lua_gettop(L) == 5)
+    if (!lua_isnoneornil(L, 5))
     {
         color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_oval(x0, y0, x1, y1, &color, false);
@@ -910,7 +915,7 @@ static int pico8_ovalfill(lua_State* L)
     apply_camera_offset(&x0, &y0);
     apply_camera_offset(&x1, &y1);
 
-    if (lua_gettop(L) == 5)
+    if (!lua_isnoneornil(L, 5))
     {
         color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_oval(x0, y0, x1, y1, &color, true);
@@ -940,7 +945,9 @@ static int pico8_pal(lua_State* L)
         /* First argument is a table: iterate through key-value pairs and apply palette mappings.
          * Keys are c0 values (source colors), values are c1 values (target colors).
          * Keys outside 0-15 range have modulo 16 applied.
-         * p parameter determines which palette: 0 = draw palette, 1 = display palette. */
+         * p parameter determines which palette: 0 = draw palette, 1 = display palette.
+         * Display palette (p == 1) keeps the full byte (128-143 = secret colors);
+         * draw palette (p == 0) is still 4-bit. */
         int p = (argc >= 2) ? fix32_to_int(luaL_optnumber(L, 2, 0)) : 0;
 
         lua_pushnil(L);  /* First key */
@@ -950,16 +957,17 @@ static int pico8_pal(lua_State* L)
             if (lua_isnumber(L, -2) && lua_isnumber(L, -1))
             {
                 int c0 = (fix32_to_int(lua_tonumber(L, -2)) & 0xFF) % 16;  /* Apply modulo 16 to key */
-                int c1 = fix32_to_int(lua_tonumber(L, -1)) & 0x0F;
+                int c1_raw = fix32_to_int(lua_tonumber(L, -1)) & 0xFF;
 
                 if (p == 1)
                 {
-                    // Display palette remap (0x5f10).
-                    pico8_ram[0x5f10 + c0] = (pico8_ram[0x5f10 + c0] & 0xF0) | (uint8_t)c1;
+                    // Display palette: store raw byte.
+                    pico8_ram[0x5f10 + c0] = (uint8_t)c1_raw;
                 }
                 else
                 {
                     // Draw palette remap (0x5f00), preserve transparency bit.
+                    int c1 = c1_raw & 0x0F;
                     pico8_ram[0x5f00 + c0] = (pico8_ram[0x5f00 + c0] & 0xF0) | (uint8_t)c1;
                 }
             }
@@ -968,31 +976,28 @@ static int pico8_pal(lua_State* L)
     }
     else if (argc >= 2)
     {
-        /* Some carts compute indices that can occasionally be out-of-range
-         * and yield nil when indexing tables; historically PICO-8 did not
-         * crash in these situations. Treat a missing/nil target color as
-         * an identity (no-op) mapping.
-         */
+        // Treat a missing/nil target color as an identity (no-op) mapping.
         int c0 = fix32_to_int(luaL_checknumber(L, 1)) & 0x0F;
-        int c1;
+        int p = fix32_to_int(luaL_optnumber(L, 3, 0));
+        int c1_raw;
         if (lua_isnoneornil(L, 2))
         {
-            c1 = c0;
+            c1_raw = c0;
         }
         else
         {
-            c1 = fix32_to_int(luaL_checknumber(L, 2)) & 0x0F;
+            c1_raw = fix32_to_int(luaL_checknumber(L, 2)) & 0xFF;
         }
-        int p = fix32_to_int(luaL_optnumber(L, 3, 0));
 
         if (p == 1)
         {
-            // Display palette remap (0x5f10).
-            pico8_ram[0x5f10 + c0] = (pico8_ram[0x5f10 + c0] & 0xF0) | (uint8_t)c1;
+            // Display palette: store raw byte.
+            pico8_ram[0x5f10 + c0] = (uint8_t)c1_raw;
         }
         else
         {
             // Draw palette remap (0x5f00), preserve transparency bit.
+            int c1 = c1_raw & 0x0F;
             pico8_ram[0x5f00 + c0] = (pico8_ram[0x5f00 + c0] & 0xF0) | (uint8_t)c1;
         }
     }
@@ -1051,20 +1056,18 @@ static int pico8_print(lua_State* L)
     uint8_t cursor_y = pico8_ram[0x5f27];
     uint8_t color = pico8_ram[0x5f25];
 
-    if (argc == 4)
+    // Checked independently per-argument (see pico8_circ())
+    if (argc >= 2 && !lua_isnoneornil(L, 2))
     {
         cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
+    }
+    if (argc >= 3 && !lua_isnoneornil(L, 3))
+    {
         cursor_y = fix32_to_uint8(luaL_checkunsigned(L, 3));
+    }
+    if (argc >= 4 && !lua_isnoneornil(L, 4))
+    {
         color = fix32_to_uint8(luaL_checkunsigned(L, 4));
-    }
-    else if (argc == 3)
-    {
-        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
-        cursor_y = fix32_to_uint8(luaL_checkunsigned(L, 3));
-    }
-    else if (argc == 2)
-    {
-        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
     }
 
     for (int i = 0; text[i] != '\0'; i++)
@@ -1115,7 +1118,7 @@ static int pico8_pset(lua_State* L)
 
     apply_camera_offset((int*)&x, (int*)&y);
 
-    if (lua_gettop(L) == 3)
+    if (!lua_isnoneornil(L, 3))
     {
         int color = (int)fix32_to_int32(luaL_checkinteger(L, 3));
         pset(x, y, &color);
@@ -1138,7 +1141,7 @@ static int pico8_rect(lua_State* L)
     apply_camera_offset(&x0, &y0);
     apply_camera_offset(&x1, &y1);
 
-    if (lua_gettop(L) == 5)
+    if (!lua_isnoneornil(L, 5))
     {
         int color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_rect(x0, y0, x1, y1, &color, false);
@@ -1161,7 +1164,7 @@ static int pico8_rectfill(lua_State* L)
     apply_camera_offset(&x0, &y0);
     apply_camera_offset(&x1, &y1);
 
-    if (lua_gettop(L) == 5)
+    if (!lua_isnoneornil(L, 5))
     {
         int color = fix32_to_int(luaL_checkinteger(L, 5));
         draw_rect(x0, y0, x1, y1, &color, true);
