@@ -1501,7 +1501,7 @@ static int pico8_btn(lua_State* L)
 
     if (argc == 0)
     {
-        lua_pushunsigned(L, fix32_value(pico8_ram[0x5f4c], 0));
+        lua_pushunsigned(L, fix32_value(pico8_ram[0x5f4c] | (pico8_ram[0x5f4d] << 8), 0));
         return 1;
     }
 
@@ -1542,13 +1542,16 @@ static int pico8_btnp(lua_State* L)
 
     if (argc == 0)
     {
-        uint8_t result = 0;
-        for (int b = 0; b < 6; b++)
+        uint16_t result = 0;
+        for (int p = 0; p < 2; p++)
         {
-            uint8_t f = btn_held_frames[0][b];
-            if (f == 1 || (f > 15 && ((f - 15) % 4 == 0)))
+            for (int b = 0; b < 6; b++)
             {
-                result |= (1 << b);
+                uint8_t f = btn_held_frames[p][b];
+                if (f == 1 || (f > 15 && ((f - 15) % 4 == 0)))
+                {
+                    result |= (1 << (b + p * 8));
+                }
             }
         }
         lua_pushunsigned(L, fix32_value(result, 0));
@@ -2727,15 +2730,29 @@ void update_input(SDL_Renderer* renderer)
                 state |= (1 << 5);
             }
 #else
-            if (keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_Y] || keys[SDL_SCANCODE_C])
+            if (keys[SDL_SCANCODE_Z] || keys[SDL_SCANCODE_Y] || keys[SDL_SCANCODE_C] ||
+                keys[SDL_SCANCODE_N] || keys[SDL_SCANCODE_KP_MULTIPLY])
             {
                 state |= (1 << 4);
             }
-            if (keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_V])
+            if (keys[SDL_SCANCODE_X] || keys[SDL_SCANCODE_V] || keys[SDL_SCANCODE_M] ||
+                keys[SDL_SCANCODE_8])
             {
                 state |= (1 << 5);
             }
 #endif
+        }
+        else
+        {
+            int num_keys = 0;
+            const bool* keys = SDL_GetKeyboardState(&num_keys);
+
+            if (keys[SDL_SCANCODE_S]) state |= (1 << 0);
+            if (keys[SDL_SCANCODE_F]) state |= (1 << 1);
+            if (keys[SDL_SCANCODE_E]) state |= (1 << 2);
+            if (keys[SDL_SCANCODE_D]) state |= (1 << 3);
+            if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_TAB]) state |= (1 << 4);
+            if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_Q]) state |= (1 << 5);
         }
 
         // Gamepad input: first connected gamepad -> player 0, second -> player 1.
