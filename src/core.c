@@ -128,7 +128,7 @@ static void update_touch_input(SDL_Renderer* renderer)
     }
 
     // Reset button state and accumulate from all active fingers.
-    touch_button_state = 0;
+    touch_button_state_player_0 = 0;
 
     // Get touch regions for button detection.
     int touch_count = 0;
@@ -165,7 +165,7 @@ static void update_touch_input(SDL_Renderer* renderer)
         {
             if (point_in_touch_region(region_x, region_y, &regions[r]))
             {
-                touch_button_state |= (1 << regions[r].bit);
+                touch_button_state_player_0 |= (1 << regions[r].bit);
             }
         }
     }
@@ -1182,7 +1182,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     {
                         if (point_in_touch_region(region_x, region_y, &regions[i]))
                         {
-                            touch_button_state |= (1 << regions[i].bit);
+                            touch_button_state_player_0 |= (1 << regions[i].bit);
 
                             uint8_t bit = regions[i].bit;
                             if (bit == 99)
@@ -1236,7 +1236,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     {
                         if (point_in_touch_region(region_x, region_y, &regions[i]))
                         {
-                            touch_button_state &= ~(1 << regions[i].bit);
+                            touch_button_state_player_0 &= ~(1 << regions[i].bit);
                         }
                     }
                 }
@@ -1335,7 +1335,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
                     {
                         if (point_in_touch_region(region_x, region_y, &regions[i]))
                         {
-                            touch_button_state |= (1 << regions[i].bit);
+                            touch_button_state_player_0 |= (1 << regions[i].bit);
 
                             uint8_t bit = regions[i].bit;
                             if (bit == 99)
@@ -1355,7 +1355,7 @@ bool handle_events(SDL_Renderer* renderer, SDL_Event* event)
             // Clear touch button state when touch is released.
             if (event->button.button == SDL_BUTTON_LEFT && state == STATE_EMULATOR)
             {
-                touch_button_state = 0;
+                touch_button_state_player_0 = 0;
             }
             break;
         }
