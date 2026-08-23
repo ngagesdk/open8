@@ -39,7 +39,8 @@ uint32_t pico8_frame_start = 0;
 uint32_t pico8_frame_ms = 0;
 
 // Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used).
-uint8_t touch_button_state = 0;
+uint8_t touch_button_state_player_0 = 0;
+uint8_t touch_button_state_player_1 = 0;
 
 // Input state: tracks how many consecutive frames each button has been held.
 // Index [player][button], players 0-1, buttons 0-5.
@@ -2785,11 +2786,14 @@ void update_input(SDL_Renderer* renderer)
             }
         }
 
-        // Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used)
-        // Only applied to player 0.
+        // Touch button state (when SDL_HINT_MOUSE_TOUCH_EVENTS is used).
         if (p == 0)
         {
-            state |= touch_button_state;
+            state |= touch_button_state_player_0;
+        }
+        else
+        {
+            state |= touch_button_state_player_1;
         }
 
         pico8_ram[0x5f4c + p] = state;
