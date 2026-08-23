@@ -1306,6 +1306,7 @@ end
 function test_btn()
     -- No buttons pressed: btn() bitfield == 0.
     poke(0x5f4c, 0x00)
+    poke(0x5f4d, 0x00)
     assert_equal(btn(), 0, "btn() no buttons")
 
     -- Single button: btn(b) returns true when bit b is set.
@@ -1333,6 +1334,11 @@ function test_btn()
     poke(0x5f4d, 0x01)
     assert_true(btn(0, 1) == true,  "btn(0,1) p1 pressed")
     assert_true(btn(0, 0) == false, "btn(0,0) p0 not pressed")
+
+    -- No-argument btn() includes player 1 in bits 8-13.
+    poke(0x5f4c, 0x3f)
+    poke(0x5f4d, 0x3f)
+    assert_equal(btn(), 0x3f3f, "btn() both players")
 
     -- Clean up.
     poke(0x5f4c, 0x00)
@@ -1379,10 +1385,18 @@ function test_btnp()
     assert_true(btnp(6)  == false, "btnp(6) out of range")
     assert_true(btnp(-1) == false, "btnp(-1) out of range")
 
+    for b = 0, 5 do
+        set_btnp_frames(b, 0)
+    end
+
     -- Player 1: set frame count for p1 button 3.
     set_btnp_frames(3, 1, 1)
     assert_true(btnp(3, 1) == true,  "btnp(3,1) p1 first press")
     assert_true(btnp(3, 0) == false, "btnp(3,0) p0 not pressed")
+
+    -- No-argument btnp() includes player 1 in bits 8-13.
+    set_btnp_frames(3, 19, 1)
+    assert_equal(btnp(), 0x0800, "btnp() p1 mask")
 
     -- Clean up.
     for b = 0, 5 do
