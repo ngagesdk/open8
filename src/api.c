@@ -2748,12 +2748,30 @@ void update_input(SDL_Renderer* renderer)
             int num_keys = 0;
             const bool* keys = SDL_GetKeyboardState(&num_keys);
 
-            if (keys[SDL_SCANCODE_S]) state |= (1 << 0);
-            if (keys[SDL_SCANCODE_F]) state |= (1 << 1);
-            if (keys[SDL_SCANCODE_E]) state |= (1 << 2);
-            if (keys[SDL_SCANCODE_D]) state |= (1 << 3);
-            if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_TAB]) state |= (1 << 4);
-            if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_Q]) state |= (1 << 5);
+            if (keys[SDL_SCANCODE_S])
+            {
+                state |= (1 << 0);
+            }
+            if (keys[SDL_SCANCODE_F])
+            {
+                state |= (1 << 1);
+            }
+            if (keys[SDL_SCANCODE_E])
+            {
+                state |= (1 << 2);
+            }
+            if (keys[SDL_SCANCODE_D])
+            {
+                state |= (1 << 3);
+            }
+            if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_TAB])
+            {
+                state |= (1 << 4);
+            }
+            if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_Q])
+            {
+                state |= (1 << 5);
+            }
         }
 
         // Gamepad input: first connected gamepad -> player 0, second -> player 1.
