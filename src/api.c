@@ -978,7 +978,7 @@ static int pico8_pal(lua_State* L)
     else if (argc >= 2)
     {
         // Treat a missing/nil target color as an identity (no-op) mapping.
-        int c0 = fix32_to_int(luaL_checknumber(L, 1)) & 0x0F;
+        int c0 = fix32_to_int(luaL_optnumber(L, 1, 0)) & 0x0F;
         int p = fix32_to_int(luaL_optnumber(L, 3, 0));
         int c1_raw;
         if (lua_isnoneornil(L, 2))
