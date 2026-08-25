@@ -240,6 +240,28 @@ static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
     }
 }
 
+static bool is_pico8_fraction_literal(const uint8_t* code, size_t code_size, size_t i)
+{
+    unsigned char prefix;
+    unsigned char digit;
+
+    if (i + 3 >= code_size || code[i] != '0' || code[i + 2] != '.')
+    {
+        return false;
+    }
+
+    prefix = (unsigned char)code[i + 1];
+    digit = (unsigned char)code[i + 3];
+    if (prefix == 'x' || prefix == 'X')
+    {
+        return (digit >= '0' && digit <= '9')
+            || (digit >= 'a' && digit <= 'f')
+            || (digit >= 'A' && digit <= 'F');
+    }
+
+    return (prefix == 'b' || prefix == 'B') && (digit == '0' || digit == '1');
+}
+
 // It's in fact easier to patch the code than parsing the preset
 // fill-pattern characters using the Lua C-API.
 static void patch_cart_code(cart_t* cart)
@@ -247,7 +269,8 @@ static void patch_cart_code(cart_t* cart)
     // State machine: 0=normal, 1=double-quote string, 2=single-quote string,
     //                3=line comment, 4=long string [[...]].
     // Special bytes are only wrapped when in normal code (state 0).
-    size_t count = 0;
+    size_t glyph_count = 0;
+    size_t fraction_count = 0;
     int state = 0;
 
     // Pass 1: count special bytes that appear outside string literals and comments.
@@ -320,6 +343,11 @@ static void patch_cart_code(cart_t* cart)
                 state = 4;
                 i++;
             }
+            else if (is_pico8_fraction_literal(cart->code, cart->code_size, i))
+            {
+                // PICO-8 accepts 0x.f format but z8lua requires it look like 0x0.f
+                fraction_count++;
+            }
             else if ((c >= 128 && c <= 135)
                 || c == 139  // Left key.
                 || c == 142  // O key.
@@ -327,18 +355,18 @@ static void patch_cart_code(cart_t* cart)
                 || c == 148  // Up key.
                 || c == 151) // X key.
             {
-                count++;
+                glyph_count++;
             }
         }
     }
 
-    if (count == 0)
+    if (glyph_count == 0 && fraction_count == 0)
     {
         return; // No changes needed.
     }
 
     // Compute new size with added quotes.
-    size_t new_size = cart->code_size + count * 2;
+    size_t new_size = cart->code_size + glyph_count * 2 + fraction_count;
     uint8_t* new_code = (uint8_t*)SDL_malloc(new_size + 1); // +1 for null terminator.
     if (!new_code)
     {
@@ -414,6 +442,13 @@ static void patch_cart_code(cart_t* cart)
             {
                 state = 4;
                 new_code[j++] = c;
+                new_code[j++] = (unsigned char)cart->code[++i];
+            }
+            else if (is_pico8_fraction_literal(cart->code, cart->code_size, i))
+            {
+                new_code[j++] = c;
+                new_code[j++] = (unsigned char)cart->code[++i];
+                new_code[j++] = '0';
                 new_code[j++] = (unsigned char)cart->code[++i];
             }
             else if ((c >= 128 && c <= 135)
