@@ -2160,8 +2160,21 @@ static int pico8_all_iter(lua_State* L)
     }
 }
 
+static int pico8_all_nil_iter(lua_State* L)
+{
+    (void)L;
+    return 0;
+}
+
 static int pico8_all(lua_State* L)
 {
+    /* all(nil) is valid syntax */
+    if (lua_isnil(L, 1))
+    {
+        lua_pushcfunction(L, pico8_all_nil_iter);
+        return 1;
+    }
+
     luaL_checktype(L, 1, LUA_TTABLE);
 
     /* Make a compact snapshot copy of the array portion of the table.
