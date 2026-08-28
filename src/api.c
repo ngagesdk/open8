@@ -2217,14 +2217,30 @@ static int pico8_add(lua_State* L)
     luaL_checkany(L, 2);
 
     int index;
+    int len = (int)lua_rawlen(L, 1);
 
     if (lua_isnoneornil(L, 3))
     {
-        index = (int)lua_rawlen(L, 1) + 1;
+        index = len + 1;
     }
     else
     {
         index = fix32_to_int(luaL_checkinteger(L, 3));
+
+        if (index < 1)
+        {
+            index = 1;
+        }
+        else if (index > len + 1)
+        {
+            index = len + 1;
+        }
+    }
+
+    for (int i = len; i >= index; i--)
+    {
+        lua_rawgeti(L, 1, i);
+        lua_rawseti(L, 1, i + 1);
     }
 
     lua_pushvalue(L, 2);
