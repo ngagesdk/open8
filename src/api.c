@@ -614,7 +614,9 @@ static int pico8_stat(lua_State* L)
             }
             break;
         }
-        case 26:
+        case 26: // Legacy audio
+        case 38: // Relative x movement
+        case 39: // Relative y movement
             lua_pushnumber(L, 0);
             break;
     }
