@@ -2354,6 +2354,33 @@ static int pico8_del(lua_State* L)
     return 1;
 }
 
+static int pico8_deli(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    int len = (int)lua_rawlen(L, 1);
+    int index = lua_isnoneornil(L, 2) ? len : fix32_to_int(luaL_checkinteger(L, 2));
+
+    if (index < 1 || index > len)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_rawgeti(L, 1, index);
+
+    for (int i = index; i < len; i++)
+    {
+        lua_rawgeti(L, 1, i + 1);
+        lua_rawseti(L, 1, i);
+    }
+
+    lua_pushnil(L);
+    lua_rawseti(L, 1, len);
+
+    return 1;
+}
+
 static int pico8_foreach(lua_State* L)
 {
     luaL_checktype(L, 1, LUA_TTABLE);
@@ -2783,6 +2810,8 @@ void init_api(lua_State* L)
     lua_setglobal(L, "count");
     lua_pushcfunction(L, pico8_del);
     lua_setglobal(L, "del");
+    lua_pushcfunction(L, pico8_deli);
+    lua_setglobal(L, "deli");
     lua_pushcfunction(L, pico8_foreach);
     lua_setglobal(L, "foreach");
     lua_pushcfunction(L, pico8_inext);

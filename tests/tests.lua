@@ -625,6 +625,13 @@ function test_tables()
     assert_equal(tbl[1], 0x11, "tbl[1] == 0x11")
     assert_equal(tbl[2], 0x44, "tbl[2] == 0x44")
 
+    tbl = { 0x11, 0x44, 0x33 }
+    assert_equal(deli(tbl, 2), 0x44, "deli(tbl, 2) returns removed value")
+    assert_equal(tbl[1], 0x11, "deli(tbl, 2) keeps preceding value")
+    assert_equal(tbl[2], 0x33, "deli(tbl, 2) shifts following value")
+    assert_equal(#tbl, 2, "deli(tbl, 2) shortens table")
+    assert_equal(deli(tbl), 0x33, "deli(tbl) removes last value")
+
     tbl = {}
     tbl = { 1, 3, 5 }
     local tmp = 1 + 3 + 5
