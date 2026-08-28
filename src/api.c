@@ -943,6 +943,25 @@ static int pico8_pal(lua_State* L)
             pico8_ram[0x5f10 + i] = (uint8_t)i;
         }
     }
+    else if (argc == 1 && !lua_istable(L, 1))
+    {
+        int p = fix32_to_int(luaL_optnumber(L, 1, 0));
+
+        if (p == 0)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                pico8_ram[0x5f00 + i] = (uint8_t)i | (i == 0 ? 0x10 : 0x00);
+            }
+        }
+        else if (p == 1)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                pico8_ram[0x5f10 + i] = (uint8_t)i;
+            }
+        }
+    }
     else if (lua_istable(L, 1))
     {
         /* First argument is a table: iterate through key-value pairs and apply palette mappings.
