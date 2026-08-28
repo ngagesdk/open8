@@ -413,6 +413,38 @@ static void draw_rect(int x0, int y0, int x1, int y1, int* color, bool fill)
     }
 }
 
+static uint8_t map_get(int col, int row)
+{
+    if ((unsigned)col >= 128 || (unsigned)row >= 64)
+    {
+        return 0;
+    }
+    if (row < 32)
+    {
+        return pico8_ram[0x2000 + row * 128 + col];
+    }
+    else
+    {
+        return pico8_ram[0x1000 + (row - 32) * 128 + col];
+    }
+}
+
+static void map_set(int col, int row, uint8_t sprite)
+{
+    if ((unsigned)col >= 128 || (unsigned)row >= 64)
+    {
+        return;
+    }
+    if (row < 32)
+    {
+        pico8_ram[0x2000 + row * 128 + col] = sprite;
+    }
+    else
+    {
+        pico8_ram[0x1000 + (row - 32) * 128 + col] = sprite;
+    }
+}
+
 // Audio functions.
 
 static int pico8_music(lua_State* L)
@@ -1383,42 +1415,91 @@ static int pico8_sspr(lua_State* L)
 
 static int pico8_tline(lua_State* L)
 {
-    TO_BE_DONE;
+    int x0 = fix32_to_int32(luaL_checknumber(L, 1));
+    int y0 = fix32_to_int32(luaL_checknumber(L, 2));
+    int x1 = fix32_to_int32(luaL_checknumber(L, 3));
+    int y1 = fix32_to_int32(luaL_checknumber(L, 4));
+    int32_t mx = (int32_t)luaL_optnumber(L, 5, 0);
+    int32_t my = (int32_t)luaL_optnumber(L, 6, 0);
+    int32_t mdx = (int32_t)luaL_optnumber(L, 7, fix32_value(0, 0x2000));
+    int32_t mdy = (int32_t)luaL_optnumber(L, 8, 0);
+
+    apply_camera_offset(&x0, &y0);
+    apply_camera_offset(&x1, &y1);
+
+    uint32_t mask_x = ((uint32_t)pico8_ram[0x5f38] << 16) - 1;
+    uint32_t mask_y = ((uint32_t)pico8_ram[0x5f39] << 16) - 1;
+    int offset_x = pico8_ram[0x5f3a] * 8;
+    int offset_y = pico8_ram[0x5f3b] * 8;
+    bool sprite_0_opaque = (pico8_ram[0x5f36] & 0x08) != 0;
+    int dx = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+    int dy = (y1 > y0) ? (y0 - y1) : (y1 - y0);
+    int step_x = (x0 < x1) ? 1 : -1;
+    int step_y = (y0 < y1) ? 1 : -1;
+    int err = dx + dy;
+
+    while (1)
+    {
+        int tx = (int32_t)((uint32_t)mx & mask_x) >> 13;
+        int ty = (int32_t)((uint32_t)my & mask_y) >> 13;
+
+        if ((tx >> 3) >= 0 && (ty >> 3) >= 0)
+        {
+            int sx = tx + offset_x;
+            int sy = ty + offset_y;
+            uint8_t sprite = map_get(sx >> 3, sy >> 3);
+
+            if (sprite != 0 || sprite_0_opaque)
+            {
+                int px = ((sprite & 0x0F) << 3) + (sx & 7);
+                int py = ((sprite >> 4) << 3) + (sy & 7);
+                uint8_t byte = pico8_ram[(py << 6) + (px >> 1)];
+                uint8_t color = (px & 1) ? (byte >> 4) : (byte & 0x0F);
+                uint8_t entry = pico8_ram[0x5f00 + color];
+
+                if (!(entry & 0x10) && ((unsigned)x0 | (unsigned)y0) < 128)
+                {
+                    uint16_t addr = 0x6000 + ((uint16_t)y0 << 6) + ((uint16_t)x0 >> 1);
+
+                    if (x0 & 1)
+                    {
+                        pico8_ram[addr] = (pico8_ram[addr] & 0x0F) | (uint8_t)((entry & 0x0F) << 4);
+                    }
+                    else
+                    {
+                        pico8_ram[addr] = (pico8_ram[addr] & 0xF0) | (entry & 0x0F);
+                    }
+                }
+            }
+        }
+
+        if (x0 == x1 && y0 == y1)
+        {
+            break;
+        }
+
+        int err2 = err * 2;
+
+        if (err2 >= dy)
+        {
+            err += dy;
+            x0 += step_x;
+        }
+
+        if (err2 <= dx)
+        {
+            err += dx;
+            y0 += step_y;
+        }
+
+        mx += mdx;
+        my += mdy;
+    }
+
+    return 0;
 }
 
 // Map functions.
-
-static uint8_t map_get(int col, int row)
-{
-    if ((unsigned)col >= 128 || (unsigned)row >= 64)
-    {
-        return 0;
-    }
-    if (row < 32)
-    {
-        return pico8_ram[0x2000 + row * 128 + col];
-    }
-    else
-    {
-        return pico8_ram[0x1000 + (row - 32) * 128 + col];
-    }
-}
-
-static void map_set(int col, int row, uint8_t sprite)
-{
-    if ((unsigned)col >= 128 || (unsigned)row >= 64)
-    {
-        return;
-    }
-    if (row < 32)
-    {
-        pico8_ram[0x2000 + row * 128 + col] = sprite;
-    }
-    else
-    {
-        pico8_ram[0x1000 + (row - 32) * 128 + col] = sprite;
-    }
-}
 
 static int pico8_map(lua_State* L)
 {
