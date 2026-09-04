@@ -12,13 +12,6 @@ jobs:
     container: vitasdk/vitasdk:latest
 
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Install build dependencies
-        run: |
-          apk update
-          apk add cmake ninja git
-
       - name: Configure project
         run: |
           cmake -S . \
