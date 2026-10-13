@@ -766,9 +766,50 @@ static int pico8_circfill(lua_State* L)
     return 0;
 }
 
+static void set_clip(int x0, int y0, int x1, int y1)
+{
+    pico8_ram[0x5f20] = (uint8_t)x0;
+    pico8_ram[0x5f21] = (uint8_t)y0;
+    pico8_ram[0x5f22] = (uint8_t)x1;
+    pico8_ram[0x5f23] = (uint8_t)y1;
+}
+
 static int pico8_clip(lua_State* L)
 {
-    TO_BE_DONE;
+    int prev_x0 = pico8_ram[0x5f20];
+    int prev_y0 = pico8_ram[0x5f21];
+    int prev_x1 = pico8_ram[0x5f22];
+    int prev_y1 = pico8_ram[0x5f23];
+
+    if (lua_gettop(L) == 0)
+    {
+        set_clip(0, 0, 128, 128);
+    }
+    else
+    {
+        int x0 = fix32_to_int(luaL_checknumber(L, 1));
+        int y0 = fix32_to_int(luaL_checknumber(L, 2));
+        int x1 = x0 + fix32_to_int(luaL_checknumber(L, 3));
+        int y1 = y0 + fix32_to_int(luaL_checknumber(L, 4));
+        bool clip_previous = lua_gettop(L) >= 5 && lua_toboolean(L, 5);
+        int min_x = clip_previous ? prev_x0 : 0;
+        int min_y = clip_previous ? prev_y0 : 0;
+        int max_x = clip_previous ? prev_x1 : 128;
+        int max_y = clip_previous ? prev_y1 : 128;
+
+        x0 = x0 < min_x ? min_x : x0;
+        y0 = y0 < min_y ? min_y : y0;
+        x1 = x1 > max_x ? max_x : x1;
+        y1 = y1 > max_y ? max_y : y1;
+        set_clip(x0, y0, x1 < x0 ? x0 : x1, y1 < y0 ? y0 : y1);
+    }
+
+    lua_pushinteger(L, prev_x0);
+    lua_pushinteger(L, prev_y0);
+    lua_pushinteger(L, prev_x1 - prev_x0);
+    lua_pushinteger(L, prev_y1 - prev_y0);
+
+    return 4;
 }
 
 static int pico8_cls(lua_State* L)
@@ -778,13 +819,12 @@ static int pico8_cls(lua_State* L)
 
     SDL_memset(&pico8_ram[0x6000], color_pair, 0x2000);
 
-    // Clear clip rectangle.
-
-    // tbd.
+    set_clip(0, 0, 128, 128);
 
     // Reset cursor position.
-    pico8_ram[0x5f26] = 0x00;
-    pico8_ram[0x5f27] = 0x00;
+    pico8_ram[0x5f24] = 0x00; // Left margin.
+    pico8_ram[0x5f26] = 0x00; // X.
+    pico8_ram[0x5f27] = 0x00; // Y.
 
     return 0;
 }
@@ -797,6 +837,7 @@ static int pico8_color(lua_State* L)
 
 static int pico8_cursor(lua_State* L)
 {
+    pico8_ram[0x5f24] = pico8_ram[0x5f26]; // Left margin.
     pico8_ram[0x5f26] = fix32_to_uint8(luaL_checkunsigned(L, 1)); // X.
     pico8_ram[0x5f27] = fix32_to_uint8(luaL_checkunsigned(L, 2)); // Y.
 
@@ -1101,66 +1142,620 @@ static int pico8_pget(lua_State* L)
     return 1;
 }
 
+static void print_scroll_rows(int rows)
+{
+    if (rows > 128)
+    {
+        rows = 128;
+    }
+    SDL_memmove(&pico8_ram[0x6000], &pico8_ram[0x6000 + 64 * rows], 0x2000 - 64 * rows);
+    SDL_memset(&pico8_ram[0x6000 + 0x2000 - 64 * rows], 0, 64 * rows);
+}
+
+static int print_scroll(int y, int line_height)
+{
+    int rows = y - (128 - line_height);
+    if (rows <= 0)
+    {
+        return y;
+    }
+    print_scroll_rows(rows);
+    return y - rows;
+}
+
+static int print_scroll_newline(int y)
+{
+    int line_height = p8scii_line_height();
+    int threshold = 128 - line_height;
+    int rows;
+    if (y <= threshold)
+    {
+        return y;
+    }
+    rows = y - threshold;
+    if (rows < line_height)
+    {
+        rows = line_height;
+    }
+    print_scroll_rows(rows);
+    return y - rows;
+}
+
+static int print_hex(int c)
+{
+    if (c >= '0' && c <= '9')
+    {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'z')
+    {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'Z')
+    {
+        return c - 'A' + 10;
+    }
+    return c;
+}
+
+static int print_arg(const char* text, int len, int* i)
+{
+    if (*i + 1 >= len)
+    {
+        return -1;
+    }
+    *i += 1;
+    return (unsigned char)text[*i];
+}
+
+static int print_hex4(const char* text, int at)
+{
+    return ((print_hex((unsigned char)text[at]) & 0x0F) << 12) |
+           ((print_hex((unsigned char)text[at + 1]) & 0x0F) << 8) |
+           ((print_hex((unsigned char)text[at + 2]) & 0x0F) << 4) |
+           (print_hex((unsigned char)text[at + 3]) & 0x0F);
+}
+
 static int pico8_print(lua_State* L)
 {
-    const char* text = luaL_checkstring(L, 1);
+    size_t text_len;
+    const char* text = luaL_checklstring(L, 1, &text_len);
+    int len = (int)text_len;
     int argc = lua_gettop(L);
-    uint8_t cursor_x = pico8_ram[0x5f26];
-    uint8_t x_cursor = cursor_x;
-    uint8_t cursor_y = pico8_ram[0x5f27];
-    uint8_t color = pico8_ram[0x5f25];
+    int x = pico8_ram[0x5f26];
+    int y = pico8_ram[0x5f27];
+    int margin = pico8_ram[0x5f24];
+    int right;
+    int last_advance = 4;
+    int i;
+    bool explicit_pos = false;
+    uint8_t flags = pico8_ram[0x5f36];
+    bool add_newline = (flags & 0x04) == 0;
+    bool wrap = (flags & 0x80) != 0;
+    bool do_scroll;
 
-    // Checked independently per-argument (see pico8_circ())
-    if (argc >= 2 && !lua_isnoneornil(L, 2))
-    {
-        cursor_x = fix32_to_uint8(luaL_checkunsigned(L, 2));
-    }
-    if (argc >= 3 && !lua_isnoneornil(L, 3))
-    {
-        cursor_y = fix32_to_uint8(luaL_checkunsigned(L, 3));
-    }
-    if (argc >= 4 && !lua_isnoneornil(L, 4))
-    {
-        color = fix32_to_uint8(luaL_checkunsigned(L, 4));
-    }
+    uint8_t attrs = pico8_ram[0x5f58];
+    bool use_defaults = (attrs & 0x01) != 0;
+    p8scii_style_t style;
+    int fg;
+    int bg = 0;
+    bool solid_bg = use_defaults && (attrs & 0x10);
+    bool border = use_defaults ? (attrs & 0x02) != 0 : true;
+    int char_w = pico8_ram[0x5f59] & 0x0F;
+    int char_h;
+    int char_w2 = pico8_ram[0x5f5a] & 0x0F;
+    int tab_width;
+    int wrap_boundary = 128;
+    int home_x, home_y;
+    int pending_repeat = 1;
 
-    for (int i = 0; text[i] != '\0'; i++)
+    if (argc == 2)
     {
-        if (text[i] == '\t') // 9, tab.
+        if (!lua_isnoneornil(L, 2))
         {
-            cursor_x += 16;
+            pico8_ram[0x5f25] = fix32_to_uint8(luaL_checkunsigned(L, 2));
+        }
+    }
+    else if (argc >= 3)
+    {
+        explicit_pos = true;
+        if (!lua_isnoneornil(L, 2))
+        {
+            x = fix32_to_uint8(luaL_checkunsigned(L, 2));
+        }
+        if (!lua_isnoneornil(L, 3))
+        {
+            y = fix32_to_uint8(luaL_checkunsigned(L, 3));
+        }
+        if (argc >= 4 && !lua_isnoneornil(L, 4))
+        {
+            pico8_ram[0x5f25] = fix32_to_uint8(luaL_checkunsigned(L, 4));
+        }
+
+        margin = x;
+        pico8_ram[0x5f24] = (uint8_t)margin;
+    }
+
+    do_scroll = !explicit_pos && (flags & 0x40) == 0;
+    right = x;
+    home_x = x;
+    home_y = y;
+    fg = pico8_ram[0x5f25] & 0x0F;
+
+    style.fg = 0;
+    style.bg = -1;
+    style.scale_x = (use_defaults && (attrs & 0x04)) ? 2 : 1;
+    style.scale_y = (use_defaults && (attrs & 0x08)) ? 2 : 1;
+    style.stripey = (use_defaults && (attrs & 0x40)) ? 1 : 0;
+    style.invert = (use_defaults && (attrs & 0x20)) ? 1 : 0;
+    style.outline_mask = 0;
+    style.outline_color = 0;
+    style.outline_hollow = 0;
+    style.custom_font = (use_defaults && (attrs & 0x80)) ? 1 : 0;
+    p8scii_font_metrics(style.custom_font, &char_h, &tab_width);
+
+    for (i = 0; i < len; i++)
+    {
+        int c = (unsigned char)text[i];
+        int repeat = pending_repeat;
+        pending_repeat = 1;
+
+        if (c >= 16)
+        {
+            int cell_w, advance, n;
+
+            if (style.custom_font)
+            {
+                cell_w = p8scii_custom_char_width((uint8_t)c);
+                if (cell_w < 0)
+                {
+                    cell_w = 0;
+                }
+            }
+            else if (c >= 128 && char_w2 > 0)
+            {
+                cell_w = char_w2;
+            }
+            else if (c < 128 && char_w > 0)
+            {
+                cell_w = char_w;
+            }
+            else
+            {
+                cell_w = p8scii_char_width((uint8_t)c) + 1;
+            }
+            advance = cell_w * style.scale_x;
+
+            for (n = 0; n < repeat; n++)
+            {
+                int draw_x, draw_y;
+
+                if (wrap && x + advance > wrap_boundary)
+                {
+                    x = margin;
+                    y += char_h * style.scale_y;
+                }
+                if (do_scroll)
+                {
+                    y = print_scroll(y, char_h * style.scale_y);
+                }
+
+                style.fg = (uint8_t)fg;
+                style.bg = solid_bg ? bg : -1;
+                draw_x = x;
+                draw_y = y;
+                apply_camera_offset(&draw_x, &draw_y);
+                p8scii_draw_char((uint8_t)c, draw_x, draw_y, cell_w, char_h, &style);
+
+                x += advance;
+                last_advance = advance;
+                if (x > right)
+                {
+                    right = x;
+                }
+            }
             continue;
         }
-        else if (text[i] == '\n') // 10, newline.
+
+        switch (c)
         {
-            cursor_x = 0;
-            cursor_y += 6;
-            continue;
-        }
-        else if (text[i] == '\b') // 8, backspace.
+        case 0: // 0, end of string.
+            add_newline = false;
+            i = len;
+            break;
+
+        case 1: // 1, repeat.
         {
-            cursor_x -= 4;
-            continue;
-        }
-        else if (text[i] == '\r') // 13, carriage return.
-        {
-            cursor_x = 0;
-            continue;
+            int a = print_arg(text, len, &i);
+            if (a >= 0)
+            {
+                pending_repeat = print_hex(a);
+            }
+            break;
         }
 
-        uint8_t w, h;
-        int x = cursor_x, y = cursor_y;
-        apply_camera_offset((int*)&x, (int*)&y);
+        case 2: // 2, background colour.
+        {
+            int a = print_arg(text, len, &i);
+            if (a >= 0)
+            {
+                bg = print_hex(a) & 0x0F;
+                solid_bg = true;
+            }
+            break;
+        }
 
-        blit_char_to_screen((unsigned char)text[i], x, y, color, &w, &h);
-        cursor_x += w + 1;
+        case 3: // 3, move horizontally.
+        {
+            int a = print_arg(text, len, &i);
+            if (a >= 0)
+            {
+                x += print_hex(a) - 16;
+            }
+            break;
+        }
+
+        case 4: // 4, move vertically.
+        {
+            int a = print_arg(text, len, &i);
+            if (a >= 0)
+            {
+                y += print_hex(a) - 16;
+            }
+            break;
+        }
+
+        case 5: // 5, move horizontally and vertically.
+        {
+            int ax = print_arg(text, len, &i);
+            int ay = print_arg(text, len, &i);
+            if (ax >= 0 && ay >= 0)
+            {
+                x += print_hex(ax) - 16;
+                y += print_hex(ay) - 16;
+            }
+            break;
+        }
+
+        case 6: // 6, command prefix.
+        {
+            int cmd = print_arg(text, len, &i);
+            bool poked = false;
+
+            switch (cmd)
+            {
+            case 'c': // Clear.
+            {
+                int a = print_arg(text, len, &i);
+                if (a >= 0)
+                {
+                    int col = print_hex(a) & 0x0F;
+                    SDL_memset(&pico8_ram[0x6000], (col << 4) | col, 0x2000);
+                    x = 0;
+                    y = 0;
+                    home_x = 0;
+                    home_y = 0;
+                    margin = 0;
+                    pico8_ram[0x5f24] = 0;
+                    set_clip(0, 0, 128, 128);
+                }
+                break;
+            }
+            case 'd': // Delay.
+                print_arg(text, len, &i);
+                break;
+            case 'g': // Go to home.
+                x = home_x;
+                y = home_y;
+                break;
+            case 'h': // Set home.
+                home_x = x;
+                home_y = y;
+                break;
+            case 'j': // Jump.
+            {
+                int ax = print_arg(text, len, &i);
+                int ay = print_arg(text, len, &i);
+                if (ax >= 0 && ay >= 0)
+                {
+                    x = print_hex(ax) * 4;
+                    y = print_hex(ay) * 4;
+                }
+                break;
+            }
+            case 'r': // Wrap boundary.
+            {
+                int a = print_arg(text, len, &i);
+                if (a >= 0)
+                {
+                    wrap_boundary = print_hex(a) * 4;
+                    wrap = true;
+                }
+                break;
+            }
+            case 's': // Tab width.
+            {
+                int a = print_arg(text, len, &i);
+                if (a >= 0 && print_hex(a) > 0)
+                {
+                    tab_width = print_hex(a);
+                }
+                break;
+            }
+            case 'x': // Character width.
+            {
+                int a = print_arg(text, len, &i);
+                if (a >= 0)
+                {
+                    char_w = print_hex(a);
+                }
+                break;
+            }
+            case 'y': // Character height.
+            {
+                int a = print_arg(text, len, &i);
+                if (a >= 0 && print_hex(a) > 0)
+                {
+                    char_h = print_hex(a);
+                }
+                break;
+            }
+            case 'w':
+                style.scale_x = 2;
+                break;
+            case 't':
+                style.scale_y = 2;
+                break;
+            case '=':
+                style.stripey = 1;
+                break;
+            case 'p':
+                style.scale_x = 2;
+                style.scale_y = 2;
+                style.stripey = 1;
+                break;
+            case 'i':
+                style.invert = 1;
+                break;
+            case 'b':
+                border = !border;
+                break;
+            case '#':
+                solid_bg = true;
+                break;
+            case '-': // Switch off.
+            {
+                int a = print_arg(text, len, &i);
+                switch (a)
+                {
+                case 'w':
+                    style.scale_x = 1;
+                    break;
+                case 't':
+                    style.scale_y = 1;
+                    break;
+                case '=':
+                    style.stripey = 0;
+                    break;
+                case 'p':
+                    style.scale_x = 1;
+                    style.scale_y = 1;
+                    style.stripey = 0;
+                    break;
+                case 'i':
+                    style.invert = 0;
+                    break;
+                case 'b':
+                    border = !border;
+                    break;
+                case '#':
+                    solid_bg = false;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            }
+            case '.': // Bitmap, raw.
+            case ',': // Bitmap, raw, padded.
+            case ':': // Bitmap, hex.
+            case ';': // Bitmap, hex, padded.
+            {
+                bool hex = (cmd == ':' || cmd == ';');
+                int count = hex ? 16 : 8;
+
+                if (i + count < len)
+                {
+                    uint8_t rows[8];
+                    int k;
+                    int pad = ((cmd == ',' || cmd == ';') && border) ? 1 : 0;
+                    int draw_x = x + pad;
+                    int draw_y = y + pad;
+
+                    for (k = 0; k < 8; k++)
+                    {
+                        if (hex)
+                        {
+                            rows[k] = (uint8_t)(((print_hex((unsigned char)text[i + 1 + k * 2]) & 0x0F) << 4) |
+                                                (print_hex((unsigned char)text[i + 2 + k * 2]) & 0x0F));
+                        }
+                        else
+                        {
+                            rows[k] = (uint8_t)text[i + 1 + k];
+                        }
+                    }
+                    i += count;
+                    apply_camera_offset(&draw_x, &draw_y);
+                    p8scii_draw_bitmap(draw_x, draw_y, rows, fg, solid_bg ? bg : -1);
+                    x += 8;
+                    last_advance = 8;
+                    if (x > right)
+                    {
+                        right = x;
+                    }
+                }
+                else
+                {
+                    i = len;
+                }
+                break;
+            }
+            case '@': // Poke count bytes.
+                if (i + 8 < len)
+                {
+                    int addr = print_hex4(text, i + 1);
+                    int count = print_hex4(text, i + 5);
+                    int k;
+
+                    i += 8;
+                    for (k = 0; k < count && i + 1 < len; k++)
+                    {
+                        i++;
+                        if (addr + k < RAM_SIZE)
+                        {
+                            pico8_ram[addr + k] = (uint8_t)text[i];
+                        }
+                    }
+                    poked = true;
+                }
+                else
+                {
+                    i = len;
+                }
+                break;
+            case '!': // Poke the rest.
+                if (i + 4 < len)
+                {
+                    int addr = print_hex4(text, i + 1);
+                    int k = 0;
+
+                    i += 4;
+                    while (i + 1 < len)
+                    {
+                        i++;
+                        if (addr + k < RAM_SIZE)
+                        {
+                            pico8_ram[addr + k] = (uint8_t)text[i];
+                        }
+                        k++;
+                    }
+                    poked = true;
+                }
+                else
+                {
+                    i = len;
+                }
+                break;
+            case 'o': // Outline.
+            {
+                int col = print_arg(text, len, &i);
+                int mask_hi = print_arg(text, len, &i);
+                int mask_lo = print_arg(text, len, &i);
+                if (col >= 0 && mask_hi >= 0 && mask_lo >= 0)
+                {
+                    style.outline_mask = (uint8_t)(((print_hex(mask_hi) & 0x0F) << 4) | (print_hex(mask_lo) & 0x0F));
+                    style.outline_hollow = (col == '!') ? 1 : 0;
+                    style.outline_color = (uint8_t)((col == '$' || col == '!') ? fg : (print_hex(col) & 0x0F));
+                }
+                break;
+            }
+            default:
+                break;
+            }
+
+            if (poked)
+            {
+                flags = pico8_ram[0x5f36];
+                add_newline = (flags & 0x04) == 0;
+                wrap = (flags & 0x80) != 0;
+                do_scroll = !explicit_pos && (flags & 0x40) == 0;
+            }
+            break;
+        }
+
+        case 8: // 8, backspace.
+            x -= last_advance;
+            break;
+
+        case 9: // 9, tab.
+            x = ((x / tab_width) + 1) * tab_width;
+            break;
+
+        case 10: // 10, newline.
+            x = margin;
+            y += char_h * style.scale_y;
+            if (do_scroll)
+            {
+                y = print_scroll_newline(y);
+            }
+            break;
+
+        case 11: // 11, decoration.
+        {
+            int code = print_arg(text, len, &i);
+            int dec = print_arg(text, len, &i);
+            if (code >= 0 && dec >= 16 && dec < 0x7f)
+            {
+                int offset = print_hex(code);
+                int draw_x = x - last_advance + (offset % 4) - 2;
+                int draw_y = y + (offset / 4) - 8;
+                p8scii_style_t plain = style;
+
+                plain.fg = (uint8_t)fg;
+                plain.bg = -1;
+                plain.scale_x = 1;
+                plain.scale_y = 1;
+                plain.outline_mask = 0;
+                plain.custom_font = 0;
+                apply_camera_offset(&draw_x, &draw_y);
+                p8scii_draw_char((uint8_t)dec, draw_x, draw_y, p8scii_char_width((uint8_t)dec) + 1, char_h, &plain);
+            }
+            break;
+        }
+
+        case 12: // 12, foreground colour.
+        {
+            int a = print_arg(text, len, &i);
+            if (a >= 0)
+            {
+                fg = print_hex(a) & 0x0F;
+                pico8_ram[0x5f25] = (uint8_t)fg;
+            }
+            break;
+        }
+
+        case 13: // 13, carriage return.
+            x = margin;
+            break;
+
+        case 14: // 14, custom font on.
+            style.custom_font = 1;
+            p8scii_font_metrics(true, &char_h, &tab_width);
+            break;
+
+        case 15: // 15, custom font off.
+            style.custom_font = 0;
+            p8scii_font_metrics(false, &char_h, &tab_width);
+            break;
+
+        default: // 7, audio, not supported.
+            break;
+        }
     }
 
-    cursor_y += 6;
+    if (add_newline)
+    {
+        x = margin;
+        y += char_h * style.scale_y;
+        if (do_scroll)
+        {
+            y = print_scroll_newline(y);
+        }
+    }
 
-    pico8_ram[0x5f26] = x_cursor;
-    pico8_ram[0x5f27] = cursor_y;
-    lua_pushnumber(L, cursor_x);
+    pico8_ram[0x5f26] = (uint8_t)x;
+    pico8_ram[0x5f27] = (uint8_t)y;
+    lua_pushinteger(L, right);
 
     return 1;
 }
@@ -2482,6 +3077,12 @@ static int pico8_inext(lua_State* L)
 
 static int pico8_ipairs(lua_State* L)
 {
+    if (lua_isnil(L, 1))
+    {
+        lua_pushcfunction(L, pico8_all_nil_iter);
+        return 1;
+    }
+
     luaL_checktype(L, 1, LUA_TTABLE);
 
     /* Push the inext iterator function */

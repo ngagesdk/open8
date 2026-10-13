@@ -93,6 +93,10 @@ void reset_draw_state(void)
 {
 	pico8_ram[0x5f25] = 0x06; // Default color, light gray.
 
+	// Clip rectangle, fullscreen.
+	pico8_ram[0x5f22] = 128;
+	pico8_ram[0x5f23] = 128;
+
 	// Initialize draw palette: identity mapping, color 0 transparent by default.
 	// Initialize display palette: identity mapping.
 	for (int i = 0; i < 16; i++)

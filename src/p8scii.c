@@ -13,6 +13,10 @@
 
 #define MAX_FONT_WIDTH 7
 #define MAX_FONT_HEIGHT 5
+#define LINE_HEIGHT 6
+#define TAB_WIDTH 16
+#define CUSTOM_FONT_ADDR 0x5600
+#define CUSTOM_FONT_GLYPHS 0x5680
 
 typedef struct
 {
@@ -289,40 +293,221 @@ const p8char_t font[] =
 	{ 7, 5, { 0b0001000, 0b0000100, 0b1100011, 0b0010000, 0b0001000, } }, // ◝
 };
 
-void blit_char_to_screen(uint8_t char_index, int x, int y, uint8_t color, uint8_t* w, uint8_t* h)
+uint8_t p8scii_char_width(uint8_t char_index)
 {
-	const p8char_t* font_char = &font[char_index];
-	const uint8_t* char_bitmap = font_char->bitmap;
-	const int char_width = font_char->width;
-	const int char_height = font_char->height;
+	return font[char_index].width;
+}
 
-	*w = (uint8_t)char_width;
-	*h = (uint8_t)char_height;
-
-	for (int row = 0; row < char_height; row++)
+static void p8scii_put(int x, int y, int color)
+{
+	if (((unsigned)x | (unsigned)y) >= 128)
 	{
-		int screen_y = y + row;
-		if (screen_y < 0 || screen_y > 127)
-		{
-			continue;
-		}
-		uint8_t row_data = char_bitmap[row];
-		uint16_t screen_row_addr = 0x6000 + ((uint16_t)screen_y << 6);
+		return;
+	}
+	if (x < pico8_ram[0x5f20] || y < pico8_ram[0x5f21] || x >= pico8_ram[0x5f22] || y >= pico8_ram[0x5f23])
+	{
+		return;
+	}
+	uint16_t addr = 0x6000 + ((uint16_t)y << 6) + ((uint16_t)x >> 1);
+	color = pico8_ram[0x5f00 + (color & 0x0F)] & 0x0F;
+	if (x & 1)
+		pico8_ram[addr] = (pico8_ram[addr] & 0x0F) | (color << 4);
+	else
+		pico8_ram[addr] = (pico8_ram[addr] & 0xF0) | color;
+}
 
-		for (int col = 0; col < char_width; col++)
+static int p8scii_custom_adjust(uint8_t char_index)
+{
+	if (!(pico8_ram[CUSTOM_FONT_ADDR + 5] & 0x01) || char_index < 16)
+	{
+		return 0;
+	}
+	int nibble_index = char_index - 16;
+	uint8_t data = pico8_ram[CUSTOM_FONT_ADDR + 8 + nibble_index / 2];
+	return (nibble_index & 1) ? (data >> 4) : (data & 0x0F);
+}
+
+int p8scii_line_height(void)
+{
+	return LINE_HEIGHT;
+}
+
+void p8scii_font_metrics(int custom, int* char_h, int* tab_width)
+{
+	int height = LINE_HEIGHT;
+	int tab = TAB_WIDTH;
+
+	if (custom)
+	{
+		if (pico8_ram[CUSTOM_FONT_ADDR + 2] > 0)
 		{
-			if (row_data & (1 << (char_width - 1 - col)))
+			height = pico8_ram[CUSTOM_FONT_ADDR + 2];
+		}
+		if (pico8_ram[CUSTOM_FONT_ADDR + 6] > 0)
+		{
+			tab = pico8_ram[CUSTOM_FONT_ADDR + 6];
+		}
+	}
+	if ((pico8_ram[0x5f59] >> 4) > 0)
+	{
+		height = pico8_ram[0x5f59] >> 4;
+	}
+	if ((pico8_ram[0x5f5a] >> 4) > 0)
+	{
+		tab = pico8_ram[0x5f5a] >> 4;
+	}
+
+	*char_h = height;
+	*tab_width = tab;
+}
+
+int p8scii_custom_char_width(uint8_t char_index)
+{
+	int width = pico8_ram[CUSTOM_FONT_ADDR + (char_index < 128 ? 0 : 1)];
+	int adjust = p8scii_custom_adjust(char_index) & 0x07;
+	if (adjust >= 4)
+	{
+		adjust -= 8;
+	}
+	return width + adjust;
+}
+
+static int p8scii_lit(uint8_t char_index, int col, int row, int invert, int custom)
+{
+	int bit = 0;
+	if (custom && char_index >= 16)
+	{
+		if (col >= 0 && row >= 0 && col < 8 && row < 8)
+		{
+			bit = (pico8_ram[CUSTOM_FONT_GLYPHS + (char_index - 16) * 8 + row] >> col) & 1;
+		}
+	}
+	else
+	{
+		const p8char_t* glyph = &font[char_index];
+		if (col >= 0 && row >= 0 && col < glyph->width && row < glyph->height)
+		{
+			bit = (glyph->bitmap[row] >> (glyph->width - 1 - col)) & 1;
+		}
+	}
+	return invert ? !bit : bit;
+}
+
+void p8scii_draw_char(uint8_t char_index, int x, int y, int cell_w, int cell_h, const p8scii_style_t* style)
+{
+	static const int outline_dx[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+	static const int outline_dy[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+	int sx = style->scale_x;
+	int sy = style->scale_y;
+	int row, col, dx, dy, n;
+
+	if (style->custom_font)
+	{
+		x += (int8_t)pico8_ram[CUSTOM_FONT_ADDR + 3];
+		y += (int8_t)pico8_ram[CUSTOM_FONT_ADDR + 4];
+		if (p8scii_custom_adjust(char_index) & 0x08)
+		{
+			y--;
+		}
+	}
+
+	for (row = 0; row < cell_h; row++)
+	{
+		for (col = 0; col < cell_w; col++)
+		{
+			int lit = p8scii_lit(char_index, col, row, style->invert, style->custom_font);
+
+			if (lit || style->bg < 0)
 			{
-				int screen_x = x + col;
-				if (screen_x < 0 || screen_x > 127)
+				continue;
+			}
+			for (dy = 0; dy < sy; dy++)
+			{
+				for (dx = 0; dx < sx; dx++)
+				{
+					if (style->stripey && !((dx + dy) & 1))
+						continue;
+					p8scii_put(x + col * sx + dx, y + row * sy + dy, style->bg);
+				}
+			}
+		}
+	}
+
+	if (style->outline_mask)
+	{
+		for (row = 0; row < cell_h; row++)
+		{
+			for (col = 0; col < cell_w; col++)
+			{
+				if (!p8scii_lit(char_index, col, row, style->invert, style->custom_font))
 				{
 					continue;
 				}
-				uint16_t addr = screen_row_addr + ((uint16_t)screen_x >> 1);
-				if (screen_x & 1)
-					pico8_ram[addr] = (pico8_ram[addr] & 0x0F) | (color << 4);
-				else
-					pico8_ram[addr] = (pico8_ram[addr] & 0xF0) | color;
+				for (n = 0; n < 8; n++)
+				{
+					if (!(style->outline_mask & (1 << n)))
+					{
+						continue;
+					}
+					if (p8scii_lit(char_index, col + outline_dx[n], row + outline_dy[n], style->invert, style->custom_font))
+					{
+						continue;
+					}
+					for (dy = 0; dy < sy; dy++)
+					{
+						for (dx = 0; dx < sx; dx++)
+						{
+							if (style->stripey && !((dx + dy) & 1))
+								continue;
+							p8scii_put(x + col * sx + dx + outline_dx[n], y + row * sy + dy + outline_dy[n], style->outline_color);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (style->outline_hollow)
+	{
+		return;
+	}
+
+	for (row = 0; row < cell_h; row++)
+	{
+		for (col = 0; col < cell_w; col++)
+		{
+			if (!p8scii_lit(char_index, col, row, style->invert, style->custom_font))
+			{
+				continue;
+			}
+			for (dy = 0; dy < sy; dy++)
+			{
+				for (dx = 0; dx < sx; dx++)
+				{
+					if (style->stripey && !((dx + dy) & 1))
+						continue;
+					p8scii_put(x + col * sx + dx, y + row * sy + dy, style->fg);
+				}
+			}
+		}
+	}
+}
+
+void p8scii_draw_bitmap(int x, int y, const uint8_t* rows, int fg, int bg)
+{
+	int row, bit;
+
+	for (row = 0; row < 8; row++)
+	{
+		for (bit = 0; bit < 8; bit++)
+		{
+			if (rows[row] & (1 << bit))
+			{
+				p8scii_put(x + bit, y + row, fg);
+			}
+			else if (bg >= 0)
+			{
+				p8scii_put(x + bit, y + row, bg);
 			}
 		}
 	}
