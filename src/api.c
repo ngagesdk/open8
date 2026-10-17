@@ -73,9 +73,24 @@ static void apply_camera_offset(int* x, int* y)
     *y -= cam_y;
 }
 
+static void get_clip(int* x0, int* y0, int* x1, int* y1)
+{
+    *x0 = pico8_ram[0x5f20];
+    *y0 = pico8_ram[0x5f21];
+    *x1 = pico8_ram[0x5f22] > 128 ? 128 : pico8_ram[0x5f22];
+    *y1 = pico8_ram[0x5f23] > 128 ? 128 : pico8_ram[0x5f23];
+}
+
+static bool is_clipped(int x, int y)
+{
+    return x < pico8_ram[0x5f20] || y < pico8_ram[0x5f21] ||
+        x >= pico8_ram[0x5f22] || y >= pico8_ram[0x5f23] ||
+        ((unsigned)x | (unsigned)y) >= 128;
+}
+
 static void pset(int x, int y, int* color)
 {
-    if (((unsigned)x | (unsigned)y) >= 128)
+    if (is_clipped(x, y))
     {
         return;
     }
@@ -140,12 +155,14 @@ static uint8_t pget(int x, int y)
 
 static void hline(int x0, int x1, int y, int* color)
 {
-    if ((unsigned)y >= 128) return;
+    int cx0, cy0, cx1, cy1;
+    get_clip(&cx0, &cy0, &cx1, &cy1);
+    if (y < cy0 || y >= cy1) return;
     if (x0 > x1) {
         int t = x0; x0 = x1; x1 = t;
     }
-    if (x0 < 0) x0 = 0;
-    if (x1 > 127) x1 = 127;
+    if (x0 < cx0) x0 = cx0;
+    if (x1 > cx1 - 1) x1 = cx1 - 1;
     if (x0 > x1) return;
 
     uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
@@ -255,12 +272,14 @@ static void draw_line(int x0, int y0, int x1, int y1, int* color)
     /* Vertical fast path - big_chest particle lines are always x0==x1. */
     if (x0 == x1)
     {
-        if ((unsigned)x0 >= 128) return;
+        int cx0, cy0, cx1, cy1;
+        get_clip(&cx0, &cy0, &cx1, &cy1);
+        if (x0 < cx0 || x0 >= cx1) return;
         if (y0 > y1) {
             int t = y0; y0 = y1; y1 = t;
         }
-        if (y0 < 0) y0 = 0;
-        if (y1 > 127) y1 = 127;
+        if (y0 < cy0) y0 = cy0;
+        if (y1 > cy1 - 1) y1 = cy1 - 1;
         uint8_t p8_color = color ? (*color & 0x0F) : pico8_ram[0x5f25];
         uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
         if (pattern == 0)
@@ -1845,10 +1864,12 @@ static void draw_sprite_n(uint8_t n, int32_t x, int32_t y, uint8_t w, uint8_t h,
     int32_t height = h * 8;
 
     // Compute the visible (clipped) pixel range once, avoiding per-pixel bounds checks.
-    int32_t dx_start = (x < 0) ? -x : 0;
-    int32_t dy_start = (y < 0) ? -y : 0;
-    int32_t dx_end = (x + width > 128) ? 128 - x : width;
-    int32_t dy_end = (y + height > 128) ? 128 - y : height;
+    int cx0, cy0, cx1, cy1;
+    get_clip(&cx0, &cy0, &cx1, &cy1);
+    int32_t dx_start = (x < cx0) ? cx0 - x : 0;
+    int32_t dy_start = (y < cy0) ? cy0 - y : 0;
+    int32_t dx_end = (x + width > cx1) ? cx1 - x : width;
+    int32_t dy_end = (y + height > cy1) ? cy1 - y : height;
 
     if (dx_start >= dx_end || dy_start >= dy_end)
     {
@@ -1987,7 +2008,7 @@ static int pico8_sspr(lua_State* L)
 
             int32_t screen_x = dx + px;
             int32_t screen_y = dy + py;
-            if (screen_x < 0 || screen_x >= 128 || screen_y < 0 || screen_y >= 128)
+            if (is_clipped(screen_x, screen_y))
             {
                 continue;
             }
@@ -2052,7 +2073,7 @@ static int pico8_tline(lua_State* L)
                 uint8_t color = (px & 1) ? (byte >> 4) : (byte & 0x0F);
                 uint8_t entry = pico8_ram[0x5f00 + color];
 
-                if (!(entry & 0x10) && ((unsigned)x0 | (unsigned)y0) < 128)
+                if (!(entry & 0x10) && !is_clipped(x0, y0))
                 {
                     uint16_t addr = 0x6000 + ((uint16_t)y0 << 6) + ((uint16_t)x0 >> 1);
 
