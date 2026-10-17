@@ -13,7 +13,7 @@
 #include "z8lua/lualib.h"
 #include "api.h"
 
-static uint8_t ram[32768];
+static uint8_t ram[65536];
 
 int main()
 {

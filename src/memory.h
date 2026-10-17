@@ -13,7 +13,7 @@
 #include <SDL3/SDL.h>
 #include <stdint.h>
 
-#define RAM_SIZE 0x8000
+#define RAM_SIZE 0x10000
 
 extern uint8_t pico8_ram[RAM_SIZE];
 extern SDL_FRect screen_rect;
