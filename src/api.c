@@ -284,6 +284,7 @@ static void draw_line(int x0, int y0, int x1, int y1, int* color)
         uint16_t pattern = (pico8_ram[0x5f31] << 8) | pico8_ram[0x5f32];
         if (pattern == 0)
         {
+            p8_color = pico8_ram[0x5f00 + p8_color] & 0x0F;
             uint8_t mask = (x0 & 1) ? 0x0F : 0xF0;
             uint8_t shift = (x0 & 1) ? 4 : 0;
             uint8_t bits = (uint8_t)(p8_color << shift);
@@ -2039,6 +2040,7 @@ static int pico8_tline(lua_State* L)
     int32_t my = (int32_t)luaL_optnumber(L, 6, 0);
     int32_t mdx = (int32_t)luaL_optnumber(L, 7, fix32_value(0, 0x2000));
     int32_t mdy = (int32_t)luaL_optnumber(L, 8, 0);
+    uint8_t layers = (uint8_t)fix32_to_int(luaL_optnumber(L, 9, 0));
 
     apply_camera_offset(&x0, &y0);
     apply_camera_offset(&x1, &y1);
@@ -2065,7 +2067,8 @@ static int pico8_tline(lua_State* L)
             int sy = ty + offset_y;
             uint8_t sprite = map_get(sx >> 3, sy >> 3);
 
-            if (sprite != 0 || sprite_0_opaque)
+            if ((sprite != 0 || sprite_0_opaque) &&
+                (layers == 0 || (pico8_ram[0x3000 + sprite] & layers) == layers))
             {
                 int px = ((sprite & 0x0F) << 3) + (sx & 7);
                 int py = ((sprite >> 4) << 3) + (sy & 7);
