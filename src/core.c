@@ -712,8 +712,9 @@ static bool run_cartridge(SDL_Renderer* renderer)
             lua_insert(vm, -2);
             luaL_loadstring(co,
                 "local cart = ... cart()\n"
-                "pcall(_init)\n"
-                "while true do pcall(_update or _update60) pcall(_draw) flip() end\n");
+                "local function call(f) local ok, err = pcall(f) if f and not ok then log(err) end end\n"
+                "call(_init)\n"
+                "while true do call(_update or _update60) call(_draw) flip() end\n");
             lua_xmove(vm, co, 1);
 
             pico8_flip_coroutine = co;

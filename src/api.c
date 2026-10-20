@@ -15,6 +15,7 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
+#include "z8lua/lstate.h"
 #include "auxiliary.h"
 #include "app.h"
 #include "core.h"
@@ -946,7 +947,7 @@ static int pico8_fillp(lua_State* L)
 
 static int pico8_flip(lua_State* L)
 {
-    if (L == pico8_flip_coroutine)
+    if (L == pico8_flip_coroutine && L->nny == 0)
     {
         return lua_yield(L, 0);
     }
