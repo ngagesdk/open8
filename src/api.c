@@ -15,6 +15,7 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 #include "z8lua/fix32.h"
+#include "z8lua/lstate.h"
 #include "auxiliary.h"
 #include "app.h"
 #include "core.h"
@@ -31,7 +32,8 @@
 
 static fix32_t seed_lo, seed_hi;
 
-static fix32_t seconds_since_start;
+static uint32_t ticks_since_start; // tick = 1/60 sec
+lua_State* pico8_flip_coroutine;
 
 // Frame timing info provided by core.c (frame_start in ms, frame_ms target in ms).
 // These are declared in api.h and set inside core.c each frame.
@@ -690,7 +692,7 @@ static int pico8_trace(lua_State* L)
 
 static int pico8_time(lua_State* L)
 {
-    lua_pushnumber(L, seconds_since_start);
+    lua_pushnumber(L, (fix32_t)((ticks_since_start / 60) << 16) + (fix32_t)(((ticks_since_start % 60) << 16) / 60));
     return 1;
 }
 
@@ -945,7 +947,10 @@ static int pico8_fillp(lua_State* L)
 
 static int pico8_flip(lua_State* L)
 {
-    // We might not need this function.
+    if (L == pico8_flip_coroutine && L->nny == 0)
+    {
+        return lua_yield(L, 0);
+    }
     return 0;
 }
 
@@ -3272,6 +3277,8 @@ static int pico8_log(lua_State* L)
 
 void init_api(lua_State* L)
 {
+    ticks_since_start = 0;
+
     // Draw state defaults.
     for (int i = 0; i < 16; i++)
     {
@@ -3620,14 +3627,5 @@ void update_input(SDL_Renderer* renderer)
 
 void update_time(void)
 {
-    static Uint64 start_time = 0;
-    if (start_time == 0)
-    {
-        start_time = SDL_GetTicks();
-    }
-
-    Uint64 current_time = SDL_GetTicks();
-    Uint64 elapsed_time_ticks = current_time - start_time;
-    fix32_t elapsed_time = fix32_from_int((Sint32)elapsed_time_ticks) / 1000;
-    seconds_since_start = elapsed_time;
+    ticks_since_start += (pico8_frame_ms < 20) ? 1 : 2;
 }

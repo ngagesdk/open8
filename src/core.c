@@ -201,6 +201,7 @@ static void destroy_vm(void)
         lua_close(vm);
         vm = NULL;
     }
+    pico8_flip_coroutine = NULL;
 }
 
 static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
@@ -703,7 +704,31 @@ static bool run_cartridge(SDL_Renderer* renderer)
         // (starting at 0x4300). Some carts rely on subtle encoding/escaping that
         // can be altered by our patcher; attempt the original on failure so
         // carts that work on real PICO-8 still run.
-        if (luaL_loadbuffer(vm, (const char*)get_cart()->code, get_cart()->code_size, "cart") || lua_pcall(vm, 0, 0, 0))
+        int status = luaL_loadbuffer(vm, (const char*)get_cart()->code, get_cart()->code_size, "cart");
+        if (status == LUA_OK)
+        {
+            // The coroutine stays on vm's stack so it is not collected.
+            lua_State* co = lua_newthread(vm);
+            lua_insert(vm, -2);
+            luaL_loadstring(co,
+                "local cart = ... cart()\n"
+                "local function call(f) local ok, err = pcall(f) if f and not ok then log(err) end end\n"
+                "call(_init)\n"
+                "while true do call(_update or _update60) call(_draw) flip() end\n");
+            lua_xmove(vm, co, 1);
+
+            pico8_flip_coroutine = co;
+            status = lua_resume(co, NULL, 1);
+            if (status != LUA_YIELD)
+            {
+                pico8_flip_coroutine = NULL;
+                if (status != LUA_OK)
+                {
+                    lua_xmove(co, vm, 1);
+                }
+            }
+        }
+        if (status != LUA_OK && status != LUA_YIELD)
         {
             // Preserve the error message from the failed attempt.
             const char* err = lua_tostring(vm, -1);
@@ -728,6 +753,10 @@ static bool run_cartridge(SDL_Renderer* renderer)
                 else
                 {
                     SDL_Log("Loaded cartridge using original embedded code after patched load failed: %s", err ? err : "(no message)");
+                    if (is_function_present(vm, "_init"))
+                    {
+                        call_pico8_function(vm, "_init");
+                    }
                 }
             }
             else
@@ -741,13 +770,12 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
         print_memory_usage(vm);
 
-        if (is_function_present(vm, "_init"))
+        if (!pico8_flip_coroutine)
         {
-            call_pico8_function(vm, "_init");
+            has_update = is_function_present(vm, "_update");
+            has_update60 = is_function_present(vm, "_update60");
+            has_draw = is_function_present(vm, "_draw");
         }
-        has_update = is_function_present(vm, "_update");
-        has_update60 = is_function_present(vm, "_update60");
-        has_draw = is_function_present(vm, "_draw");
     }
     else
     {
@@ -1417,7 +1445,21 @@ bool iterate_core(SDL_Renderer* renderer)
         pico8_frame_start = frame_start;
         pico8_frame_ms = frame_ms;
 
-        if (has_update)
+        bool running = (pico8_flip_coroutine != NULL);
+        if (running)
+        {
+            has_update60 = is_function_present(vm, "_update60");
+            update_input(renderer);
+            update_touch_input(renderer);
+            lua_State* co = pico8_flip_coroutine;
+            int status = lua_resume(co, NULL, 0);
+            if (status != LUA_YIELD)
+            {
+                pico8_flip_coroutine = NULL;
+                SDL_Log("Error running cartridge: %s", lua_tostring(co, -1));
+            }
+        }
+        else if (has_update)
         {
             update_input(renderer);
             update_touch_input(renderer);
@@ -1430,7 +1472,7 @@ bool iterate_core(SDL_Renderer* renderer)
             call_pico8_function(vm, "_update60");
         }
 
-        if (has_draw)
+        if (has_draw && !running)
         {
             // Do not reset_draw_state() every frame, do that only when switching carts
             call_pico8_function(vm, "_draw");
