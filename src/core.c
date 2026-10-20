@@ -201,7 +201,7 @@ static void destroy_vm(void)
         lua_close(vm);
         vm = NULL;
     }
-    pico8_init_coroutine = NULL;
+    pico8_flip_coroutine = NULL;
 }
 
 static void extract_pico8_data(uint8_t* image_data, uint8_t* cart_data)
@@ -710,14 +710,17 @@ static bool run_cartridge(SDL_Renderer* renderer)
             // The coroutine stays on vm's stack so it is not collected.
             lua_State* co = lua_newthread(vm);
             lua_insert(vm, -2);
-            luaL_loadstring(co, "local cart = ... cart() if _init then _init() end");
+            luaL_loadstring(co,
+                "local cart = ... cart()\n"
+                "pcall(_init)\n"
+                "while true do pcall(_update or _update60) pcall(_draw) flip() end\n");
             lua_xmove(vm, co, 1);
 
-            pico8_init_coroutine = co;
+            pico8_flip_coroutine = co;
             status = lua_resume(co, NULL, 1);
             if (status != LUA_YIELD)
             {
-                pico8_init_coroutine = NULL;
+                pico8_flip_coroutine = NULL;
                 if (status != LUA_OK)
                 {
                     lua_xmove(co, vm, 1);
@@ -766,7 +769,7 @@ static bool run_cartridge(SDL_Renderer* renderer)
 
         print_memory_usage(vm);
 
-        if (!pico8_init_coroutine)
+        if (!pico8_flip_coroutine)
         {
             has_update = is_function_present(vm, "_update");
             has_update60 = is_function_present(vm, "_update60");
@@ -1441,26 +1444,18 @@ bool iterate_core(SDL_Renderer* renderer)
         pico8_frame_start = frame_start;
         pico8_frame_ms = frame_ms;
 
-        bool initializing = (pico8_init_coroutine != NULL);
-        if (initializing)
+        bool running = (pico8_flip_coroutine != NULL);
+        if (running)
         {
+            has_update60 = is_function_present(vm, "_update60");
             update_input(renderer);
             update_touch_input(renderer);
-            lua_State* co = pico8_init_coroutine;
+            lua_State* co = pico8_flip_coroutine;
             int status = lua_resume(co, NULL, 0);
             if (status != LUA_YIELD)
             {
-                pico8_init_coroutine = NULL;
-                if (status == LUA_OK)
-                {
-                    has_update = is_function_present(vm, "_update");
-                    has_update60 = is_function_present(vm, "_update60");
-                    has_draw = is_function_present(vm, "_draw");
-                }
-                else
-                {
-                    SDL_Log("Error running cartridge: %s", lua_tostring(co, -1));
-                }
+                pico8_flip_coroutine = NULL;
+                SDL_Log("Error running cartridge: %s", lua_tostring(co, -1));
             }
         }
         else if (has_update)
@@ -1476,7 +1471,7 @@ bool iterate_core(SDL_Renderer* renderer)
             call_pico8_function(vm, "_update60");
         }
 
-        if (has_draw && !initializing)
+        if (has_draw && !running)
         {
             // Do not reset_draw_state() every frame, do that only when switching carts
             call_pico8_function(vm, "_draw");

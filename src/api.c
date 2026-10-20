@@ -32,7 +32,7 @@
 static fix32_t seed_lo, seed_hi;
 
 static fix32_t seconds_since_start;
-lua_State* pico8_init_coroutine;
+lua_State* pico8_flip_coroutine;
 
 // Frame timing info provided by core.c (frame_start in ms, frame_ms target in ms).
 // These are declared in api.h and set inside core.c each frame.
@@ -946,7 +946,7 @@ static int pico8_fillp(lua_State* L)
 
 static int pico8_flip(lua_State* L)
 {
-    if (L == pico8_init_coroutine)
+    if (L == pico8_flip_coroutine)
     {
         return lua_yield(L, 0);
     }
