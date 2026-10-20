@@ -18,7 +18,6 @@
 #include "z8lua/lauxlib.h"
 #include "z8lua/lua.h"
 
-extern fix32_t seconds_since_start;
 extern lua_State* pico8_flip_coroutine;
 
 // Frame timing information (set by core.c each frame) used by stat(1).
