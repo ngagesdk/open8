@@ -21,7 +21,7 @@
 extern lua_State* pico8_flip_coroutine;
 
 // Frame timing information (set by core.c each frame) used by stat(1).
-extern uint64_t pico8_frame_start;
+extern uint32_t pico8_frame_start;
 extern uint32_t pico8_frame_ms;
 
 void init_api(lua_State* L);

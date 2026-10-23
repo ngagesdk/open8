@@ -17,6 +17,7 @@
 #include "z8lua/fix32.h"
 #include "z8lua/lstate.h"
 #include "auxiliary.h"
+#include "api.h"
 #include "app.h"
 #include "core.h"
 #include "memory.h"
